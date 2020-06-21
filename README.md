@@ -14,3 +14,10 @@ Navigate any hierarchical ledger graphically, all the way down to individual tra
 
 pip install -r requirements.txt
 
+
+### Export data from Gnucash
+
+1. `File` → `Export` → `Export Transactions to CSV …`
+2. `Next`
+3. `Select All`, `Next`
+4. Enter filename, for example, `transactions.csv`

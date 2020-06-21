@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import treelib
-
+import urllib
 
 #######################################################################
 # All function definitions here, except for callbacks at the end
@@ -204,9 +204,10 @@ def load_eras(source, earliest_date, latest_date):
         data = pd.read_csv(source)
         data = data.astype({'start_date': 'datetime64'})
         data = data.astype({'end_date': 'datetime64'})
-    except Exception:
-        data = pd.DataFrame({'start_date': pd.date_range(start=earliest_date, end=latest_date, freq='Y')})
-        data['name'] = data.end_date
+    except urllib.error.HTTPError:
+        data = pd.DataFrame({'end_date': pd.date_range(start=earliest_date, end=latest_date, freq='Y')})
+        data['start_date'] = data['end_date'].shift(1)
+        data['name'] = data['end_date'].dt.year
 
     data = data.sort_values(by=['start_date'], ascending=False)
     data = data.reset_index(drop=True).set_index('name')
@@ -217,6 +218,7 @@ def load_eras(source, earliest_date, latest_date):
         data.iloc[-1].start_date = earliest_date
     combined_data = pd.concat([all_data, data])
 
+    print(combined_data)
     return combined_data
 
 
@@ -446,7 +448,7 @@ app = dash.Dash(__name__)
 # this eliminates an error about 'A local version of http://localhost/dash_layout.css'
 app.css.config.serve_locally = False
 
-app.css.append_css(dict(external_url='localhost/dash_layout.css'))
+app.css.append_css(dict(external_url='http://localhost/dash_layout.css'))
 
 # useful for DEBUGging
 pd.set_option('display.max_rows', None)  # DEBUG: put back to 10?
@@ -494,14 +496,14 @@ chart_fig_layout = dict(
 # this could come from a URL; simpler now to get from a local file
 # crash if the load fails, as nothing is going to work
 
-trans, account_tree = load_transactions('http://localhost/gnureport/transactions.csv')
+trans, account_tree = load_transactions('http://localhost/transactions.csv')
 trans = trans.sort_values(['date', 'account'])
 earliest_trans = trans['date'].min()
 latest_trans = trans['date'].max()
 
 # Load a custom eras file if present.
 #
-eras = load_eras('http://localhost/gnureport/eras.csv', earliest_trans, latest_trans)
+eras = load_eras('http://localhost/eras.csv', earliest_trans, latest_trans)
 
 eras_dropdown_data = [dict(label=name, value=name) for name in eras.index]
 SUBTOTAL_SUFFIX = ' Subtotal'
