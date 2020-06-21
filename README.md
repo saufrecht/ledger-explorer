@@ -1,7 +1,7 @@
 # ledger-explorer
 Navigate any hierarchical ledger graphically, all the way down to individual transactions.
 
-![Screenshot](https://github.com/saufrecht/ledger-explorer/ledger_explorer.png | width=600)
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/ledger_explorer.png | width=600)
 
 # Installation
 
