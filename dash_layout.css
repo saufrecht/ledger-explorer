@@ -1,0 +1,89 @@
+/*———————————————————————————————————————————————————————————*/
+/* Color scheme                                              */
+/*———————————————————————————————————————————————————————————*/
+
+:root {
+  --Base3:       #fdf6e3;
+  --Base2:       #eee8d5;
+  --Base1:       #93a1a1;
+  --Base0:       #839496;
+  --Base00:      #657b83;
+  --Base01:      #586e75;
+  --Base02:      #073642;
+  --Base03:      #002b36;
+  --Yellow:      #b58900;
+  --Green:       #859900;
+  --Gray:        #e1e1e1;
+  --Magenta:     #d33682;
+  --Violet:      #6c71c4;
+  --Cyan:        #2aa198;
+  --Orange:      #cb4b16;
+  --Red:         #dc322f;
+}
+
+html {
+  background-color: var(--Base2);
+}
+
+
+h1 {
+  font-size: 200%;
+  font-family: 'Quadraat Sans OT';
+  margin: 0px 0px 0px 10px;
+}
+
+.layout_box {
+  display: grid;
+  grid-gap: 6px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.control_bar {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.control_bar > * {
+  flex-grow: 1;
+}
+
+.account_selector {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.account_burst {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.time_series {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.trans_table {
+  grid-column: 2 / 3;
+  grid-row: 2 / 5;
+}
+
+.dashbox {
+  border-top: 1px solid var(--Base1);
+  border-left: 1px solid var(--Base1);
+  box-shadow: 4px 4px 3px 1px var(--Base00);
+  margin: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+.dash-filter > input {
+  border: 4px solid var(--Base2)!important;
+  background-color: var(--Base1)!important;
+  color: var(--Base03)!important;
+  text-align: center!important;
+}

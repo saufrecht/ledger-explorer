@@ -1,0 +1,105 @@
+Date,Transaction ID,Number,Description,Notes,Commodity/Currency,Void Reason,Action,Memo,Full Account Name,Account Name,Amount With Sym,Amount Num.,Reconcile,Reconcile Date,Rate/Price
+03/01/2015,4a1efb8f1af04a478695eceb8e231022,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
+01/01/2019,01faca5a75ed4fed9f36f6dea04b9f9c,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
+06/20/2020,66b168165d694e26af2db601ac2487e0,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
+01/01/2018,dc977f5a6cdd45e088b262aee5c89994,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+01/01/2018,344063e78c1b44c294d4b62dd9caceb2,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+02/01/2018,01352e266ada46e582dc5cb70e394642,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+02/01/2018,9a57a019324444a8a4660a03e226539d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+03/01/2018,c91c1f17c6ad421e98fbc05b3ac0b3e2,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+03/01/2018,a6322a7fb3ab4b8d9d22cb352c3ba588,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+04/01/2018,fdc5e030785945cc854acdc79bd17b1e,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+04/01/2018,abc4bc6e6fa942bb91c344988259ee91,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+05/01/2018,f77d36413c5b47dd8438121b1c9a8880,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+05/01/2018,677edca37f134a52b8f007a154210f8b,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+06/01/2018,0387db66ae114c738240b3c029a0148d,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+06/01/2018,baef245283ce40aeac66ed2e50c737fe,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+07/01/2018,8c2c70ffeff34695906ca4fa50263334,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+07/18/2018,f07be8beece44ed19a360b688418d0b3,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+08/01/2018,6246e50b044b4e87ad479e5b527c9304,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+08/01/2018,f00895b844b842b0bb740900ec1b59a9,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+09/01/2018,405d70900e0e4480affcd836926da74b,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+09/01/2018,2b2c20591f7a4ac986817839e13f4071,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+10/01/2018,bd5bf4e8bf0249b4b07db62a3d0b2fb8,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+11/01/2018,028839ed31cd4fb7b8fccde716306371,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+12/01/2018,aac12fa51b814cf6a994e4b777499b9d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
+12/15/2018,228f17de390d457f8aecabfc08fe1766,,Big Bonus,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$15,000.00","15,000.00",n,,1.00
+,,,,,,,,,Income:Bonus,Bonus,"-$15,000.00","-15,000.00",n,,1.00
+01/01/2019,14a97e47830f4167a2f3e1268db34bfe,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+02/03/2019,8ce5ca4520ab4012bc73f988d2bb6772,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+03/03/2019,a7d8b9419d4542b8a97a80310c793de3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+04/03/2019,81439f2ded344b77aa955ee9a15a93d4,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+05/03/2019,5fd1fcecfc1949b59cdf208259ec1582,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+05/15/2019,04f6f35f3d70425aa45f85dee30af0ad,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
+06/01/2019,5b6c34d060864f89b8658edde637ff92,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+07/01/2019,4fe075089ca14219a612a3aedbd334b1,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
+,,,,,,,,bought gas for Jim Anchower,Expenses:Charity,Charity,$20.00,20.00,n,,1.00
+07/01/2019,b833a9ce67714a4fa78a605161fffb83,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+07/05/2019,559ab52a76bc4d0c8f0ef32428dd3772,,lots of beans,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$255.00,-255.00,n,,1.00
+,,,,,,,,,Expenses:Groceries,Groceries,$255.00,255.00,n,,1.00
+09/01/2019,23d71d3b64e74d86857e1587728d0fcf,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+10/01/2019,41bca29b74164d5483e2d5bd922ebb3b,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+11/01/2019,bf5b4cfc6ac341c5a7da95387957b8f3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
+02/02/2020,be6cd187812748cabe508cbe4c0c30a6,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
+03/01/2020,0915e09ba9704cd389504cd7704a06bb,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
+03/02/2020,caccec592dcb41ceade22785b05b8a70,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
+03/15/2020,de04f1f8162645518f939fee912f0a0c,,nice clothes,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.00
+,,,,,,,,,Expenses:Clothes,Clothes,$150.00,150.00,n,,1.00
+04/01/2020,5136ceebb76e476bac4faef604653458,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
+04/02/2020,b6f7e34729a64617a4b034a5d0ba6bc0,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
+05/02/2020,e03584c11e1a47ec8020db9e98e04cc4,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
+06/02/2020,ab1bccdaa6c24cc196a96a4819131746,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
+06/20/2020,4a47c806adaf4480b9320133911be9f7,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
