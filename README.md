@@ -14,6 +14,8 @@ Navigate any hierarchical ledger graphically, all the way down to individual tra
 
 `python3 -m venv ~/.venv_le`
 
+The path `~/.venv_le` is completely arbitrary and your naming conventions may vary.  This is a best practice, not a requirement for running this program.  See [Python documentation on Virtual Environments](https://docs.python.org/3/tutorial/venv.html) for more information.
+
 `source ~/.venv_le/bin/activate`
 
 `pip install -r requirements.txt`
