@@ -1,6 +1,7 @@
 # ledger-explorer
 Navigate any hierarchical ledger graphically, all the way down to individual transactions.  The special thing here is moving quickly from a graphical view of aggregate data, like a pie chart or bar chart, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (to me) rare in off-the-shelf F/OSS tools.  The Plotly Dashboard works very well for this purpose.
 
+
 ![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/ledger_explorer.png?s=600)
 
 # Installation
