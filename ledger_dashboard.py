@@ -15,6 +15,7 @@ import urllib
 # All function definitions here, except for callbacks at the end
 #######################################################################
 
+
 def color_variant(hex_color, brightness_offset=1):
     """ takes a color like #87c95f and produces a lighter or darker variant
     from https://chase-seibert.github.io/blog/2011/07/29/python-calculate-lighterdarker-rgb-colors.html """
@@ -245,10 +246,14 @@ def load_transactions(source):
 
     data['amount'] = data['amount'].replace(to_replace=',', value='')
     data['amount'] = data['amount'].astype(float).round(decimals=0).astype(int)
-    data['description'] = data['description'].replace(to_replace='CHG-', value='').astype(str)
-    data['memo'] = data['memo'].astype(str)
-    data['notes'] = data['notes'].astype(str)
+
+    data.fillna('', inplace=True)  # Any remaining fields with invalid numerical data should be text fields
     data.where(data.notnull(), None)
+
+    data['memo'] = data['memo'].astype(str)
+    data['description'] = data['description'].astype(str)
+    data['notes'] = data['notes'].astype(str)
+
     data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
     trans = data[['date', 'description', 'amount', 'account', 'full account name']]
     account_tree = get_account_tree_from_transaction_data(trans)
@@ -409,7 +414,6 @@ def make_sunburst(account_tree, trans, start_date=None, end_date=None):
                                x.bpointer,
                                x.data['total']) for x in sun_tree.all_nodes()],
                              columns=['id', 'name', 'parent', 'value'])
-
 
     figure = px.sunburst(sun_frame,
                          ids='id',
@@ -761,7 +765,7 @@ def apply_selection_from_time_series(selectedData, figure):
                     trace_account = trace['customdata'][0]['account']
                     selected_accounts.append(trace_account)
                 except KeyError:
-                    prin(f'DEBUG: Bad Assumption Warning: unable to get account from trace {trace}.')
+                    print(f'DEBUG: Bad Assumption Warning: unable to get account from trace {trace}.')
             elif ttype == 'scatter':
                 # hack: rather than try to pass along account name reliable, just grab all of the transactions
                 # in the scatter plot
