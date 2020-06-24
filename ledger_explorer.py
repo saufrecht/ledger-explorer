@@ -528,6 +528,10 @@ trans_table = dash_table.DataTable(
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
                   'font-size=': '1.1rem',
                   'text-align': 'center'},
+    style_cell={'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'maxWidth': 0,
+                'backgroundColor': '#839496'},
     style_cell_conditional=[
         {'if': {'column_id': 'date'},
          'textAlign': 'left',
@@ -547,10 +551,11 @@ trans_table = dash_table.DataTable(
     sort_action='native',
     page_action='native',
     filter_action='native',
-    style_cell={'overflow': 'hidden',
-                'textOverflow': 'ellipsis',
-                'maxWidth': 0},
-    page_size=30)
+    style_data_conditional=[{
+        'if': {'row_index': 'odd'},
+        'backgroundColor': '#657b83'}],
+    style_as_list_view=True,
+    page_size=20)
 
 
 app.layout = html.Div(

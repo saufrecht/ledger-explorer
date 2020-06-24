@@ -1,28 +1,54 @@
 /*———————————————————————————————————————————————————————————*/
 /* Color scheme                                              */
 /*———————————————————————————————————————————————————————————*/
+/* Solarized */
 
 :root {
-  --Base3:       #fdf6e3;
-  --Base2:       #eee8d5;
-  --Base1:       #93a1a1;
-  --Base0:       #839496;
-  --Base00:      #657b83;
-  --Base01:      #586e75;
-  --Base02:      #073642;
-  --Base03:      #002b36;
-  --Yellow:      #b58900;
-  --Green:       #859900;
-  --Gray:        #e1e1e1;
-  --Magenta:     #d33682;
-  --Violet:      #6c71c4;
-  --Cyan:        #2aa198;
-  --Orange:      #cb4b16;
-  --Red:         #dc322f;
+  --lightest:       #fdf6e3; /* Base3  */
+  --light:          #eee8d5; /* Base2  */
+  --dark-lightest:  #93a1a1; /* Base1  */
+  --dark-lighterer: #839496; /* Base0  */
+  --dark-lighter:   #657b83; /* Base00 */
+  --dark-light:     #586e75; /* Base01 */
+  --dark:           #073642; /* Base02 */
+  --darkest:        #002b36; /* Base03 */
+  --yellow:         #b58900;
+  --green:          #859900;
+  --gray:           #e1e1e1;
+  --magenta:        #d33682;
+  --violet:         #6c71c4;
+  --cyan:           #2aa198;
+  --orange:         #cb4b16;
+  --red:            #dc322f;
 }
 
+@media (prefers-color-scheme: light) {
+    :root {
+        --page-bg: var(--lightest);
+        --bg:      var(--light);         /* body background */
+        --fg:      var(--dark-light);
+        --fg-less: var(--dark-lighter);
+        --fg-more: var(--darkest);
+        --body-shadow: 0.1em 0.2em 0.3em rgba(0, 0, 0, 0.3), 0.2em 0.3em 0.3em 0 rgba(0, 0, 0, 0.28);
+        --box-shadow: 0.1em 0.1em 0.2em rgba(0, 0, 0, 0.2), 0.1em 0.2em .4em 0 rgba(0, 0, 0, 0.19);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page-bg:  var(--darkest);
+        --bg:       var(--dark);
+        --fg:       var(--dark-lightest);
+        --fg-less:  var(--dark-lighterer);
+        --fg-more:  var(--dark-lightest);
+        --body-shadow: none;
+        --box-shadow: none;
+    }
+}
+
+
 html {
-  background-color: var(--Base2);
+  background-color: var(--page-bg);
 }
 
 
@@ -71,9 +97,10 @@ h1 {
 }
 
 .dashbox {
-  border-top: 1px solid var(--Base1);
-  border-left: 1px solid var(--Base1);
-  box-shadow: 4px 4px 3px 1px var(--Base00);
+  background-color: var(--bg);
+  border-top: 1px solid var(--fg-less);
+  border-left: 1px solid var(--fg-less);
+  box-shadow: var(--box-shadow);
   margin: 4px;
 }
 
@@ -82,8 +109,14 @@ h1 {
 }
 
 .dash-filter > input {
-  border: 4px solid var(--Base2)!important;
-  background-color: var(--Base1)!important;
-  color: var(--Base03)!important;
+  border: 4px solid var(--bg)!important;
+  background-color: var(--fg-less)!important;
+  color: var(--fg-more)!important;
   text-align: center!important;
 }
+
+.control_bar, .dash-dropdown, .dash-graph, .Select, .select-control, .Select-value, .Select-value-label {
+    background-color: var(--bg);
+    color: var(--fg)!important;
+}
+
