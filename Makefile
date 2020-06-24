@@ -1,14 +1,17 @@
 SHELL := /bin/bash
 
-all: publish_data dash  ##     publish data, dash
+all: publish_data dev dash  ##          publish_data, dev, dash
 
-publish_data: ## publish output file and eras file to web
+publish_data: ## publish data content files to static webserver
 	cp sample_data.csv /var/www/html/transactions.csv
 
-dash:   ##     publish css and start dash development server on :8050
-	python ledger_dashboard.py
+dev: ##          publish any supporting files to static webserver
+	cp dash_layout.css /var/www/html/
 
-help:   ##     Print this
+dash:   ##         publish css and start dash development server on :8050
+	python ledger_explorer.py
+
+help:   ##         Print this
 	@printf "\ncommands: \n\n"
 	@fgrep -h "##" $(MAKEFILE_LIST) | sed -e 's/\(\:.*\#\#\)/\:\ /' | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 	@printf "\n"
