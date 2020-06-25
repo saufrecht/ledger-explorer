@@ -90,7 +90,7 @@ def get_era_bar(account, eras, color_num=0):
     bins = eras.start_date.sort_values()
 
     # group the data and build the traces
-    tba['bins'] = pd.cut(x=tba.date, bins=bins)
+    tba['bins'] = pd.cut(x=tba.date, bins=bins, duplicates='drop')
     sums = tba.groupby('bins').sum()
     bar_x = []
     bar_y = []
@@ -137,7 +137,7 @@ def get_era_bar(account, eras, color_num=0):
         x=label_x,
         y=label_y,
         mode='text',
-        text=eras['name'],
+        text=eras.index,
         textposition='bottom center',
         textfont=dict(
             size=12),
