@@ -24,11 +24,12 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-        --page-bg: var(--lightest);
+        --bg-more: var(--lightest);
         --bg:      var(--light);         /* body background */
         --fg:      var(--dark-light);
         --fg-less: var(--dark-lighter);
         --fg-more: var(--darkest);
+        --accent:  var(--magenta);
         --body-shadow: 0.1em 0.2em 0.3em rgba(0, 0, 0, 0.3), 0.2em 0.3em 0.3em 0 rgba(0, 0, 0, 0.28);
         --box-shadow: 0.1em 0.1em 0.2em rgba(0, 0, 0, 0.2), 0.1em 0.2em .4em 0 rgba(0, 0, 0, 0.19);
     }
@@ -36,11 +37,12 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --page-bg:  var(--darkest);
+        --bg-more:  var(--darkest);
         --bg:       var(--dark);
         --fg:       var(--dark-lightest);
         --fg-less:  var(--dark-lighterer);
         --fg-more:  var(--dark-lightest);
+        --accent:  var(--magenta);
         --body-shadow: none;
         --box-shadow: none;
     }
@@ -48,7 +50,7 @@
 
 
 html {
-  background-color: var(--page-bg);
+  background-color: var(--bg-more);
 }
 
 
@@ -66,34 +68,33 @@ h1 {
 
 .control_bar {
   grid-column: 1 / 3;
-  grid-row: 1;
+  grid-row: 1 / 2 ;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-end;
 }
 
 .control_bar > * {
   flex-grow: 1;
 }
 
-.account_selector {
-  grid-column: 2;
-  grid-row: 1;
+.master_time_series {
+  grid-column: 1 / 3;
+  grid-row: 2 / 3 ;
+}
+
+.transaction_time_series {
+  grid-column: 1 / 3;
+  grid-row: 4 / 5 ;
 }
 
 .account_burst {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.time_series {
-  grid-column: 1;
-  grid-row: 3;
+  grid-column: 1 / 2;
+  grid-row: 3 / 4;
 }
 
 .trans_table {
   grid-column: 2 / 3;
-  grid-row: 2 / 5;
+  grid-row: 3 / 4;
 }
 
 .dashbox {
@@ -120,3 +121,30 @@ h1 {
     color: var(--fg)!important;
 }
 
+.rc-slider-track {
+    background-color: var(--accent);
+}
+
+.rc-slider-rail {
+    background-color: var(--accent);
+}
+
+.rc-slider-handle {
+    background-color: var(--fg-more);
+
+}
+
+.rc-slider-dot {
+    border-color: var(--fg);
+   
+}
+
+.rc-slider-mark-text {
+    color: var(--fg-less);
+
+}
+
+.rc-slider-mark-text-active {
+    color: var(--fg-more);
+
+}

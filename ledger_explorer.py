@@ -11,8 +11,9 @@ import plotly.graph_objects as go
 import treelib
 import urllib
 
+
 #######################################################################
-# All function definitions here, except for callbacks at the end
+# All function definitions here, except for the callbacks at the end
 #######################################################################
 
 
@@ -28,7 +29,7 @@ def color_variant(hex_color, brightness_offset=1):
     return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
 
 
-def purge_root(tree):
+def trim_excess_root(tree):
     # If the input tree's root has no branches, trim the superfluous node and return a shorter tree
     root_id = tree.root
     root_kids = tree.children(root_id)
@@ -71,7 +72,7 @@ def get_account_tree_from_transaction_data(trans):
                                  identifier=name,
                                  parent=parent)
 
-    tree = purge_root(tree)
+    tree = trim_excess_root(tree)
     return tree
 
 
@@ -149,23 +150,65 @@ def get_era_bar(account, eras, color_num=0):
     return bar, era_value, era_name
 
 
-def get_quarterly_bar(account, color_num=0):
-    """ returns a go.Bar object with monthly summaries for the selected account """
+def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
+    """ returns a go.Bar object with total by time_resolution period for
+    the selected account.  If deep, include total for all descendent accounts. """
 
-    tba = trans[trans['account'] == account]
-    m_amounts = tba.set_index('date').resample('Q').sum()['amount'] / 3
+    if deep:
+        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
+    else:
+        tba = trans[trans['account'] == account]
+
+    tba = tba.set_index('date')
+
+    tr = TIME_RES_LOOKUP[time_resolution]
+    tr_hover = tr['hovertext']  # e.g., "q."
+    tr_label = tr['label']      # e.g., 'Quarterly'
+    tr_months = tr['months']
+
+    ts = TIME_SPAN_LOOKUP[time_span]
+    ts_hover = ts['hovertext']      # e.g., 'per y'
+    ts_months = ts['months']
+    factor = ts_months / tr_months
+
+    if tr_label == 'All':
+        # TODO
+        # this is the only way to get an entire tranche of data for all time into the sunburst
+        # all_data = pd.DataFrame({'start_date': [earliest_date], 'end_date': [latest_date], 'name': 'All'})
+        return None
+    elif tr_label == 'By Era':
+        # convert the era dates to a series that can be used for grouping
+        bins = eras.start_date.sort_values()
+        # group the data and build the traces
+        tba['bin'] = pd.cut(x=tba.index, bins=bins, duplicates='drop')
+        bin_amounts = tba.groupby('bin').sum()
+    elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
+        resample_keyword = tr['resample_keyword']
+        bin_amounts = tba.resample(resample_keyword).\
+            sum()['amount'].\
+            to_frame(name='value')
+        bin_amounts['text'] = f'{ts_hover} <br>DEBUG ts_months: {ts_months}, tr_months: {tr_months}, factor {factor}<br>{tr_hover}'
+        bin_amounts['value'] = bin_amounts['value'] * factor
+        bin_amounts['account'] = account
+    else:
+        # bad input data
+        return None
+
     try:
         marker_color = disc_colors[color_num]
     except IndexError:
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
+
+    customdata = bin_amounts['account']
     bar = go.Bar(
         name=account,
-        x=m_amounts.index,
-        y=m_amounts,
-        customdata=[dict(account=account)],
-        marker_color=marker_color,
-        hovertemplate='%{y:$,.0f}/mo, Q ending %{x}')
+        x=bin_amounts.index,
+        y=bin_amounts.value,
+        customdata=customdata,
+        text=bin_amounts.text,
+        hovertemplate='%{customdata} %{y:$,.0f} %{text} ending %{x}',
+        marker_color=marker_color)
 
     return bar
 
@@ -175,6 +218,15 @@ def get_children(account_id, account_tree):
     Return a list of tags of all direct child accounts of the input account.
     """
     return [x.tag for x in account_tree.children(account_id)]
+
+
+def get_descendents(account_id, account_tree):
+    """
+    Return a list of tags of all descendent accounts of the input account.
+    """
+
+    descendent_nodes = account_tree.subtree(account_id).all_nodes()
+    return [x.tag for x in descendent_nodes]
 
 
 def get_trace(account, color_num=0):
@@ -195,20 +247,17 @@ def get_trace(account, color_num=0):
 
 def load_eras(source, earliest_date, latest_date):
     """
-    Create bins for selecting periods of data.  If custom bins are
-    not provided, make year-based bins.
+    If era data file is available, use it to construct
+    arbitrary bins
     """
 
-    all_data = pd.DataFrame({'start_date': [earliest_date], 'end_date': [latest_date], 'name': 'All'})
-    all_data = all_data.reset_index(drop=True).set_index('name')
     try:
         data = pd.read_csv(source)
-        data = data.astype({'start_date': 'datetime64'})
-        data = data.astype({'end_date': 'datetime64'})
     except urllib.error.HTTPError:
-        data = pd.DataFrame({'end_date': pd.date_range(start=earliest_date, end=latest_date, freq='Y')})
-        data['start_date'] = data['end_date'].shift(1)
-        data['name'] = data['end_date'].dt.year
+        return None
+
+    data = data.astype({'start_date': 'datetime64'})
+    data = data.astype({'end_date': 'datetime64'})
 
     data = data.sort_values(by=['start_date'], ascending=False)
     data = data.reset_index(drop=True).set_index('name')
@@ -217,10 +266,8 @@ def load_eras(source, earliest_date, latest_date):
         data.iloc[0].end_date = latest_date
     if pd.isnull(data.iloc[-1].start_date):
         data.iloc[-1].start_date = earliest_date
-    combined_data = pd.concat([all_data, data])
 
-    print(combined_data)
-    return combined_data
+    return data
 
 
 def load_transactions(source):
@@ -491,7 +538,27 @@ chart_fig_layout = dict(
     title=dict(
             font=big_font,
             x=0.5,
-            y=0.9))
+            y=0.9),
+    hoverlabel=dict(
+        bgcolor='var(--bg)',
+        font_color='var(--fg)',
+        font=small_font))
+
+# TODO: move this to a class?
+TIME_RES_LOOKUP = {
+    0: {'label': 'All'},
+    1: {'label': 'By Era'},
+    2: {'label': 'Annual', 'hovertext': 'year', 'resample_keyword': 'A', 'months': 12},
+    3: {'label': 'Quarterly', 'hovertext': 'q.', 'resample_keyword': 'Q', 'months': 3},
+    4: {'label': 'Monthly', 'hovertext': 'mo.', 'resample_keyword': 'M', 'months': 1}}
+
+TIME_RES_OPTIONS = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
+
+TIME_SPAN_LOOKUP = {
+    0: {'label': 'per year', 'hovertext': 'per year', 'months': 12},
+    1: {'label': 'per month', 'hovertext': 'per month', 'months': 1}}
+
+TIME_SPAN_OPTIONS = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
 
 #######################################################################
 # Load Data
@@ -508,8 +575,6 @@ latest_trans = trans['date'].max()
 # Load a custom eras file if present.
 #
 eras = load_eras('http://localhost/eras.csv', earliest_trans, latest_trans)
-
-eras_dropdown_data = [dict(label=name, value=name) for name in eras.index]
 SUBTOTAL_SUFFIX = ' Subtotal'
 LEAF_SUFFIX = ' Leaf'
 OTHER_PREFIX = 'Other '
@@ -531,7 +596,7 @@ trans_table = dash_table.DataTable(
     style_cell={'overflow': 'hidden',
                 'textOverflow': 'ellipsis',
                 'maxWidth': 0,
-                'backgroundColor': '#839496'},
+                'backgroundColor': 'var(--bg-more)'},
     style_cell_conditional=[
         {'if': {'column_id': 'date'},
          'textAlign': 'left',
@@ -551,9 +616,6 @@ trans_table = dash_table.DataTable(
     sort_action='native',
     page_action='native',
     filter_action='native',
-    style_data_conditional=[{
-        'if': {'row_index': 'odd'},
-        'backgroundColor': '#657b83'}],
     style_as_list_view=True,
     page_size=20)
 
@@ -562,39 +624,56 @@ app.layout = html.Div(
     className="layout_box",
     children=[
         html.Div(
+            className="control_bar dashbox",
+            children=[
+                html.H1(
+                    id='titlebar',
+                    children=['Ledger']),
+                dcc.Slider(
+                    className='resolution-slider',
+                    id='time_series_resolution',
+                    min=0,
+                    max=4,
+                    step=1,
+                    marks=TIME_RES_OPTIONS,
+                    value=4
+                ),
+                dcc.Slider(
+                    className='span-slider',
+                    id='time_series_span',
+                    min=0,
+                    max=1,
+                    step=1,
+                    marks=TIME_SPAN_OPTIONS,
+                    value=1
+                ),
+                dcc.RadioItems(
+                    id='time_periods')
+            ]),
+        html.Div(
             className='account_burst dashbox',
             children=[
-                html.Div(
-                    className="control_bar",
-                    children=[
-                        html.H1(
-                            id='titlebar',
-                            children=['Ledger']),
-                        html.Div(
-                            style=dict(textAlign='right', padding='0 10px 0 0'),
-                            children=['Era']),
-                        dcc.Dropdown(
-                            id='era_dropdown',
-                            options=eras_dropdown_data,
-                            clearable=True,
-                            value=eras.index[0],
-                            placeholder='Select Time Period')
-                    ]),
                 dcc.Graph(
                     id='account_burst',
                     figure=make_sunburst(account_tree, trans))
             ]),
         html.Div(
-            className='time_series dashbox',
+            className='master_time_series dashbox',
             children=[
                 dcc.Graph(
-                    id='transaction_time_series')
+                    id='master_time_series')
             ]),
         html.Div(
             className="trans_table dashbox",
             children=[
                 trans_table
-            ])
+            ]),
+        html.Div(
+            className='transaction_time_series dashbox',
+            children=[
+                dcc.Graph(
+                    id='transaction_time_series')
+            ]),
     ])
 
 #######################################################################
@@ -603,90 +682,34 @@ app.layout = html.Div(
 
 
 @app.callback(
-    Output('account_burst', 'figure'),
-    [Input('era_dropdown', 'value')])
-def apply_era_selector(selection):
-    try:
-        start_date = eras.loc[selection].start_date
-        end_date = eras.loc[selection].end_date
-    except IndexError:
-        start_date = None
-        end_date = None
-    sun_fig = make_sunburst(account_tree, trans, start_date, end_date)
-    return sun_fig
-
-
-@app.callback(
-    [Output('titlebar', 'children'),
-     Output('transaction_time_series', 'figure')],
-    [Input('account_burst', 'clickData')])
-def apply_burst_click(clickData):
-    """
-    Clicking on a slice in the Sunburst updates the titlebar with the name of the
-    now-active account and updates the transaction_time_series with the transactions:
-    For a leaf account, chart transactions, and monthly averages by year or era.
-    For a node account, chart monthly summaries of all subtree accounts.
-
-    Changing transaction_time_series will trigger the next callback, which will
-    update the transaction table
-    transactions for that account
-    """
+    Output('master_time_series', 'figure'),
+    [Input('time_series_resolution', 'value'),
+     Input('time_series_span', 'value')])
+def apply_time_series_resolution(time_resolution, time_span):
     chart_fig = go.Figure(layout=chart_fig_layout)
-    if clickData:
-        click_account = clickData['points'][0]['id']
-    else:
-        click_account = []
 
-    selected_accounts = []
-    if click_account:
-        title = f'{click_account}'
-        try:
-            selected_accounts = [click_account] + get_children(click_account, account_tree)
-        except treelib.exceptions.NodeIDAbsentError:
-            # This is a hack.  If the account isn't there, assume that the reason
-            # is that it was reidentified to 'X Leaf', and back that out.
-            try:
-                if LEAF_SUFFIX in click_account:
-                    revised_id = click_account.replace(LEAF_SUFFIX, '')
-                    selected_accounts = [revised_id]
-            except treelib.exceptions.NodeIDAbsentError:
-                pass
-    else:
-        pass
+    root_account_id = account_tree.root  # TODO: Stub for controllable design
 
-    if not selected_accounts:
-        title = 'All'
+    title = account_tree[root_account_id].tag
+    selected_accounts = get_children(root_account_id, account_tree)
+    for i, account in enumerate(selected_accounts):
+        chart_fig.add_trace(make_bar(account, i, time_resolution, time_span, deep=True))
 
     chart_fig.update_layout(dict(
         title={'text': title}))
 
-    if len(selected_accounts) == 1:
-        account = selected_accounts[0]
-        chart_fig.add_trace(get_trace(account))
-        try:
-            era_bar, era_value, era_name = get_era_bar(account, eras=eras)
-            chart_fig.add_trace(era_bar)
-            chart_fig.add_trace(era_value)
-            chart_fig.add_trace(era_name)
-        except TypeError:
-            pass
-    elif len(selected_accounts) > 1:
-        for i, account in enumerate(selected_accounts):
-            chart_fig.add_trace(get_quarterly_bar(account, i))
-        chart_fig.update_layout(
-            barmode='stack',
-            showlegend=True)
-    else:
-        pass
+    chart_fig.update_layout(
+        barmode='stack',
+        showlegend=True)
 
-    return title, chart_fig
+    return chart_fig
 
 
 @app.callback(
     Output('trans_table', 'data'),
-    [Input('transaction_time_series', 'selectedData'),
-     Input('transaction_time_series', 'figure')])
-def apply_selection_from_time_series(selectedData, figure):
+    [Input('master_time_series', 'figure'),
+     Input('master_time_series', 'selectedData')])
+def apply_selection_from_time_series(figure, selectedDat):
     """
     Selecting specific points from the time series chart updates the
     transaction table.
@@ -694,103 +717,116 @@ def apply_selection_from_time_series(selectedData, figure):
     Reminder to self: When you think selectedData input is broken, remember
     that unaltered default action in the graph is to zoom, not to select.
 
-    A Dash object can only be an Input to one callback, and an Output
-    to one callback.  But we want to update the trans_table in two
-    different ways: either by selecting an account in the sunburst, in
-    which case the trans_table is all transactions in that account, or
-    by selecting some specific dots in the transaction_time_series, in
-    which case only those specific transactions should show up in the
-    trans_table.  To make this possible, the sunburst updates the
-    transaction_time_series, which then updates the trans_table in
-    either of two ways:
-
-    If the whole transaction_time_series figure is changed, then that
-    triggers this callback, and the ids of all the transactions on the
-    chart, inside figure['data'], comprise the transactions to include.
-
-    Or, if selectedData is set by selecting some markers, that
-    triggers this callback and updates the table with only those
-    transactions.
-
-    Or, if a bar in a barchart is clicked, that will also trigger selectedData,
-    and the transactions comprising that bar marker will go to the table.
-
-    Selecting a point on a scatter plot:
-
-    Selected: {'points': [{'curveNumber': 0, 'pointNumber': 53, 'pointIndex': 53, 'x': '2017-11-08', 'y': 861, 'id': 3997, 'text': 'Teresa'}]}  # NOQA
-
-    Selecting a bar:
-
-    Selected: {'points': [{'curveNumber': 3, 'pointNumber': 1, 'pointIndex': 1, 'x': '2015-12-31', 'y': 1543.6666666666667, 'label': '2015-12-31', 'value': 1543.6666666666667}]},  # NOQA
-
-    Scatter plot has an ID, bar doesn't.
-
     """
-    selected_ids = []
-    selected_accounts = []
-    filtered_trans = []
-    # catch clicks
-    if selectedData:
-        # figure out if the selection is a quarterly bar, or a point or group of transactions
-        # if it has ids in the first curve, it's a set of transactions.  Otherwise, it's a bar.
-        points = selectedData['points']
-        try:
-            selected_ids = [i['id'] for i in list(filter(lambda x: x['curveNumber'] == 0, points))]
-        except KeyError:
-            # debugging selecting multiple bar segments
-            # DEBUG
-            pass
-        if len(selected_ids) > 0:
-            # If IDs are present, assume it's a selection of one or multiple individual points or bars.
-            filtered_trans = trans[trans.index.isin(selected_ids)]
-        else:
-            # assume this is a click on a single bar in barchart.  Reverse-engineer the bar
-            # parameters
-            curve = points[0]
-            curve_num = curve['curveNumber']
-            end_date = pd.to_datetime(curve['x'])
-            start_date = end_date - pd.tseries.offsets.QuarterBegin(n=1, startingMonth=1)
-            # get the account from the full figure
-            traces = locals()['figure']['data']
-            try:
-                account = traces[curve_num]['customdata'][0]['account']
-            except IndexError:
-                # debugging
-                pass
-            filtered_trans = trans[
-                (trans['account'] == account) &
+
+    filtered_trans = None
+    for trace in figure['data']:
+        account = trace['name']
+        points = trace.get('selectedpoints')
+        if not points:
+            continue
+        for point in points:
+            end_date = pd.to_datetime(trace['x'][point])
+            #try:
+            start_date = pd.to_datetime(trace['x'][point - 1])
+            #except:  # TODO: get the error name when clicking the first entry
+            #    start_date = earliest_trans
+
+            new_trans = trans[
+                (trans['account'].isin(get_descendents(account, account_tree))) &
                 (trans['date'] >= start_date) &
                 (trans['date'] <= end_date)]
-    elif figure:
-        for trace in figure['data']:
-            ttype = trace.get('type', None)
-            # should only be bars or scatter (plus summary & labels)
-            if ttype == 'bar':
-                try:
-                    trace_account = trace['customdata'][0]['account']
-                    selected_accounts.append(trace_account)
-                except KeyError:
-                    print(f'DEBUG: Bad Assumption Warning: unable to get account from trace {trace}.')
-            elif ttype == 'scatter':
-                # hack: rather than try to pass along account name reliable, just grab all of the transactions
-                # in the scatter plot
-                trace_ids = trace.get('ids', [])
-                selected_ids += trace_ids
-        if selected_ids:
-            filtered_trans = trans[trans.index.isin(selected_ids)]
-        elif selected_accounts:
-            filtered_trans = trans[trans['account'].isin(selected_accounts)]
+            try:
+                filtered_trans.append(new_trans)
+            except AttributeError:
+                filtered_trans = new_trans
 
-    if len(filtered_trans) > 0:
-        pass
-    else:
-        # if no transactions are selected, show all of them.
-        filtered_trans = trans.copy()
+    try:
+        data_count = len(filtered_trans)
+    except TypeError:
+        data_count = 0
 
-    # format date so minutes don't show in trans_table
-    filtered_trans['date'] = filtered_trans['date'].dt.strftime('%Y-%m-%d')
+    if data_count == 0:
+        filtered_trans = trans
 
     return filtered_trans.to_dict('records')
+
+
+# #    Output('account_burst', 'figure'),
+# def apply_era_selector(selection):
+#     try:
+#         start_date = eras.loc[selection].start_date
+#         end_date = eras.loc[selection].end_date
+#     except IndexError:
+#         start_date = None
+#         end_date = None
+#     sun_fig = make_sunburst(account_tree, trans, start_date, end_date)
+#     return sun_fig
+
+
+# @app.callback(
+#     [Output('titlebar', 'children'),
+#      Output('transaction_time_series', 'figure')],
+#     [Input('account_burst', 'clickData')])
+# def apply_burst_click(clickData):
+#     """
+#     Clicking on a slice in the Sunburst updates the titlebar with the name of the
+#     now-active account and updates the transaction_time_series with the transactions:
+#     For a leaf account, chart transactions, and monthly averages by year or era.
+#     For a node account, chart monthly summaries of all subtree accounts.
+
+#     Changing transaction_time_series will trigger the next callback, which will
+#     update the transaction table with transactions for that selection
+#     """
+#     chart_fig = go.Figure(layout=chart_fig_layout)
+#     if clickData:
+#         click_account = clickData['points'][0]['id']
+#     else:
+#         click_account = []
+
+#     selected_accounts = []
+#     if click_account:
+#         title = f'{click_account}'
+#         try:
+#             selected_accounts = [click_account] + get_children(click_account, account_tree)
+#         except treelib.exceptions.NodeIDAbsentError:
+#             # This is a hack.  If the account isn't there, assume that the reason
+#             # is that it was reidentified to 'X Leaf', and back that out.
+#             try:
+#                 if LEAF_SUFFIX in click_account:
+#                     revised_id = click_account.replace(LEAF_SUFFIX, '')
+#                     selected_accounts = [revised_id]
+#             except treelib.exceptions.NodeIDAbsentError:
+#                 pass
+#     else:
+#         pass
+
+#     if not selected_accounts:
+#         title = 'All'
+
+#     chart_fig.update_layout(dict(
+#         title={'text': title}))
+
+#     if len(selected_accounts) == 1:
+#         account = selected_accounts[0]
+#         chart_fig.add_trace(get_trace(account))
+#         try:
+#             era_bar, era_value, era_name = get_era_bar(account, eras=eras)
+#             chart_fig.add_trace(era_bar)
+#             chart_fig.add_trace(era_value)
+#             chart_fig.add_trace(era_name)
+#         except TypeError:
+#             pass
+#     elif len(selected_accounts) > 1:
+#         for i, account in enumerate(selected_accounts):
+#             chart_fig.add_trace(get_quarterly_bar(account, i))
+#         chart_fig.update_layout(
+#             barmode='stack',
+#             showlegend=True)
+#     else:
+#         pass
+
+#    return title, chart_fig
 
 
 if __name__ == '__main__':
