@@ -162,32 +162,38 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
     tba = tba.set_index('date')
 
     tr = TIME_RES_LOOKUP[time_resolution]
-    tr_hover = tr['hovertext']  # e.g., "q."
-    tr_label = tr['label']      # e.g., 'Quarterly'
-    tr_months = tr['months']
+    tr_hover = tr.get('hovertext')  # e.g., "q."
+    tr_label = tr.get('label')      # e.g., 'Quarterly'
+    tr_months = tr.get('months')
 
     ts = TIME_SPAN_LOOKUP[time_span]
-    ts_hover = ts['hovertext']      # e.g., 'per y'
-    ts_months = ts['months']
-    factor = ts_months / tr_months
+    ts_months = ts.get('months')
 
     if tr_label == 'All':
-        # TODO
-        # this is the only way to get an entire tranche of data for all time into the sunburst
-        # all_data = pd.DataFrame({'start_date': [earliest_date], 'end_date': [latest_date], 'name': 'All'})
-        return None
+        total = tba['amount'].sum()
+        bin_amounts = pd.DataFrame({'date': earliest_trans, 'value': total}, index=[earliest_trans])
+        all_months = 12 * (latest_trans.year - earliest_trans.year) + (latest_trans.month - earliest_trans.month)
+        factor = ts_months / all_months
+        bin_amounts['value'] = bin_amounts['value'] * factor
+        bin_amounts['account'] = account
+        bin_amounts['text'] = f'<br>{tr_hover}'
     elif tr_label == 'By Era':
         # convert the era dates to a series that can be used for grouping
-        bins = eras.start_date.sort_values()
+        bins = eras.start_date.sort_values().append
+
         # group the data and build the traces
-        tba['bin'] = pd.cut(x=tba.index, bins=bins, duplicates='drop')
-        bin_amounts = tba.groupby('bin').sum()
+        breakpoint()
+        tba['bin'] = pd.cut(x=tba.index, bins=eras['start_date'], labels=eras['name'], duplicates='drop')
+        bin_amounts = pd.DataFrame({'date': bins, 'value': tba.groupby('bin')['amounts'].sum()})
+        bin_amounts['account'] = account
+        bin_amounts['text'] = f'<br>{tr_hover}'
     elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
         resample_keyword = tr['resample_keyword']
         bin_amounts = tba.resample(resample_keyword).\
             sum()['amount'].\
             to_frame(name='value')
-        bin_amounts['text'] = f'{ts_hover} <br>DEBUG ts_months: {ts_months}, tr_months: {tr_months}, factor {factor}<br>{tr_hover}'
+        factor = ts_months / tr_months
+        bin_amounts['text'] = f'<br>{tr_hover}'
         bin_amounts['value'] = bin_amounts['value'] * factor
         bin_amounts['account'] = account
     else:
@@ -207,7 +213,7 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         y=bin_amounts.value,
         customdata=customdata,
         text=bin_amounts.text,
-        hovertemplate='%{customdata} %{y:$,.0f} %{text} ending %{x}',
+        hovertemplate='%{customdata} %{y:$,.0f} %{text} ending %{x}<extra></extra>',
         marker_color=marker_color)
 
     return bar
@@ -534,20 +540,20 @@ chart_fig_layout = dict(
         r=10,
         t=10,
         b=10),
-    showlegend=False,
+    showlegend=True,
     title=dict(
             font=big_font,
-            x=0.5,
+            x=0.1,
             y=0.9),
     hoverlabel=dict(
         bgcolor='var(--bg)',
         font_color='var(--fg)',
-        font=small_font))
+        font=medium_font))
 
 # TODO: move this to a class?
 TIME_RES_LOOKUP = {
-    0: {'label': 'All'},
-    1: {'label': 'By Era'},
+    0: {'label': 'All', 'hovertext': 'total'},
+    1: {'label': 'By Era', 'hovertext': 'period'},
     2: {'label': 'Annual', 'hovertext': 'year', 'resample_keyword': 'A', 'months': 12},
     3: {'label': 'Quarterly', 'hovertext': 'q.', 'resample_keyword': 'Q', 'months': 3},
     4: {'label': 'Monthly', 'hovertext': 'mo.', 'resample_keyword': 'M', 'months': 1}}
@@ -626,9 +632,12 @@ app.layout = html.Div(
         html.Div(
             className="control_bar dashbox",
             children=[
-                html.H1(
-                    id='titlebar',
-                    children=['Ledger']),
+                html.H2(
+                    id='selected_account_display',
+                    children=['Account']),
+                html.H2(
+                    id='selected_date_range',
+                    children=['Dates', 'foo']),
                 dcc.Slider(
                     className='resolution-slider',
                     id='time_series_resolution',
@@ -636,7 +645,7 @@ app.layout = html.Div(
                     max=4,
                     step=1,
                     marks=TIME_RES_OPTIONS,
-                    value=4
+                    value=0
                 ),
                 dcc.Slider(
                     className='span-slider',
@@ -695,13 +704,14 @@ def apply_time_series_resolution(time_resolution, time_span):
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(account, i, time_resolution, time_span, deep=True))
 
+    ts = TIME_SPAN_LOOKUP[time_span]
+    ts_hover = ts.get('hovertext')      # e.g., 'per y'
+
     chart_fig.update_layout(dict(
-        title={'text': title}))
+        title={'text': f'{title}<br>$ {ts_hover}'}))
 
-    chart_fig.update_layout(
-        barmode='stack',
-        showlegend=True)
-
+    chart_fig.update_layout(barmode='relative')
+    chart_fig.update_traces(texttemplate='%{value:$,.0f}', textposition='auto')
     return chart_fig
 
 
@@ -717,11 +727,14 @@ def apply_selection_from_time_series(figure, selectedDat):
     Reminder to self: When you think selectedData input is broken, remember
     that unaltered default action in the graph is to zoom, not to select.
 
+    Note: all of the necessary information is in figure but that doesn't trigger well,
+    so use selectedData to guarantee trigger
+    
     """
 
     filtered_trans = None
     for trace in figure['data']:
-        account = trace['name']
+        account = trace.get('name')
         points = trace.get('selectedpoints')
         if not points:
             continue
