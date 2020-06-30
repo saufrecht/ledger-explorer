@@ -171,31 +171,49 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
 
     if tr_label == 'All':
         total = tba['amount'].sum()
-        bin_amounts = pd.DataFrame({'date': earliest_trans, 'value': total}, index=[earliest_trans])
-        all_months = 12 * (latest_trans.year - earliest_trans.year) + (latest_trans.month - earliest_trans.month)
+        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
+        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
+        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
         factor = ts_months / all_months
         bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['account'] = account
-        bin_amounts['text'] = f'<br>{tr_hover}'
+
     elif tr_label == 'By Era':
         # convert the era dates to a series that can be used for grouping
-        bins = eras.start_date.sort_values().append
+        # make sure the eras cover the full selected date range
 
-        # group the data and build the traces
-        breakpoint()
-        tba['bin'] = pd.cut(x=tba.index, bins=eras['start_date'], labels=eras['name'], duplicates='drop')
-        bin_amounts = pd.DataFrame({'date': bins, 'value': tba.groupby('bin')['amounts'].sum()})
-        bin_amounts['account'] = account
-        bin_amounts['text'] = f'<br>{tr_hover}'
+        bins = eras.start_date.sort_values()
+        bin_start_dates = bins.tolist()
+        bin_labels = bins.index.tolist()
+        earliest_tba = tba.index.min()
+        latest_tba = tba.index.max()
+        if bin_start_dates[0] < earliest_tba:
+            bin_start_dates = [earliest_tba] + bin_start_dates
+            bin_labels = ['before'] + bin_labels
+        # there must be one more bin boundary than label
+        # so either add a new end-date to bound the final label
+        # or remove the last label
+        if bin_start_dates[-1] <= latest_tba:
+            bin_start_dates = bin_start_dates + [latest_tba]
+        else:
+            bin_labels = bin_labels[0:-1]
+        tba['bin'] = pd.cut(x=tba.index, bins=bin_start_dates, labels=bin_labels, duplicates='drop')
+        bin_amounts = pd.DataFrame({'date': bin_start_dates[0:-1], 'value': tba.groupby('bin')['amount'].sum()})
+        bin_amounts['start_date'] = bin_start_dates[0:-1]
+        bin_amounts['end_date'] = bin_start_dates[1:]
+        bin_amounts['months'] = ((bin_amounts['start_date'] - bin_amounts['end_date']) / np.timedelta64(1, 'M'))
+        bin_amounts['date'] = bin_amounts['date']
+        bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
+
     elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
+
         resample_keyword = tr['resample_keyword']
         bin_amounts = tba.resample(resample_keyword).\
             sum()['amount'].\
             to_frame(name='value')
         factor = ts_months / tr_months
-        bin_amounts['text'] = f'<br>{tr_hover}'
+        bin_amounts['date'] = bin_amounts.index
         bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['account'] = account
+
     else:
         # bad input data
         return None
@@ -206,13 +224,18 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
 
-    customdata = bin_amounts['account']
+    bin_amounts['text'] = f'<br>{tr_hover}'
+    bin_amounts['customdata'] = account
+    bin_amounts['texttemplate'] = '%{customdata}'
+
     bar = go.Bar(
         name=account,
-        x=bin_amounts.index,
+        x=bin_amounts.date,
         y=bin_amounts.value,
-        customdata=customdata,
+        customdata=bin_amounts.customdata,
         text=bin_amounts.text,
+        texttemplate=bin_amounts.texttemplate,
+        textposition='auto',
         hovertemplate='%{customdata} %{y:$,.0f} %{text} ending %{x}<extra></extra>',
         marker_color=marker_color)
 
@@ -482,7 +505,6 @@ def make_sunburst(account_tree, trans, start_date=None, end_date=None):
         go.Sunburst(),
         insidetextorientation='horizontal',
         maxdepth=3,
-        texttemplate='%{label}<br>%{value}',
         hovertemplate='%{label}<br>%{value}'
     )
 
@@ -540,7 +562,7 @@ chart_fig_layout = dict(
         r=10,
         t=10,
         b=10),
-    showlegend=True,
+    showlegend=False,
     title=dict(
             font=big_font,
             x=0.1,
@@ -555,8 +577,8 @@ TIME_RES_LOOKUP = {
     0: {'label': 'All', 'hovertext': 'total'},
     1: {'label': 'By Era', 'hovertext': 'period'},
     2: {'label': 'Annual', 'hovertext': 'year', 'resample_keyword': 'A', 'months': 12},
-    3: {'label': 'Quarterly', 'hovertext': 'q.', 'resample_keyword': 'Q', 'months': 3},
-    4: {'label': 'Monthly', 'hovertext': 'mo.', 'resample_keyword': 'M', 'months': 1}}
+    3: {'label': 'Quarterly', 'hovertext': 'Q', 'resample_keyword': 'Q', 'months': 3},
+    4: {'label': 'Monthly', 'hovertext': 'mo', 'resample_keyword': 'M', 'months': 1}}
 
 TIME_RES_OPTIONS = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
 
@@ -699,7 +721,6 @@ def apply_time_series_resolution(time_resolution, time_span):
 
     root_account_id = account_tree.root  # TODO: Stub for controllable design
 
-    title = account_tree[root_account_id].tag
     selected_accounts = get_children(root_account_id, account_tree)
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(account, i, time_resolution, time_span, deep=True))
@@ -708,10 +729,9 @@ def apply_time_series_resolution(time_resolution, time_span):
     ts_hover = ts.get('hovertext')      # e.g., 'per y'
 
     chart_fig.update_layout(dict(
-        title={'text': f'{title}<br>$ {ts_hover}'}))
+        title={'text': f'Average $ {ts_hover}'}))
 
     chart_fig.update_layout(barmode='relative')
-    chart_fig.update_traces(texttemplate='%{value:$,.0f}', textposition='auto')
     return chart_fig
 
 
@@ -729,11 +749,10 @@ def apply_selection_from_time_series(figure, selectedDat):
 
     Note: all of the necessary information is in figure but that doesn't trigger well,
     so use selectedData to guarantee trigger
-    
     """
 
     filtered_trans = None
-    for trace in figure['data']:
+    for trace in figure.get('data'):
         account = trace.get('name')
         points = trace.get('selectedpoints')
         if not points:
