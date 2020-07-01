@@ -21,8 +21,6 @@ def color_variant(hex_color, brightness_offset=1):
     """ takes a color like #87c95f and produces a lighter or darker variant
     from https://chase-seibert.github.io/blog/2011/07/29/python-calculate-lighterdarker-rgb-colors.html """
 
-    if len(hex_color) != 7:
-        app.logger.debug(f'Passed {hex_color} into color_variant(), but it needs to be in #xxxxxx format.')
     rgb_hex = [hex_color[x:x+2] for x in [1, 3, 5]]
     new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
     new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 255
@@ -232,7 +230,7 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         bin_amounts['end_date'] = bin_start_dates[1:]
         bin_amounts['months'] = ((bin_amounts['end_date'] - bin_amounts['start_date']) /
                                  np.timedelta64(1, 'M'))
-        bin_amounts['date'] = bin_amounts['date']
+        bin_amounts['date'] = bin_amounts['end_date']
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
         bin_amounts['text'] = f'{ts_hover}<br>' + bin_amounts.index.astype(str) + ' period '
     elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
@@ -265,7 +263,7 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         text=bin_amounts.text,
         texttemplate=bin_amounts.texttemplate,
         textposition='auto',
-        hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} starting %{x}<extra></extra>',
+        hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
         marker_color=marker_color)
 
     return bar
@@ -748,16 +746,21 @@ def apply_selection_from_time_series(figure, selectedData):
             continue
         selected_accounts.append(account)
         for point in points:
-            print(f'DEBUG1: master_time_series trace, point: {trace}, {point}')
             # back out the selection parameters (account and start/end dates)
             # from the trace
-            selection_start_date = pd.to_datetime(trace['x'][point])
-            # the last point in the time-series won't have a following point
-            try:
-                selection_end_date = pd.to_datetime(trace['x'][point + 1])
-            except IndexError:
-                selection_end_date = latest_trans
+            # TODO: for All, x is end date
+            #       for By Era, x is start date
+            #       for A/Q/M, x is end date
+            # so fix that.
+            print(f'DEBUG0 point: {trace["x"]}')
+            selection_end_date = pd.to_datetime(trace['x'][point])
+            # the first point in the time-series won't have a preceding point
+            if point == 0:
+                selection_start_date = earliest_trans
+            else:
+                selection_start_date = pd.to_datetime(trace['x'][point - 1])
 
+            print(f'DEBUG point: {selection_start_date}, {selection_end_date}')
             point_accounts = get_descendents(account, account_tree)
 
             new_trans = trans.loc[trans['account'].isin(point_accounts)].\
@@ -772,7 +775,6 @@ def apply_selection_from_time_series(figure, selectedData):
     # If no transactions are ultimately selected, show all transactions
     try:
         data_count = len(filtered_trans)
-        print(f'DEBUG2: master_time_series data_count: {data_count}')
     except TypeError:
         data_count = 0
     if data_count == 0:
@@ -780,10 +782,7 @@ def apply_selection_from_time_series(figure, selectedData):
         selected_accounts = ['All']
 
     pos_trans = positize(filtered_trans)
-    print(f'DEBUG3: master_time_series len(pos_trans): {len(pos_trans)}')
-    print(f'DEBUG4: master_time_series start: {selection_start_date}, end: {selection_end_date}')
     sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date)
-    print(f'DEBUG5: master_time_series sun_fig: {sun_fig}')
     account_children = ', '.join(selected_accounts)
 
     if selection_start_date and selection_end_date:
