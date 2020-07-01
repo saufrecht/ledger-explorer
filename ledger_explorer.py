@@ -13,6 +13,25 @@ import treelib
 import urllib
 
 
+from line_profiler import LineProfiler
+
+
+def do_profile(follow=[]):
+    def inner(func):
+        def profiled_func(*args, **kwargs):
+            try:
+                profiler = LineProfiler()
+                profiler.add_function(func)
+                for f in follow:
+                    profiler.add_function(f)
+                profiler.enable_by_count()
+                return func(*args, **kwargs)
+            finally:
+                profiler.print_stats()
+        return profiled_func
+    return inner
+
+
 #######################################################################
 # Function definitions except for callbacks
 #######################################################################
@@ -24,11 +43,11 @@ def color_variant(hex_color, brightness_offset=1):
 
     rgb_hex = [hex_color[x:x+2] for x in [1, 3, 5]]
     new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
-    new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 255
+    new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 2x55
     return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
 
 
-def get_account_tree_from_transaction_data(trans):
+def make_account_tree_from_trans(trans):
     """ extract all accounts from a list of Gnucash account paths
 
     Each account name is a full path.  Parent accounts with no
@@ -172,7 +191,7 @@ def load_transactions(source):
 
     data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
     trans = data[['date', 'description', 'amount', 'account', 'full account name']]
-    account_tree = get_account_tree_from_transaction_data(trans)
+    account_tree = make_account_tree_from_trans(trans)
     return trans, account_tree
 
 
@@ -229,8 +248,9 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
                                     'value': tba.groupby('bin')['amount'].sum()})
         bin_amounts['start_date'] = bin_start_dates[0:-1]
         bin_amounts['end_date'] = bin_start_dates[1:]
-        bin_amounts['months'] = ((bin_amounts['end_date'] - bin_amounts['start_date']) /
-                                 np.timedelta64(1, 'M'))
+        bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
+        bin_amounts['width'] = bin_amounts['delta'] / np.timedelta64(1, 'ms')
+        bin_amounts['months'] = bin_amounts['delta'] / np.timedelta64(1, 'M')
         bin_amounts['date'] = bin_amounts['end_date']
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
         bin_amounts['text'] = f'{ts_hover}<br>' + bin_amounts.index.astype(str) + ' period '
@@ -256,16 +276,30 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
     bin_amounts['customdata'] = account
     bin_amounts['texttemplate'] = '%{customdata}'
 
-    bar = go.Bar(
-        name=account,
-        x=bin_amounts.date,
-        y=bin_amounts.value,
-        customdata=bin_amounts.customdata,
-        text=bin_amounts.text,
-        texttemplate=bin_amounts.texttemplate,
-        textposition='auto',
-        hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
-        marker_color=marker_color)
+    if tr_label == 'By Era':
+        print('DEBUG By Era')
+        bar = go.Bar(
+            name=account,
+            x=bin_amounts.date,
+            width=bin_amounts.width,
+            y=bin_amounts.value,
+            customdata=bin_amounts.customdata,
+            text=bin_amounts.text,
+            texttemplate=bin_amounts.texttemplate,
+            textposition='auto',
+            hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
+            marker_color=marker_color)
+    else:
+        bar = go.Bar(
+            name=account,
+            x=bin_amounts.date,
+            y=bin_amounts.value,
+            customdata=bin_amounts.customdata,
+            text=bin_amounts.text,
+            texttemplate=bin_amounts.texttemplate,
+            textposition='auto',
+            hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
+            marker_color=marker_color)
 
     return bar
 
@@ -303,22 +337,32 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
         end_date = pd.Timestamp.now()
 
     duration = (end_date - start_date) / np.timedelta64(1, 'M')
-    trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
-    sun_tree = get_account_tree_from_transaction_data(trans)
-    trans.reset_index(drop=True).set_index('account')
+    sel_trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
 
-    def leaf_total(account):
+    def make_subtotal_tree(trans):
         """
-        Generate the subtotal of all transactions for the account
+        Calculate the subtotal for each node (direct subtotal only, no children) in
+        the provided transaction tree and store it in the tree.
         """
-        foobar = trans[trans.index == account].sum()['amount']
-        subtotal = round(foobar / duration)
-        if subtotal < 0:
-            subtotal = 0
-        return subtotal
+        trans = trans.reset_index(drop=True).set_index('account')
+        sel_tree = make_account_tree_from_trans(trans)
+        subtotals = trans.groupby('account').sum()['amount']
+        for node in sel_tree.all_nodes():
+            try:
+                subtotal = subtotals.loc[node.tag]
+            except KeyError:
+                # These should be nodes without leaf_totals, and therefore
+                # not present in the subtotals DataFrame
+                continue
 
-    for node in sun_tree.all_nodes():
-        node.data = {'leaf_total': leaf_total(node.identifier)}
+            norm_subtotal = round(subtotal / duration)
+            if norm_subtotal < 0:
+                norm_subtotal = 0
+            node.data = {'leaf_total': norm_subtotal}
+
+        return sel_tree
+
+    _sun_tree = make_subtotal_tree(sel_trans)
 
     #######################################################################
     # Total up all the nodes.
@@ -344,7 +388,7 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
     def set_node_total(node):
         """
         Set the total value of the node as a property of the node.  Assumes
-        a sun_tree treelib.Tree in surrounding scope, and modifies that
+        a _sun_tree treelib.Tree in surrounding scope, and modifies that
         treelib as a side effect.
 
         Assumption: No negative leaf values
@@ -352,19 +396,23 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
         Uses 'leaf_total' for all transactions that belong to this node's account,
         and 'total' for the final value for the node, including descendants.
         """
-        nonlocal sun_tree
+        nonlocal _sun_tree
         node_id = node.identifier
         tag = node.tag
-        leaf_total = node.data.get('leaf_total', 0)
+        try:
+            leaf_total = node.data.get('leaf_total', 0)
+        except AttributeError:
+            # in case it doesn't even have a data node
+            leaf_total = 0
         running_subtotal = leaf_total
 
-        children = sun_tree.children(node_id)
+        children = _sun_tree.children(node_id)
 
         if children:
             # if it has children, rename it to subtotal, but
             # don't change the identity.
             subtotal_tag = tag + SUBTOTAL_SUFFIX
-            sun_tree.update_node(node_id, tag=subtotal_tag)
+            _sun_tree.update_node(node_id, tag=subtotal_tag)
 
             # If it has its own leaf_total, move that amount
             # to a new leaf node
@@ -372,11 +420,11 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 
                 new_leaf_id = node_id + LEAF_SUFFIX
                 node.data['leaf_total'] = 0
-                sun_tree.create_node(identifier=new_leaf_id,
-                                     tag=tag,
-                                     parent=node_id,
-                                     data=dict(leaf_total=leaf_total,
-                                               total=leaf_total))
+                _sun_tree.create_node(identifier=new_leaf_id,
+                                      tag=tag,
+                                      parent=node_id,
+                                      data=dict(leaf_total=leaf_total,
+                                                total=leaf_total))
 
             for child in children:
                 # recurse to get subtotals.  This won't double-count
@@ -387,13 +435,16 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 
         # Remove zeros, because they look terrible in sunburst.
         if running_subtotal == 0:
-            sun_tree.remove_node(node_id)
+            _sun_tree.remove_node(node_id)
         else:
-            node.data['total'] = running_subtotal
+            if node.data:
+                node.data['total'] = running_subtotal
+            else:
+                node.data = {'total': running_subtotal}
 
         return running_subtotal
 
-    root = sun_tree.get_node(sun_tree.root)
+    root = _sun_tree.get_node(_sun_tree.root)
 
     set_node_total(root)
 
@@ -407,16 +458,16 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
         The "-2" accounts for the Other node to be created, and for
         one-based vs zero-based counting.
         """
-        nonlocal sun_tree
+        nonlocal _sun_tree
         node_id = node.identifier
-        children = sun_tree.children(node_id)
+        children = _sun_tree.children(node_id)
         if len(children) > (MAX_SLICES - 2):
             other_id = OTHER_PREFIX + node_id
             other_subtotal = 0
-            sun_tree.create_node(identifier=other_id,
-                                 tag=other_id,
-                                 parent=node_id,
-                                 data=dict(total=other_subtotal))
+            _sun_tree.create_node(identifier=other_id,
+                                  tag=other_id,
+                                  parent=node_id,
+                                  data=dict(total=other_subtotal))
             total_list = [(dict(identifier=x.identifier,
                                 total=x.data['total']))
                           for x in children]
@@ -424,10 +475,10 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
             for i, child in enumerate(sorted_list):
                 if i > (MAX_SLICES - 2):
                     other_subtotal += child['total']
-                    sun_tree.move_node(child['identifier'], other_id)
-            sun_tree.update_node(other_id, data=dict(total=other_subtotal))
+                    _sun_tree.move_node(child['identifier'], other_id)
+            _sun_tree.update_node(other_id, data=dict(total=other_subtotal))
 
-        children = sun_tree.children(node_id)
+        children = _sun_tree.children(node_id)
 
         for child in children:
             summarize_to_other(child)
@@ -441,7 +492,7 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
     sun_frame = pd.DataFrame([(x.identifier,
                                x.tag,
                                x.bpointer,
-                               x.data['total']) for x in sun_tree.all_nodes()],
+                               x.data['total']) for x in _sun_tree.all_nodes()],
                              columns=['id', 'name', 'parent', 'value'])
 
     figure = px.sunburst(sun_frame,
@@ -480,11 +531,6 @@ def positize(trans):
     a sunburst."""
 
     if trans.sum(numeric_only=True)['amount'] < 0:
-        blah = True
-    else:
-        blah = False
-
-    if blah:
         trans['amount'] = trans['amount'] * -1
 
     return trans
@@ -500,17 +546,6 @@ def trim_excess_root(tree):
         return new_tree
     else:
         return tree
-
-
-def xlog(name, start=True):
-    label = name.ljust(100, '—')
-    filling = ' '.center(110)
-    if start:
-        logging.debug(f'/———START——{label}\\')
-        logging.debug(f'|{filling}|')
-    else:
-        logging.debug(f'|{filling}|')
-        logging.debug(f'\\———END————{label}/')
 
 
 #######################################################################
@@ -603,7 +638,7 @@ eras = load_eras('http://localhost/eras.csv', earliest_trans, latest_trans)
 SUBTOTAL_SUFFIX = ' Subtotal'
 LEAF_SUFFIX = ' Leaf'
 OTHER_PREFIX = 'Other '
-MAX_SLICES = 7
+MAX_SLICES = 7  # TODO: expose this in a control
 
 
 #######################################################################
@@ -803,7 +838,6 @@ def apply_selection_from_time_series(figure, selectedData):
         selected_accounts = ['All']
 
     pos_trans = positize(filtered_trans)
-
     sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
     account_children = ', '.join(selected_accounts)
     if selection_start_date and selection_end_date:
@@ -859,6 +893,15 @@ def apply_burst_click(burst_clickData, detail_data):
         start_date = detail_data['start']
         end_date = detail_data['end']
         sel_trans = sel_trans[(sel_trans['date'] >= start_date) & (sel_trans['date'] <= end_date)]
+        chart_min = sel_trans['amount'].min()
+        chart_max = sel_trans['amount'].max()
+        tts_fig.add_shape(
+            type="line",
+            x0=start_date,
+            x1=end_date,
+            y0=chart_min,
+            y1=chart_max)
+
     except (KeyError, TypeError):
         pass
 
@@ -869,6 +912,10 @@ def apply_burst_click(burst_clickData, detail_data):
         except TypeError:
             pass
     elif len(selected_accounts) > 1:
+        # TODO: design bug: certain leaves (maybe with ¿hidden children?)
+        # appear as leaves in the sunburst and show only one
+        # account in the trans table, but have multiple selected_accounts
+        # and so render as bars when they should be scatter
         for i, account in enumerate(selected_accounts):
             tts_fig.add_trace(make_bar(account, i, 4, 1, deep=True))
             tts_fig.update_layout(
