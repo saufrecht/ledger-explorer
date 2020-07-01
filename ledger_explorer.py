@@ -13,7 +13,7 @@ import urllib
 
 
 #######################################################################
-# All function definitions here, except for the callbacks at the end
+# Function definitions except for callbacks
 #######################################################################
 
 
@@ -27,18 +27,6 @@ def color_variant(hex_color, brightness_offset=1):
     new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
     new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 255
     return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
-
-
-def trim_excess_root(tree):
-    # If the input tree's root has no branches, trim the superfluous node and return a shorter tree
-    root_id = tree.root
-    root_kids = tree.children(root_id)
-    if len(root_kids) == 1:
-        tree.update_node(root_kids[0].identifier, parent=None, bpointer=None)
-        new_tree = tree.subtree(root_kids[0].identifier)
-        return new_tree
-    else:
-        return tree
 
 
 def get_account_tree_from_transaction_data(trans):
@@ -75,171 +63,40 @@ def get_account_tree_from_transaction_data(trans):
     tree = trim_excess_root(tree)
     return tree
 
+    # DEBUG: use this code to fix the base widths of the era bars
 
-def get_era_bar(account, eras, color_num=0):
-    """
-    returns a line trace and two scatter traces, with era-grouped
-    monthly averages for the selected account.
-    """
+    # # group the data and build the traces
+    # tba['bins'] = pd.cut(x=tba.date, bins=bins, duplicates='drop')
+    # sums = tba.groupby('bins').sum()
+    # bar_x = []
+    # bar_y = []
+    # label_x = []
+    # label_y = []
 
-    # filter to get transaction by account (tba)
-    tba = trans[trans['account'] == account]
-    if len(tba) == 0:
-        return
-
-    # convert the era dates to a series that can be used for grouping
-    bins = eras.start_date.sort_values()
-
-    # group the data and build the traces
-    tba['bins'] = pd.cut(x=tba.date, bins=bins, duplicates='drop')
-    sums = tba.groupby('bins').sum()
-    bar_x = []
-    bar_y = []
-    label_x = []
-    label_y = []
-
-    # convert the sums array into a plotable line trace, by using
-    # start and stop of each bin as x values, and using the y value
-    # twice for each bin.  probably this is the most hacky way to do
-    # it.  This hack messes up lebeling, so make a separate annotation
-    # trace.
-    for i in range(len(sums)):
-        value = int(sums['amount'][i] / (sums.axes[0][i].length / np.timedelta64(1, 'M')))
-        bar_x.append(sums.index[i].left)
-        bar_x.append(sums.index[i].right)
-        bar_y.append(value)
-        bar_y.append(value)
-        label_x.append(sums.index[i].mid)
-        label_y.append(value)
-    bar = go.Scatter(
-        name='average monthly spending',
-        x=bar_x,
-        y=bar_y,
-        mode='lines+text',
-        line_shape='hvh',
-        text=None,
-        hovertemplate="<extra></extra>",
-        line=dict(
-            color=color_variant(disc_colors[color_num], 30),
-            width=2))
-
-    era_value = go.Scatter(
-        name='era values',
-        x=label_x,
-        y=label_y,
-        mode='text',
-        text=label_y,
-        textposition='top center',
-        textfont=medium_font,
-        hovertemplate="<extra></extra>")
-
-    era_name = go.Scatter(
-        name='era labels',
-        x=label_x,
-        y=label_y,
-        mode='text',
-        text=eras.index,
-        textposition='bottom center',
-        textfont=dict(
-            size=12),
-        line=dict(
-            color=color_variant(disc_colors[color_num], 30),
-            width=2),
-        hovertemplate="<extra></extra>")
-
-    return bar, era_value, era_name
-
-
-def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
-    """ returns a go.Bar object with total by time_resolution period for
-    the selected account.  If deep, include total for all descendent accounts. """
-
-    if deep:
-        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
-    else:
-        tba = trans[trans['account'] == account]
-
-    tba = tba.set_index('date')
-
-    tr = TIME_RES_LOOKUP[time_resolution]
-    tr_hover = tr.get('hovertext')  # e.g., "q."
-    tr_label = tr.get('label')      # e.g., 'Quarterly'
-    tr_months = tr.get('months')
-
-    ts = TIME_SPAN_LOOKUP[time_span]
-    ts_months = ts.get('months')
-
-    if tr_label == 'All':
-        total = tba['amount'].sum()
-        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
-        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
-        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
-        factor = ts_months / all_months
-        bin_amounts['value'] = bin_amounts['value'] * factor
-
-    elif tr_label == 'By Era':
-        # convert the era dates to a series that can be used for grouping
-        # make sure the eras cover the full selected date range
-
-        bins = eras.start_date.sort_values()
-        bin_start_dates = bins.tolist()
-        bin_labels = bins.index.tolist()
-        earliest_tba = tba.index.min()
-        latest_tba = tba.index.max()
-        if bin_start_dates[0] < earliest_tba:
-            bin_start_dates = [earliest_tba] + bin_start_dates
-            bin_labels = ['before'] + bin_labels
-        # there must be one more bin boundary than label
-        # so either add a new end-date to bound the final label
-        # or remove the last label
-        if bin_start_dates[-1] <= latest_tba:
-            bin_start_dates = bin_start_dates + [latest_tba]
-        else:
-            bin_labels = bin_labels[0:-1]
-        tba['bin'] = pd.cut(x=tba.index, bins=bin_start_dates, labels=bin_labels, duplicates='drop')
-        bin_amounts = pd.DataFrame({'date': bin_start_dates[0:-1], 'value': tba.groupby('bin')['amount'].sum()})
-        bin_amounts['start_date'] = bin_start_dates[0:-1]
-        bin_amounts['end_date'] = bin_start_dates[1:]
-        bin_amounts['months'] = ((bin_amounts['start_date'] - bin_amounts['end_date']) / np.timedelta64(1, 'M'))
-        bin_amounts['date'] = bin_amounts['date']
-        bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
-
-    elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
-
-        resample_keyword = tr['resample_keyword']
-        bin_amounts = tba.resample(resample_keyword).\
-            sum()['amount'].\
-            to_frame(name='value')
-        factor = ts_months / tr_months
-        bin_amounts['date'] = bin_amounts.index
-        bin_amounts['value'] = bin_amounts['value'] * factor
-
-    else:
-        # bad input data
-        return None
-
-    try:
-        marker_color = disc_colors[color_num]
-    except IndexError:
-        # don't ever run out of colors
-        marker_color = 'var(--Cyan)'
-
-    bin_amounts['text'] = f'<br>{tr_hover}'
-    bin_amounts['customdata'] = account
-    bin_amounts['texttemplate'] = '%{customdata}'
-
-    bar = go.Bar(
-        name=account,
-        x=bin_amounts.date,
-        y=bin_amounts.value,
-        customdata=bin_amounts.customdata,
-        text=bin_amounts.text,
-        texttemplate=bin_amounts.texttemplate,
-        textposition='auto',
-        hovertemplate='%{customdata} %{y:$,.0f} %{text} ending %{x}<extra></extra>',
-        marker_color=marker_color)
-
-    return bar
+    # # convert the sums array into a plotable line trace, by using
+    # # start and stop of each bin as x values, and using the y value
+    # # twice for each bin.  probably this is the most hacky way to do
+    # # it.  This hack messes up lebeling, so make a separate annotation
+    # # trace.
+    # for i in range(len(sums)):
+    #     value = int(sums['amount'][i] / (sums.axes[0][i].length / np.timedelta64(1, 'M')))
+    #     bar_x.append(sums.index[i].left)
+    #     bar_x.append(sums.index[i].right)
+    #     bar_y.append(value)
+    #     bar_y.append(value)
+    #     label_x.append(sums.index[i].mid)
+    #     label_y.append(value)
+    # bar = go.Scatter(
+    #     name='average monthly spending',
+    #     x=bar_x,
+    #     y=bar_y,
+    #     mode='lines+text',
+    #     line_shape='hvh',
+    #     text=None,
+    #     hovertemplate="<extra></extra>",
+    #     line=dict(
+    #         color=color_variant(disc_colors[color_num], 30),
+    #         width=2))
 
 
 def get_children(account_id, account_tree):
@@ -256,22 +113,6 @@ def get_descendents(account_id, account_tree):
 
     descendent_nodes = account_tree.subtree(account_id).all_nodes()
     return [x.tag for x in descendent_nodes]
-
-
-def get_trace(account, color_num=0):
-    """ returns """
-    tba = trans[trans['account'] == account]
-    trace = go.Scatter(
-        name=account,
-        x=tba['date'],
-        y=tba['amount'],
-        text=tba['account'],
-        ids=tba.index,
-        mode='markers',
-        marker=dict(
-            symbol='circle-open',
-            opacity=0.5))
-    return trace
 
 
 def load_eras(source, earliest_date, latest_date):
@@ -336,11 +177,122 @@ def load_transactions(source):
     return trans, account_tree
 
 
-def make_sunburst(account_tree, trans, start_date=None, end_date=None):
+def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
+    """ returns a go.Bar object with total by time_resolution period for
+    the selected account.  If deep, include total for all descendent accounts. """
+
+    if deep:
+        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
+    else:
+        tba = trans[trans['account'] == account]
+
+    tba = tba.set_index('date')
+
+    tr = TIME_RES_LOOKUP[time_resolution]
+    tr_hover = tr.get('hovertext')  # e.g., "Mo"
+    tr_label = tr.get('label')      # e.g., 'Quarterly'
+    tr_months = tr.get('months')
+
+    ts = TIME_SPAN_LOOKUP[time_span]
+    ts_hover = ts.get('hovertext')  # e.g., "y"
+    ts_months = ts.get('months')
+
+    if tr_label == 'All':
+        total = tba['amount'].sum()
+        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
+        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
+        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
+        factor = ts_months / all_months
+        bin_amounts['value'] = bin_amounts['value'] * factor
+        bin_amounts['text'] = f'{ts_hover}<br>{tr_hover}'
+    elif tr_label == 'By Era':
+        earliest_tba = tba.index.min()
+        latest_tba = tba.index.max()
+
+        # convert the era dates to a series that can be used for grouping
+        bins = eras.start_date.sort_values()
+        bin_start_dates = bins.tolist()
+        bin_labels = bins.index.tolist()
+        # make sure the eras cover the full selected date range
+        if bin_start_dates[0] > earliest_tba:
+            bin_start_dates = [earliest_tba] + bin_start_dates
+            bin_labels = ['before'] + bin_labels
+        # there must be one more bin boundary than label
+        # so either add a new end-date to bound the last bin
+        # or remove the last label
+        if bin_start_dates[-1] <= latest_tba:
+            bin_start_dates = bin_start_dates + [latest_tba]
+        else:
+            bin_labels = bin_labels[0:-1]
+
+        tba['bin'] = pd.cut(x=tba.index, bins=bin_start_dates, labels=bin_labels, duplicates='drop')
+        bin_amounts = pd.DataFrame({'date': bin_start_dates[0:-1],
+                                    'value': tba.groupby('bin')['amount'].sum()})
+        bin_amounts['start_date'] = bin_start_dates[0:-1]
+        bin_amounts['end_date'] = bin_start_dates[1:]
+        bin_amounts['months'] = ((bin_amounts['end_date'] - bin_amounts['start_date']) /
+                                 np.timedelta64(1, 'M'))
+        bin_amounts['date'] = bin_amounts['date']
+        bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
+        bin_amounts['text'] = f'{ts_hover}<br>' + bin_amounts.index.astype(str) + ' period '
+    elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
+        resample_keyword = tr['resample_keyword']
+        bin_amounts = tba.resample(resample_keyword).\
+            sum()['amount'].\
+            to_frame(name='value')
+        factor = ts_months / tr_months
+        bin_amounts['date'] = bin_amounts.index
+        bin_amounts['value'] = bin_amounts['value'] * factor
+        bin_amounts['text'] = f'{ts_hover}<br>{tr_hover}'
+    else:
+        # bad input data
+        return None
+
+    try:
+        marker_color = disc_colors[color_num]
+    except IndexError:
+        # don't ever run out of colors
+        marker_color = 'var(--Cyan)'
+
+    bin_amounts['customdata'] = account
+    bin_amounts['texttemplate'] = '%{customdata}'
+
+    bar = go.Bar(
+        name=account,
+        x=bin_amounts.date,
+        y=bin_amounts.value,
+        customdata=bin_amounts.customdata,
+        text=bin_amounts.text,
+        texttemplate=bin_amounts.texttemplate,
+        textposition='auto',
+        hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} starting %{x}<extra></extra>',
+        marker_color=marker_color)
+
+    return bar
+
+
+def make_scatter(account, trans, color_num=0):
+    """ returns scatter trace of input transactions
     """
-    Generate a figure for a sunburst, where each node is an account
-    and the value of each node is the subtotal of all transactions for
-    that node and any subtree, filtered by date.
+
+    trace = go.Scatter(
+        name=account,
+        x=trans['date'],
+        y=trans['amount'],
+        text=trans['account'],
+        ids=trans.index,
+        mode='markers',
+        marker=dict(
+            symbol='circle'))
+    return trace
+
+
+def make_sunburst(trans, start_date=None, end_date=None):
+    """
+    Using a tree of accounts and a DataFrame of transactions,
+    generate a figure for a sunburst, where each node is an account
+    in the tree, and the value of each node is the subtotal of all
+    transactions for that node and any subtree, filtered by date.
     """
 
     #######################################################################
@@ -359,7 +311,6 @@ def make_sunburst(account_tree, trans, start_date=None, end_date=None):
         Generate the subtotal of all transactions for the account
         """
         subtotal = round((trans[trans['account'] == account].sum()['amount']) / duration)
-        # this algorithm took 0.14 sec for Out.  Try something faster.
         if subtotal < 0:
             subtotal = 0
         return subtotal
@@ -505,7 +456,8 @@ def make_sunburst(account_tree, trans, start_date=None, end_date=None):
         go.Sunburst(),
         insidetextorientation='horizontal',
         maxdepth=3,
-        hovertemplate='%{label}<br>%{value}'
+        hovertemplate='%{label}<br>%{value}',
+        texttemplate='%{label}<br>%{value}',
     )
 
     figure.update_layout(
@@ -519,6 +471,30 @@ def make_sunburst(account_tree, trans, start_date=None, end_date=None):
     return figure
 
 
+def positize(trans):
+    """Negative values can't be plotted in sunbursts.  This can't be fixed with absolute value
+    because that would erase the distinction between debits and credits within an account.
+    This function always returns a net-positive-value DataFrame of transactions suitable for
+    a sunburst."""
+
+    if trans.sum()['amount'] < 0:
+        trans['amount'] = trans['amount'] * -1
+
+    return trans
+
+
+def trim_excess_root(tree):
+    # If the input tree's root has no branches, trim the superfluous node and return a shorter tree
+    root_id = tree.root
+    root_kids = tree.children(root_id)
+    if len(root_kids) == 1:
+        tree.update_node(root_kids[0].identifier, parent=None, bpointer=None)
+        new_tree = tree.subtree(root_kids[0].identifier)
+        return new_tree
+    else:
+        return tree
+
+
 #######################################################################
 # Initialize and set up formatting
 #######################################################################
@@ -529,8 +505,7 @@ app.css.config.serve_locally = False
 
 app.css.append_css(dict(external_url='http://localhost/dash_layout.css'))
 
-# useful for DEBUGging
-pd.set_option('display.max_rows', None)  # DEBUG: put back to 10?
+pd.set_option('display.max_rows', None)  # useful for DEBUGging, put back to 10?
 
 disc_colors = px.colors.qualitative.D3
 
@@ -572,19 +547,18 @@ chart_fig_layout = dict(
         font_color='var(--fg)',
         font=medium_font))
 
-# TODO: move this to a class?
 TIME_RES_LOOKUP = {
     0: {'label': 'All', 'hovertext': 'total'},
     1: {'label': 'By Era', 'hovertext': 'period'},
-    2: {'label': 'Annual', 'hovertext': 'year', 'resample_keyword': 'A', 'months': 12},
+    2: {'label': 'Annual', 'hovertext': 'Y', 'resample_keyword': 'A', 'months': 12},
     3: {'label': 'Quarterly', 'hovertext': 'Q', 'resample_keyword': 'Q', 'months': 3},
-    4: {'label': 'Monthly', 'hovertext': 'mo', 'resample_keyword': 'M', 'months': 1}}
+    4: {'label': 'Monthly', 'hovertext': 'Mo', 'resample_keyword': 'M', 'months': 1}}
 
 TIME_RES_OPTIONS = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
 
 TIME_SPAN_LOOKUP = {
-    0: {'label': 'per year', 'hovertext': 'per year', 'months': 12},
-    1: {'label': 'per month', 'hovertext': 'per month', 'months': 1}}
+    0: {'label': 'per year', 'hovertext': '/y', 'months': 12},
+    1: {'label': 'per month', 'hovertext': '/mo.', 'months': 1}}
 
 TIME_SPAN_OPTIONS = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
 
@@ -647,19 +621,13 @@ trans_table = dash_table.DataTable(
     style_as_list_view=True,
     page_size=20)
 
-
 app.layout = html.Div(
     className="layout_box",
     children=[
         html.Div(
+            id='time_series_control_bar',
             className="control_bar dashbox",
             children=[
-                html.H2(
-                    id='selected_account_display',
-                    children=['Account']),
-                html.H2(
-                    id='selected_date_range',
-                    children=['Dates', 'foo']),
                 dcc.Slider(
                     className='resolution-slider',
                     id='time_series_resolution',
@@ -667,7 +635,7 @@ app.layout = html.Div(
                     max=4,
                     step=1,
                     marks=TIME_RES_OPTIONS,
-                    value=0
+                    value=1
                 ),
                 dcc.Slider(
                     className='span-slider',
@@ -677,16 +645,30 @@ app.layout = html.Div(
                     step=1,
                     marks=TIME_SPAN_OPTIONS,
                     value=1
-                ),
-                dcc.RadioItems(
-                    id='time_periods')
+                )
+            ]),
+        html.Div(
+            id='detail_control_bar',
+            className="control_bar dashbox",
+            children=[
+                html.H2(
+                    id='selected_account_display',
+                    children=['Account']),
+                html.H2(
+                    id='burst_selected_account_display',
+                    children=[]),
+                html.H2(
+                    id='selected_date_range_display',
+                    children=['All Dates']),
+                dcc.Store(id='detail_store',
+                          storage_type='memory')
             ]),
         html.Div(
             className='account_burst dashbox',
             children=[
                 dcc.Graph(
                     id='account_burst',
-                    figure=make_sunburst(account_tree, trans))
+                    figure=make_sunburst(trans))
             ]),
         html.Div(
             className='master_time_series dashbox',
@@ -713,152 +695,167 @@ app.layout = html.Div(
 
 
 @app.callback(
-    Output('master_time_series', 'figure'),
+    [Output('master_time_series', 'figure')],
     [Input('time_series_resolution', 'value'),
      Input('time_series_span', 'value')])
 def apply_time_series_resolution(time_resolution, time_span):
     chart_fig = go.Figure(layout=chart_fig_layout)
-
     root_account_id = account_tree.root  # TODO: Stub for controllable design
-
     selected_accounts = get_children(root_account_id, account_tree)
+
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(account, i, time_resolution, time_span, deep=True))
 
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_hover = ts.get('hovertext')      # e.g., 'per y'
-
     chart_fig.update_layout(dict(
         title={'text': f'Average $ {ts_hover}'}))
-
     chart_fig.update_layout(barmode='relative')
-    return chart_fig
+    return [chart_fig]
 
 
 @app.callback(
-    Output('trans_table', 'data'),
+    [Output('selected_account_display', 'children'),
+     Output('selected_date_range_display', 'children'),
+     Output('detail_store', 'data'),
+     Output('account_burst', 'figure')],
     [Input('master_time_series', 'figure'),
      Input('master_time_series', 'selectedData')])
-def apply_selection_from_time_series(figure, selectedDat):
+def apply_selection_from_time_series(figure, selectedData):
     """
     Selecting specific points from the time series chart updates the
-    transaction table.
+    account burst and the detail labels.
 
     Reminder to self: When you think selectedData input is broken, remember
     that unaltered default action in the graph is to zoom, not to select.
 
-    Note: all of the necessary information is in figure but that doesn't trigger well,
-    so use selectedData to guarantee trigger
-    """
+    Note: all of the necessary information is in figure but that doesn't seem
+    to trigger reliably.  Adding selectedData as a second Input causes reliable
+    triggering.
 
+    """
+    selection_start_date = None
+    selection_end_date = None
+    date_range_content = None
     filtered_trans = None
+    selected_accounts = []
+    detail_store = None
+
     for trace in figure.get('data'):
         account = trace.get('name')
         points = trace.get('selectedpoints')
         if not points:
             continue
+        selected_accounts.append(account)
         for point in points:
-            end_date = pd.to_datetime(trace['x'][point])
-            #try:
-            start_date = pd.to_datetime(trace['x'][point - 1])
-            #except:  # TODO: get the error name when clicking the first entry
-            #    start_date = earliest_trans
+            print(f'DEBUG1: master_time_series trace, point: {trace}, {point}')
+            # back out the selection parameters (account and start/end dates)
+            # from the trace
+            selection_start_date = pd.to_datetime(trace['x'][point])
+            # the last point in the time-series won't have a following point
+            try:
+                selection_end_date = pd.to_datetime(trace['x'][point + 1])
+            except IndexError:
+                selection_end_date = latest_trans
 
-            new_trans = trans[
-                (trans['account'].isin(get_descendents(account, account_tree))) &
-                (trans['date'] >= start_date) &
-                (trans['date'] <= end_date)]
+            point_accounts = get_descendents(account, account_tree)
+
+            new_trans = trans.loc[trans['account'].isin(point_accounts)].\
+                loc[trans['date'] >= selection_start_date].\
+                loc[trans['date'] <= selection_end_date]
+
             try:
                 filtered_trans.append(new_trans)
             except AttributeError:
                 filtered_trans = new_trans
 
+    # If no transactions are ultimately selected, show all transactions
     try:
         data_count = len(filtered_trans)
+        print(f'DEBUG2: master_time_series data_count: {data_count}')
     except TypeError:
         data_count = 0
-
     if data_count == 0:
         filtered_trans = trans
+        selected_accounts = ['All']
 
-    return filtered_trans.to_dict('records')
+    pos_trans = positize(filtered_trans)
+    print(f'DEBUG3: master_time_series len(pos_trans): {len(pos_trans)}')
+    print(f'DEBUG4: master_time_series start: {selection_start_date}, end: {selection_end_date}')
+    sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date)
+    print(f'DEBUG5: master_time_series sun_fig: {sun_fig}')
+    account_children = ', '.join(selected_accounts)
+
+    if selection_start_date and selection_end_date:
+        date_range_content = ['Between ',
+                              selection_start_date.strftime("%Y-%m-%d"),
+                              ' and ',
+                              selection_end_date.strftime("%Y-%m-%d")]
+        detail_store = {'start': selection_start_date, 'end': selection_end_date}
+    return [account_children, date_range_content, detail_store, sun_fig]
 
 
-# #    Output('account_burst', 'figure'),
-# def apply_era_selector(selection):
-#     try:
-#         start_date = eras.loc[selection].start_date
-#         end_date = eras.loc[selection].end_date
-#     except IndexError:
-#         start_date = None
-#         end_date = None
-#     sun_fig = make_sunburst(account_tree, trans, start_date, end_date)
-#     return sun_fig
+@app.callback(
+    [Output('trans_table', 'data'),
+     Output('transaction_time_series', 'figure'),
+     Output('burst_selected_account_display', 'children')],
+    [Input('account_burst', 'clickData'),
+     Input('detail_store', 'data')])
+def apply_burst_click(burst_clickData, detail_data):
+    """
+    Clicking on a slice in the Sunburst updates the transaction list with matching transactions
+    """
+    selected_accounts = []
+    tts_fig = go.Figure(layout=chart_fig_layout)
 
+    if burst_clickData:
+        click_account = burst_clickData['points'][0]['id']
+    else:
+        click_account = []
 
-# @app.callback(
-#     [Output('titlebar', 'children'),
-#      Output('transaction_time_series', 'figure')],
-#     [Input('account_burst', 'clickData')])
-# def apply_burst_click(clickData):
-#     """
-#     Clicking on a slice in the Sunburst updates the titlebar with the name of the
-#     now-active account and updates the transaction_time_series with the transactions:
-#     For a leaf account, chart transactions, and monthly averages by year or era.
-#     For a node account, chart monthly summaries of all subtree accounts.
+    if click_account:
+        try:
+            selected_accounts = [click_account] + get_children(click_account, account_tree)
+        except treelib.exceptions.NodeIDAbsentError:
+            # This is a hack.  If the account isn't there, assume that the reason
+            # is that it was reidentified to 'X Leaf', and back that out.
+            try:
+                if LEAF_SUFFIX in click_account:
+                    revised_id = click_account.replace(LEAF_SUFFIX, '')
+                    selected_accounts = [revised_id]
+            except treelib.exceptions.NodeIDAbsentError:
+                pass
+    else:
+        title = 'All'
+        pass
 
-#     Changing transaction_time_series will trigger the next callback, which will
-#     update the transaction table with transactions for that selection
-#     """
-#     chart_fig = go.Figure(layout=chart_fig_layout)
-#     if clickData:
-#         click_account = clickData['points'][0]['id']
-#     else:
-#         click_account = []
+    if selected_accounts:
+        title = click_account
+        sel_trans = trans[trans['account'].isin(selected_accounts)]
+    else:
+        sel_trans = trans
 
-#     selected_accounts = []
-#     if click_account:
-#         title = f'{click_account}'
-#         try:
-#             selected_accounts = [click_account] + get_children(click_account, account_tree)
-#         except treelib.exceptions.NodeIDAbsentError:
-#             # This is a hack.  If the account isn't there, assume that the reason
-#             # is that it was reidentified to 'X Leaf', and back that out.
-#             try:
-#                 if LEAF_SUFFIX in click_account:
-#                     revised_id = click_account.replace(LEAF_SUFFIX, '')
-#                     selected_accounts = [revised_id]
-#             except treelib.exceptions.NodeIDAbsentError:
-#                 pass
-#     else:
-#         pass
+    try:
+        start_date = detail_data['start']
+        end_date = detail_data['end']
+        sel_trans = sel_trans[(sel_trans['date'] >= start_date) & (sel_trans['date'] <= end_date)]
+    except (KeyError, TypeError):
+        pass
 
-#     if not selected_accounts:
-#         title = 'All'
+    if len(selected_accounts) == 1:
+        try:
+            account = selected_accounts[0]
+            tts_fig.add_trace(make_scatter(account, sel_trans))
+        except TypeError:
+            pass
+    elif len(selected_accounts) > 1:
+        for i, account in enumerate(selected_accounts):
+            tts_fig.add_trace(make_bar(account, i, 4, 1, deep=True))
+            tts_fig.update_layout(
+                barmode='stack',
+                showlegend=True)
 
-#     chart_fig.update_layout(dict(
-#         title={'text': title}))
-
-#     if len(selected_accounts) == 1:
-#         account = selected_accounts[0]
-#         chart_fig.add_trace(get_trace(account))
-#         try:
-#             era_bar, era_value, era_name = get_era_bar(account, eras=eras)
-#             chart_fig.add_trace(era_bar)
-#             chart_fig.add_trace(era_value)
-#             chart_fig.add_trace(era_name)
-#         except TypeError:
-#             pass
-#     elif len(selected_accounts) > 1:
-#         for i, account in enumerate(selected_accounts):
-#             chart_fig.add_trace(get_quarterly_bar(account, i))
-#         chart_fig.update_layout(
-#             barmode='stack',
-#             showlegend=True)
-#     else:
-#         pass
-
-#    return title, chart_fig
+    return [sel_trans.to_dict('records'), tts_fig, title]
 
 
 if __name__ == '__main__':
