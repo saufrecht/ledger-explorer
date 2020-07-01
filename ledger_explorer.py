@@ -517,7 +517,12 @@ def positize(trans):
     This function always returns a net-positive-value DataFrame of transactions suitable for
     a sunburst."""
 
-    if trans.sum()['amount'] < 0:
+    if trans.sum(numeric_only=True)['amount'] < 0:
+        blah = True
+    else:
+        blah = False
+
+    if blah:
         trans['amount'] = trans['amount'] * -1
 
     return trans
@@ -790,7 +795,6 @@ def apply_time_series_resolution(time_resolution, time_span):
     [Input('master_time_series', 'figure'),
      Input('master_time_series', 'selectedData')])
 def apply_selection_from_time_series(figure, selectedData):
-    xlog(inspect.stack()[0][3])
     """
     Selecting specific points from the time series chart updates the
     account burst and the detail labels.
@@ -852,10 +856,18 @@ def apply_selection_from_time_series(figure, selectedData):
         filtered_trans = trans
         selected_accounts = ['All']
 
-    pos_trans = positize(filtered_trans)
-    sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
-    account_children = ', '.join(selected_accounts)
+    xlog(f'{inspect.stack()[0][3]} Sub 1.5')
 
+    @do_profile(follow=[sum])
+    def do_pos(trans):
+        return positize(trans)
+    pos_trans = do_pos(filtered_trans)
+
+    xlog(f'{inspect.stack()[0][3]} Sub 2')
+
+    sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
+    xlog(f'{inspect.stack()[0][3]} Sub 3')
+    account_children = ', '.join(selected_accounts)
     if selection_start_date and selection_end_date:
         date_range_content = ['Between ',
                               selection_start_date.strftime("%Y-%m-%d"),
