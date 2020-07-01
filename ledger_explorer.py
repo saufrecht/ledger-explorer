@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-
-
-import cProfile  # DEBUG ONLY
-from pstats import SortKey  # DEBUG ONLY
-from line_profiler import LineProfiler
-
 import dash
 import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-import inspect
 import logging
 import numpy as np
 import pandas as pd
@@ -33,37 +26,6 @@ def color_variant(hex_color, brightness_offset=1):
     new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
     new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 255
     return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
-
-
-def do_cprofile(func):
-    """ DEBUG: helper function for profiling.
-    https://zapier.com/engineering/profiling-python-boss """
-    def profiled_func(*args, **kwargs):
-        profile = cProfile.Profile()
-        try:
-            profile.enable()
-            result = func(*args, **kwargs)
-            profile.disable()
-            return result
-        finally:
-            logging.debug(profile.print_stats(sort=SortKey.CUMULATIVE))
-    return profiled_func
-
-
-def do_profile(follow=[]):
-    def inner(func):
-        def profiled_func(*args, **kwargs):
-            try:
-                profiler = LineProfiler()
-                profiler.add_function(func)
-                for f in follow:
-                    profiler.add_function(f)
-                profiler.enable_by_count()
-                return func(*args, **kwargs)
-            finally:
-                profiler.print_stats()
-        return profiled_func
-    return inner
 
 
 def get_account_tree_from_transaction_data(trans):
@@ -324,7 +286,7 @@ def make_scatter(account, trans, color_num=0):
     return trace
 
 
-def make_sunburst(trans, start_date=None, end_date=pd.Timestamp.now(), SUBTOTAL_SUFFIX=None):
+def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
     """
     Using a tree of accounts and a DataFrame of transactions,
     generate a figure for a sunburst, where each node is an account
@@ -337,8 +299,8 @@ def make_sunburst(trans, start_date=None, end_date=pd.Timestamp.now(), SUBTOTAL_
     #######################################################################
     if not start_date:
         start_date = trans['date'].min()
-    logging.debug(f'start_date: {start_date}')
-    logging.debug(f'end_date: {end_date}')
+    if not end_date:
+        end_date = pd.Timestamp.now()
 
     duration = (end_date - start_date) / np.timedelta64(1, 'M')
     trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
@@ -558,7 +520,6 @@ def xlog(name, start=True):
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
-xlog('initialize')
 
 app = dash.Dash(__name__)
 
@@ -645,17 +606,9 @@ OTHER_PREFIX = 'Other '
 MAX_SLICES = 7
 
 
-def foo(trans, SUBTOTAL_SUFFIX):
-    make_sunburst(trans, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
-
-
-foo(trans, SUBTOTAL_SUFFIX)
-
-xlog('initialize', False)
 #######################################################################
 # Declare the content of the page
 #######################################################################
-xlog('trans table')
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date'),
@@ -690,8 +643,6 @@ trans_table = dash_table.DataTable(
     filter_action='native',
     style_as_list_view=True,
     page_size=20)
-xlog('trans table', False)
-xlog('layout')
 app.layout = html.Div(
     className="layout_box",
     children=[
@@ -759,7 +710,6 @@ app.layout = html.Div(
                     id='transaction_time_series')
             ]),
     ])
-xlog('layout', False)
 #######################################################################
 # Callback functions
 #######################################################################
@@ -770,7 +720,6 @@ xlog('layout', False)
     [Input('time_series_resolution', 'value'),
      Input('time_series_span', 'value')])
 def apply_time_series_resolution(time_resolution, time_span):
-    xlog(inspect.stack()[0][3])
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -783,7 +732,6 @@ def apply_time_series_resolution(time_resolution, time_span):
     chart_fig.update_layout(dict(
         title={'text': f'Average $ {ts_hover}'}))
     chart_fig.update_layout(barmode='relative')
-    xlog(inspect.stack()[0][3], False)
     return [chart_fig]
 
 
@@ -827,7 +775,6 @@ def apply_selection_from_time_series(figure, selectedData):
             #       for By Era, x is start date
             #       for A/Q/M, x is end date
             # so fix that.
-            print(f'DEBUG0 point: {trace["x"]}')
             selection_end_date = pd.to_datetime(trace['x'][point])
             # the first point in the time-series won't have a preceding point
             if point == 0:
@@ -835,7 +782,6 @@ def apply_selection_from_time_series(figure, selectedData):
             else:
                 selection_start_date = pd.to_datetime(trace['x'][point - 1])
 
-            print(f'DEBUG point: {selection_start_date}, {selection_end_date}')
             point_accounts = get_descendents(account, account_tree)
 
             new_trans = trans.loc[trans['account'].isin(point_accounts)].\
@@ -856,17 +802,9 @@ def apply_selection_from_time_series(figure, selectedData):
         filtered_trans = trans
         selected_accounts = ['All']
 
-    xlog(f'{inspect.stack()[0][3]} Sub 1.5')
-
-    @do_profile(follow=[sum])
-    def do_pos(trans):
-        return positize(trans)
-    pos_trans = do_pos(filtered_trans)
-
-    xlog(f'{inspect.stack()[0][3]} Sub 2')
+    pos_trans = positize(filtered_trans)
 
     sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
-    xlog(f'{inspect.stack()[0][3]} Sub 3')
     account_children = ', '.join(selected_accounts)
     if selection_start_date and selection_end_date:
         date_range_content = ['Between ',
@@ -874,7 +812,6 @@ def apply_selection_from_time_series(figure, selectedData):
                               ' and ',
                               selection_end_date.strftime("%Y-%m-%d")]
         detail_store = {'start': selection_start_date, 'end': selection_end_date}
-    xlog(inspect.stack()[0][3], False)
     return [account_children, date_range_content, detail_store, sun_fig]
 
 
@@ -885,7 +822,6 @@ def apply_selection_from_time_series(figure, selectedData):
     [Input('account_burst', 'clickData'),
      Input('detail_store', 'data')])
 def apply_burst_click(burst_clickData, detail_data):
-    xlog(inspect.stack()[0][3])
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
     """
@@ -938,7 +874,6 @@ def apply_burst_click(burst_clickData, detail_data):
             tts_fig.update_layout(
                 barmode='stack',
                 showlegend=True)
-    xlog(inspect.stack()[0][3], False)
     return [sel_trans.to_dict('records'), tts_fig, title]
 
 
