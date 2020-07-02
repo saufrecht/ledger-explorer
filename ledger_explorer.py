@@ -81,41 +81,6 @@ def make_account_tree_from_trans(trans):
     tree = trim_excess_root(tree)
     return tree
 
-    # DEBUG: use this code to fix the base widths of the era bars
-
-    # # group the data and build the traces
-    # tba['bins'] = pd.cut(x=tba.date, bins=bins, duplicates='drop')
-    # sums = tba.groupby('bins').sum()
-    # bar_x = []
-    # bar_y = []
-    # label_x = []
-    # label_y = []
-
-    # # convert the sums array into a plotable line trace, by using
-    # # start and stop of each bin as x values, and using the y value
-    # # twice for each bin.  probably this is the most hacky way to do
-    # # it.  This hack messes up lebeling, so make a separate annotation
-    # # trace.
-    # for i in range(len(sums)):
-    #     value = int(sums['amount'][i] / (sums.axes[0][i].length / np.timedelta64(1, 'M')))
-    #     bar_x.append(sums.index[i].left)
-    #     bar_x.append(sums.index[i].right)
-    #     bar_y.append(value)
-    #     bar_y.append(value)
-    #     label_x.append(sums.index[i].mid)
-    #     label_y.append(value)
-    # bar = go.Scatter(
-    #     name='average monthly spending',
-    #     x=bar_x,
-    #     y=bar_y,
-    #     mode='lines+text',
-    #     line_shape='hvh',
-    #     text=None,
-    #     hovertemplate="<extra></extra>",
-    #     line=dict(
-    #         color=color_variant(disc_colors[color_num], 30),
-    #         width=2))
-
 
 def get_children(account_id, account_tree):
     """
@@ -226,7 +191,6 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
     elif tr_label == 'By Era':
         earliest_tba = tba.index.min()
         latest_tba = tba.index.max()
-
         # convert the era dates to a series that can be used for grouping
         bins = eras.start_date.sort_values()
         bin_start_dates = bins.tolist()
@@ -250,8 +214,8 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         bin_amounts['end_date'] = bin_start_dates[1:]
         bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
         bin_amounts['width'] = bin_amounts['delta'] / np.timedelta64(1, 'ms')
+        bin_amounts['center_date'] = bin_amounts['end_date'] - (bin_amounts['delta'] / 2)
         bin_amounts['months'] = bin_amounts['delta'] / np.timedelta64(1, 'M')
-        bin_amounts['date'] = bin_amounts['end_date']
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
         bin_amounts['text'] = f'{ts_hover}<br>' + bin_amounts.index.astype(str) + ' period '
     elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
@@ -277,10 +241,9 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
     bin_amounts['texttemplate'] = '%{customdata}'
 
     if tr_label == 'By Era':
-        print('DEBUG By Era')
         bar = go.Bar(
             name=account,
-            x=bin_amounts.date,
+            x=bin_amounts.center_date,
             width=bin_amounts.width,
             y=bin_amounts.value,
             customdata=bin_amounts.customdata,
@@ -580,10 +543,9 @@ small_font = dict(
     size=12)
 
 time_series_layout = dict(
-    xaxis={'title': 'Date'},
-    yaxis={'title': 'Dollars'},
     legend={'x': 0, 'y': 1},
     font=small_font,
+    paper_bgcolor='var(--bg)',
     titlefont=medium_font)
 
 
@@ -595,6 +557,8 @@ chart_fig_layout = dict(
         r=10,
         t=10,
         b=10),
+    height=350,
+    paper_bgcolor='var(--bg)',
     showlegend=False,
     title=dict(
             font=big_font,
@@ -764,9 +728,11 @@ def apply_time_series_resolution(time_resolution, time_span):
 
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_hover = ts.get('hovertext')      # e.g., 'per y'
-    chart_fig.update_layout(dict(
-        title={'text': f'Average $ {ts_hover}'}))
-    chart_fig.update_layout(barmode='relative')
+    chart_fig.update_layout(
+        title={'text': f'Average $ {ts_hover}'},
+        xaxis={'showgrid': True, 'dtick': 'M3'},
+        barmode='relative')
+
     return [chart_fig]
 
 
@@ -893,14 +859,30 @@ def apply_burst_click(burst_clickData, detail_data):
         start_date = detail_data['start']
         end_date = detail_data['end']
         sel_trans = sel_trans[(sel_trans['date'] >= start_date) & (sel_trans['date'] <= end_date)]
-        chart_min = sel_trans['amount'].min()
-        chart_max = sel_trans['amount'].max()
         tts_fig.add_shape(
-            type="line",
-            x0=start_date,
-            x1=end_date,
-            y0=chart_min,
-            y1=chart_max)
+            type="rect",
+            x0=earliest_trans,
+            x1=start_date,
+            yref='paper',
+            ysizemode='scaled',
+            y0=0,
+            y1=1,
+            line=dict(width=0),
+            fillcolor='#e1e1e1',
+            opacity=0.6
+        )
+        tts_fig.add_shape(
+            type="rect",
+            x0=end_date,
+            x1=latest_trans,
+            yref='paper',
+            ysizemode='scaled',
+            y0=0,
+            y1=1,
+            line=dict(width=0),
+            fillcolor='#e1e1e1',
+            opacity=0.6
+        )
 
     except (KeyError, TypeError):
         pass
