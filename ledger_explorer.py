@@ -13,24 +13,18 @@ import treelib
 import urllib
 
 
-from line_profiler import LineProfiler
-
-
-def do_profile(follow=[]):
-    def inner(func):
-        def profiled_func(*args, **kwargs):
-            try:
-                profiler = LineProfiler()
-                profiler.add_function(func)
-                for f in follow:
-                    profiler.add_function(f)
-                profiler.enable_by_count()
-                return func(*args, **kwargs)
-            finally:
-                profiler.print_stats()
-        return profiled_func
-    return inner
-
+# TODO
+# - Show Era labels
+# - make the LOOKUPs use constants, not numbers
+#   - related: swap out the LOOKUP sliders for something more like a pushbutton selector
+# - show more info in scatter label and hovertext
+# - apply better colors, including fixing dark mode
+# - Improve the status bar so it shows dates in more readable format, e.g., 2020·Q1 
+# - re-arrange areas so that controls are in the same plane as things they control
+# - show loading icon when doing longer operations
+# - have option for "Other" to collect smaller accounts, with depth control knob
+# - Get the By Era bars to line up correctly with the X axis
+# - put per month/per year into sunburst labels
 
 #######################################################################
 # Function definitions except for callbacks
@@ -45,41 +39,6 @@ def color_variant(hex_color, brightness_offset=1):
     new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
     new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 2x55
     return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
-
-
-def make_account_tree_from_trans(trans):
-    """ extract all accounts from a list of Gnucash account paths
-
-    Each account name is a full path.  Parent accounts with no
-    transactions will be missing from the data, so reconstruct the
-    complete tree implied by the transaction data.
-
-    As long as the accounts are sorted hierarchically, the algorithm
-    should never encounter a missing parent except the first node.
-
-    If there are multiple heads in the data, they will all belong to
-    root, so the tree will still be a DAG
-    """
-
-    tree = treelib.Tree()
-    tree.create_node(tag='All', identifier='root')
-    accounts = trans['full account name'].unique()
-
-    for account in accounts:
-        branches = account.split(':')  # example: Foo:Bar:Baz
-        for i, branch in enumerate(branches):
-            name = branch
-            if i == 0:
-                parent = 'root'
-            else:
-                parent = branches[i-1]
-            if not tree.get_node(name):
-                tree.create_node(tag=name,
-                                 identifier=name,
-                                 parent=parent)
-
-    tree = trim_excess_root(tree)
-    return tree
 
 
 def get_children(account_id, account_tree):
@@ -158,6 +117,41 @@ def load_transactions(source):
     trans = data[['date', 'description', 'amount', 'account', 'full account name']]
     account_tree = make_account_tree_from_trans(trans)
     return trans, account_tree
+
+
+def make_account_tree_from_trans(trans):
+    """ extract all accounts from a list of Gnucash account paths
+
+    Each account name is a full path.  Parent accounts with no
+    transactions will be missing from the data, so reconstruct the
+    complete tree implied by the transaction data.
+
+    As long as the accounts are sorted hierarchically, the algorithm
+    should never encounter a missing parent except the first node.
+
+    If there are multiple heads in the data, they will all belong to
+    root, so the tree will still be a DAG
+    """
+
+    tree = treelib.Tree()
+    tree.create_node(tag='All', identifier='root')
+    accounts = trans['full account name'].unique()
+
+    for account in accounts:
+        branches = account.split(':')  # example: Foo:Bar:Baz
+        for i, branch in enumerate(branches):
+            name = branch
+            if i == 0:
+                parent = 'root'
+            else:
+                parent = branches[i-1]
+            if not tree.get_node(name):
+                tree.create_node(tag=name,
+                                 identifier=name,
+                                 parent=parent)
+
+    tree = trim_excess_root(tree)
+    return tree
 
 
 def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
