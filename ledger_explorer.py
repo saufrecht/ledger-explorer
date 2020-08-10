@@ -19,11 +19,11 @@ import urllib
 #   - related: swap out the LOOKUP sliders for something more like a pushbutton selector
 # - show more info in scatter label and hovertext
 # - apply better colors, including fixing dark mode
-# - Improve the status bar so it shows dates in more readable format, e.g., 2020·Q1 
+# - Improve the status bar so it shows dates in more readable format, e.g., 2020·Q1
 # - re-arrange areas so that controls are in the same plane as things they control
 # - show loading icon when doing longer operations
 # - have option for "Other" to collect smaller accounts, with depth control knob
-# - Get the By Era bars to line up correctly with the X axis
+# - make the ledger entries prettier (bigger fonts, less grid fluff, smaller date, shorter description w/full in hover)
 # - put per month/per year into sunburst labels
 
 #######################################################################
@@ -166,13 +166,13 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
     tba = tba.set_index('date')
 
     tr = TIME_RES_LOOKUP[time_resolution]
-    tr_hover = tr.get('hovertext')  # e.g., "Mo"
-    tr_label = tr.get('label')      # e.g., 'Quarterly'
-    tr_months = tr.get('months')
+    tr_hover = tr.get('abbrev')      # e.g., "Q"
+    tr_label = tr.get('label')       # e.g., "Quarter"
+    tr_months = tr.get('months')     # e.g., 3
 
     ts = TIME_SPAN_LOOKUP[time_span]
-    ts_hover = ts.get('hovertext')  # e.g., "y"
-    ts_months = ts.get('months')
+    ts_hover = ts.get('abbrev')      # e.g., "y"
+    ts_months = ts.get('months')     # e.g., 12
 
     if tr_label == 'All':
         total = tba['amount'].sum()
@@ -181,38 +181,35 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
         factor = ts_months / all_months
         bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['text'] = f'{ts_hover}<br>{tr_hover}'
-    elif tr_label == 'By Era':
-        earliest_tba = tba.index.min()
+        bin_amounts['text'] = f'{tr_hover}'
+    elif tr_label == 'Era':
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
         bins = eras.start_date.sort_values()
-        bin_start_dates = bins.tolist()
+        bin_boundary_dates = bins.tolist()
         bin_labels = bins.index.tolist()
-        # make sure the eras cover the full selected date range
-        if bin_start_dates[0] > earliest_tba:
-            bin_start_dates = [earliest_tba] + bin_start_dates
-            bin_labels = ['before'] + bin_labels
-        # there must be one more bin boundary than label
-        # so either add a new end-date to bound the last bin
-        # or remove the last label
-        if bin_start_dates[-1] <= latest_tba:
-            bin_start_dates = bin_start_dates + [latest_tba]
+        # there must be one more bin boundary than label, so:
+        if bin_boundary_dates[-1] <= latest_tba:
+            # if there's going to be any data in the last bin, add a final boundary
+            bin_boundary_dates = bin_boundary_dates + [latest_tba]
         else:
+            # otherwise, lose its label, leaving its start as the final boundary of the previous
             bin_labels = bin_labels[0:-1]
 
-        tba['bin'] = pd.cut(x=tba.index, bins=bin_start_dates, labels=bin_labels, duplicates='drop')
-        bin_amounts = pd.DataFrame({'date': bin_start_dates[0:-1],
+        tba['bin'] = pd.cut(x=tba.index, bins=bin_boundary_dates, labels=bin_labels, duplicates='drop')
+        bin_amounts = pd.DataFrame({'date': bin_boundary_dates[0:-1],
                                     'value': tba.groupby('bin')['amount'].sum()})
-        bin_amounts['start_date'] = bin_start_dates[0:-1]
-        bin_amounts['end_date'] = bin_start_dates[1:]
+        bin_amounts['start_date'] = bin_boundary_dates[0:-1]
+        bin_amounts['end_date'] = bin_boundary_dates[1:]
         bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
         bin_amounts['width'] = bin_amounts['delta'] / np.timedelta64(1, 'ms')
-        bin_amounts['center_date'] = bin_amounts['end_date'] - (bin_amounts['delta'] / 2)
+        bin_amounts['midpoint'] = bin_amounts['start_date'] + bin_amounts['delta'] / 2
+        bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
         bin_amounts['months'] = bin_amounts['delta'] / np.timedelta64(1, 'M')
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
-        bin_amounts['text'] = f'{ts_hover}<br>' + bin_amounts.index.astype(str) + ' period '
-    elif tr_label in ['Annual', 'Quarterly', 'Monthly']:
+        bin_amounts['text'] = bin_amounts.index.astype(str)
+
+    elif tr_label in ['Year', 'Quarter', 'Month']:
         resample_keyword = tr['resample_keyword']
         bin_amounts = tba.resample(resample_keyword).\
             sum()['amount'].\
@@ -220,7 +217,7 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         factor = ts_months / tr_months
         bin_amounts['date'] = bin_amounts.index
         bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['text'] = f'{ts_hover}<br>{tr_hover}'
+        bin_amounts['text'] = f'{tr_hover}'
     else:
         # bad input data
         return None
@@ -232,19 +229,19 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
         marker_color = 'var(--Cyan)'
 
     bin_amounts['customdata'] = account
-    bin_amounts['texttemplate'] = '%{customdata}'
+    bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
 
-    if tr_label == 'By Era':
+    if tr_label == 'Era':
         bar = go.Bar(
             name=account,
-            x=bin_amounts.center_date,
+            x=bin_amounts.midpoint,
             width=bin_amounts.width,
             y=bin_amounts.value,
             customdata=bin_amounts.customdata,
             text=bin_amounts.text,
             texttemplate=bin_amounts.texttemplate,
             textposition='auto',
-            hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
+            hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<extra></extra>',
             marker_color=marker_color)
     else:
         bar = go.Bar(
@@ -255,7 +252,7 @@ def make_bar(account, color_num=0, time_resolution=0, time_span=1, deep=False):
             text=bin_amounts.text,
             texttemplate=bin_amounts.texttemplate,
             textposition='auto',
-            hovertemplate='%{customdata}<br>%{y:$,.0f}%{text} ending %{x}<extra></extra>',
+            hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
             marker_color=marker_color)
 
     return bar
@@ -564,17 +561,17 @@ chart_fig_layout = dict(
         font=medium_font))
 
 TIME_RES_LOOKUP = {
-    0: {'label': 'All', 'hovertext': 'total'},
-    1: {'label': 'By Era', 'hovertext': 'period'},
-    2: {'label': 'Annual', 'hovertext': 'Y', 'resample_keyword': 'A', 'months': 12},
-    3: {'label': 'Quarterly', 'hovertext': 'Q', 'resample_keyword': 'Q', 'months': 3},
-    4: {'label': 'Monthly', 'hovertext': 'Mo', 'resample_keyword': 'M', 'months': 1}}
+    0: {'label': 'All', 'abbrev': 'all'},
+    1: {'label': 'Era', 'abbrev': 'era'},
+    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12},
+    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
+    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1}}
 
 TIME_RES_OPTIONS = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
 
 TIME_SPAN_LOOKUP = {
-    0: {'label': 'per year', 'hovertext': '/y', 'months': 12},
-    1: {'label': 'per month', 'hovertext': '/mo.', 'months': 1}}
+    0: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
+    1: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 TIME_SPAN_OPTIONS = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
 
@@ -713,6 +710,15 @@ app.layout = html.Div(
     [Input('time_series_resolution', 'value'),
      Input('time_series_span', 'value')])
 def apply_time_series_resolution(time_resolution, time_span):
+    try:
+        tr = TIME_RES_LOOKUP[time_resolution]
+        ts = TIME_SPAN_LOOKUP[time_span]
+        ts_label = ts.get('label')      # e.g., 'Annual' or 'Monthly'
+        tr_label = tr.get('label')          # e.g., 'by Era'
+    except IndexError:
+        logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
+        return
+
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -720,10 +726,8 @@ def apply_time_series_resolution(time_resolution, time_span):
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(account, i, time_resolution, time_span, deep=True))
 
-    ts = TIME_SPAN_LOOKUP[time_span]
-    ts_hover = ts.get('hovertext')      # e.g., 'per y'
     chart_fig.update_layout(
-        title={'text': f'Average $ {ts_hover}'},
+        title={'text': f'Average {ts_label} $, by {tr_label} '},
         xaxis={'showgrid': True, 'dtick': 'M3'},
         barmode='relative')
 
@@ -749,6 +753,8 @@ def apply_selection_from_time_series(figure, selectedData):
     to trigger reliably.  Adding selectedData as a second Input causes reliable
     triggering.
 
+    TODO: maybe check for input safety?
+
     """
     selection_start_date = None
     selection_end_date = None
@@ -770,13 +776,14 @@ def apply_selection_from_time_series(figure, selectedData):
             #       for By Era, x is start date
             #       for A/Q/M, x is end date
             # so fix that.
-            selection_end_date = pd.to_datetime(trace['x'][point])
-            # the first point in the time-series won't have a preceding point
-            if point == 0:
-                selection_start_date = earliest_trans
-            else:
-                selection_start_date = pd.to_datetime(trace['x'][point - 1])
+            selection_start_date = pd.to_datetime(trace['x'][point])
+            # the last point in the time-series won't have a following point
+            try:
+                selection_end_date = pd.to_datetime(trace['x'][point + 1])
+            except IndexError:
+                selection_end_date = latest_trans
 
+            logging.debug(f'point: start {selection_start_date}, end {selection_end_date}')
             point_accounts = get_descendents(account, account_tree)
 
             new_trans = trans.loc[trans['account'].isin(point_accounts)].\
@@ -818,6 +825,8 @@ def apply_selection_from_time_series(figure, selectedData):
 def apply_burst_click(burst_clickData, detail_data):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
+
+    TODO: maybe check for input safety?
     """
     selected_accounts = []
     tts_fig = go.Figure(layout=chart_fig_layout)
