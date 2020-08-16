@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output
 import logging
 
 from app import app
-from apps import balance_sheet, cashflow, data_source
+from apps import balance_sheet, cash_flow, data_source
 
 
 app.layout = html.Div(
@@ -28,7 +28,7 @@ def change_tab(selected_tab):
     if selected_tab == 'bs':
         layout = balance_sheet.layout
     if selected_tab == 'cf':
-        layout = cashflow.layout
+        layout = cash_flow.layout
     else:
         layout = data_source.layout
     return layout
