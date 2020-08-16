@@ -1,32 +1,27 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import json
 import logging
 import pandas as pd
-
+import treelib
 
 import plotly.graph_objects as go
-from dash.dependencies import Input, Output, State
-from utils import chart_fig_layout, TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_OPTIONS, TIME_SPAN_LOOKUP, LEAF_SUFFIX
-from utils import trans_table, load_eras, load_transactions, get_children, make_bar
+from dash.dependencies import Input, Output
+from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_OPTIONS, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
+from utils import chart_fig_layout, trans_table, data_from_json_store
+from utils import get_children, get_descendents
+from utils import make_account_tree_from_trans, make_bar, make_scatter, make_sunburst
+
 from app import app
 
 
 layout = html.Div(
     className="layout_box",
     children=[
-        html.Div(id='data_source',
-                 style={'display': 'none'}),
         html.Div(
             id='time_series_control_bar',
             className="control_bar dashbox",
             children=[
-                dcc.Input(
-                    id='transaction_url',
-                    type='url',
-                    value='http://localhost/transactions.csv',
-                    placeholder='URL for transaction csv file'
-                ),
-                html.Button('Load', id='data_load_button'),
                 dcc.Slider(
                     className='resolution-slider',
                     id='time_series_resolution',
@@ -90,16 +85,10 @@ layout = html.Div(
 
 @app.callback(
     [Output('master_time_series', 'figure')],
-    [Input('data_load_button', 'n_clicks')],
-    state=[State('time_series_resolution', 'value'),
-           State('time_series_span', 'value'),
-           State('transaction_url', 'value')])
-def apply_time_series_resolution(n_clicks, time_resolution, time_span, url):
-    trans, account_tree = load_transactions(url)
-    earliest_trans = trans['date'].min()
-    latest_trans = trans['date'].max()
-    trans = trans.sort_values(['date', 'account'])
-    eras = load_eras('http://localhost/eras.csv', earliest_trans, latest_trans)
+    [Input('time_series_resolution', 'value'),
+     Input('time_series_span', 'value'),
+     Input('data_store', 'children')])
+def apply_time_series_resolution(time_resolution, time_span, data_store):
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -108,6 +97,8 @@ def apply_time_series_resolution(n_clicks, time_resolution, time_span, url):
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         return
+
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
 
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
@@ -130,8 +121,9 @@ def apply_time_series_resolution(n_clicks, time_resolution, time_span, url):
      Output('detail_store', 'data'),
      Output('account_burst', 'figure')],
     [Input('master_time_series', 'figure'),
-     Input('master_time_series', 'selectedData')])
-def apply_selection_from_time_series(figure, selectedData):
+     Input('master_time_series', 'selectedData'),
+     Input('data_store', 'children')])
+def apply_selection_from_time_series(figure, selectedData, data_store):
     """
     Selecting specific points from the time series chart updates the
     account burst and the detail labels.
@@ -152,7 +144,9 @@ def apply_selection_from_time_series(figure, selectedData):
     filtered_trans = None
     selected_accounts = []
     detail_store = None
-    breakpoint()
+
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
+
     for trace in figure.get('data'):
         account = trace.get('name')
         points = trace.get('selectedpoints')
@@ -194,8 +188,7 @@ def apply_selection_from_time_series(figure, selectedData):
         filtered_trans = trans
         selected_accounts = ['All']
 
-    pos_trans = positize(filtered_trans)
-    sun_fig = make_sunburst(pos_trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
+    sun_fig = make_sunburst(trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
     account_children = ', '.join(selected_accounts)
     if selection_start_date and selection_end_date:
         date_range_content = ['Between ',
@@ -211,13 +204,17 @@ def apply_selection_from_time_series(figure, selectedData):
      Output('transaction_time_series', 'figure'),
      Output('burst_selected_account_display', 'children')],
     [Input('account_burst', 'clickData'),
-     Input('detail_store', 'data')])
-def apply_burst_click(burst_clickData, detail_data):
+     Input('detail_store', 'data'),
+     Input('data_store', 'children')])
+def apply_burst_click(burst_clickData, detail_data, data_store):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
 
     TODO: maybe check for input safety?
     """
+
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
+
     selected_accounts = []
     tts_fig = go.Figure(layout=chart_fig_layout)
 
@@ -292,7 +289,7 @@ def apply_burst_click(burst_clickData, detail_data):
         # account in the trans table, but have multiple selected_accounts
         # and so render as bars when they should be scatter
         for i, account in enumerate(selected_accounts):
-            tts_fig.add_trace(make_bar(account, i, 4, 1, deep=True))
+            tts_fig.add_trace(make_bar(trans, account_tree, eras, account, i, 4, 1, deep=True))
             tts_fig.update_layout(
                 barmode='stack',
                 showlegend=True)

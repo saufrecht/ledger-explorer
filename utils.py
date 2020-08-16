@@ -1,10 +1,13 @@
-import pandas as pd
+import json
 import numpy as np
+import pandas as pd
+import treelib
+import urllib
+
+
 import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
-import urllib
-import treelib
 
 
 disc_colors = px.colors.qualitative.D3
@@ -70,6 +73,33 @@ OTHER_PREFIX = 'Other '
 MAX_SLICES = 7  # TODO: expose this in a control
 
 
+def data_from_json_store(data_store, filter=None):
+    """ Parse data stored in Dash JSON component.  Used to move data between different
+    callbacks in Dash """
+
+    data = json.loads(data_store)
+    trans = pd.read_json(data['trans'], orient='split')
+    account_tree = make_account_tree_from_trans(trans)
+    filter_accounts = []
+
+    for account in filter:
+        filter_accounts = filter_accounts +  get_descendents(account, account_tree)
+
+    if filter_accounts:
+        trans = trans[trans['account'].isin(filter_accounts)]
+
+    # rebuild account tree from filtered trans
+    account_tree = make_account_tree_from_trans(trans)
+
+    eras = pd.read_json(data['eras'],
+                        orient='split',
+                        dtype={'index': 'str', 'start_date': 'datetime64', 'end_date': 'datetime64'})
+    earliest_trans = trans['date'].min()
+    latest_trans = trans['date'].max()
+
+    return trans, eras, account_tree, earliest_trans, latest_trans
+
+
 def color_variant(hex_color, brightness_offset=1):
     """ takes a color like #87c95f and produces a lighter or darker variant
     from https://chase-seibert.github.io/blog/2011/07/29/python-calculate-lighterdarker-rgb-colors.html """
@@ -85,7 +115,11 @@ def get_descendents(account_id, account_tree):
     Return a list of tags of all descendent accounts of the input account.
     """
 
-    descendent_nodes = account_tree.subtree(account_id).all_nodes()
+    try:
+        descendent_nodes = account_tree.subtree(account_id).all_nodes()
+    except treelib.exceptions.NodeIDAbsentError:
+        descendent_nodes = []
+
     return [x.tag for x in descendent_nodes]
 
 
@@ -99,7 +133,6 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
         tba = trans[trans['account'] == account]
 
     tba = tba.set_index('date')
-
     tr = TIME_RES_LOOKUP[time_resolution]
     tr_hover = tr.get('abbrev')      # e.g., "Q"
     tr_label = tr.get('label')       # e.g., "Quarter"
@@ -230,6 +263,7 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 
     duration = (end_date - start_date) / np.timedelta64(1, 'M')
     sel_trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
+    trans = positize(trans)
 
     def make_subtotal_tree(trans):
         """
@@ -493,8 +527,7 @@ def load_transactions(source):
 
     data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
     trans = data[['date', 'description', 'amount', 'account', 'full account name']]
-    account_tree = make_account_tree_from_trans(trans)
-    return trans, account_tree
+    return trans
 
 
 def make_account_tree_from_trans(trans):

@@ -4,23 +4,34 @@ from dash.dependencies import Input, Output
 import logging
 
 from app import app
-from apps import balance_sheet, cashflow
+from apps import balance_sheet, cashflow, data_source
 
 
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div(id='page-content')
-])
+app.layout = html.Div(
+    id='page-content',
+    children=[
+        html.Div(id='data_store',
+                 style={'display': 'none'}),
+        dcc.Tabs(id='tabs',
+                 value='ds',
+                 children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
+                           dcc.Tab(label='Cash Flow', id='cf_tab', value='cf'),
+                           dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs')]),
+        html.Div(id='tab-content')
+    ])
 
 
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
-    logging.debug('url callback')
-    if pathname == 'balance_sheet':
-        return balance_sheet.layout
+@app.callback(Output('tab-content', 'children'),
+              [Input('tabs', 'value')])
+def change_tab(selected_tab):
+    logging.debug(f'tab selection: {selected_tab}')
+    if selected_tab == 'bs':
+        layout = balance_sheet.layout
+    if selected_tab == 'cf':
+        layout = cashflow.layout
     else:
-        return cashflow.layout
+        layout = data_source.layout
+    return layout
 
 
 if __name__ == '__main__':
