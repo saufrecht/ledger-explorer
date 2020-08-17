@@ -5,7 +5,8 @@ import pandas as pd
 import treelib
 
 import plotly.graph_objects as go
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_OPTIONS, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
 from utils import chart_fig_layout, trans_table, data_from_json_store
 from utils import get_children, get_descendents
@@ -87,17 +88,19 @@ layout = html.Div(
 @app.callback(
     [Output('master_time_series', 'figure')],
     [Input('time_series_resolution', 'value'),
-     Input('time_series_span', 'value'),
-     Input('data_store', 'children')])
+     Input('time_series_span', 'value')],
+    state=[State('data_store', 'children')])
 def apply_time_series_resolution(time_resolution, time_span, data_store):
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
         ts_label = ts.get('label')      # e.g., 'Annual' or 'Monthly'
         tr_label = tr.get('label')          # e.g., 'by Era'
+    except KeyError:
+        raise PreventUpdate
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
-        return
+        raise PreventUpdate
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
@@ -146,8 +149,10 @@ def apply_selection_from_time_series(figure, selectedData, data_store):
     selected_accounts = []
     detail_store = None
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    if not figure:
+        raise PreventUpdate
 
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
     for trace in figure.get('data'):
         account = trace.get('name')
         points = trace.get('selectedpoints')

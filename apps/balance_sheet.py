@@ -3,7 +3,7 @@ import dash_html_components as html
 import logging
 
 import plotly.graph_objects as go
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from utils import TIME_RES_LOOKUP, TIME_RES_OPTIONS
 from utils import chart_fig_layout, trans_table, data_from_json_store
 from utils import get_children
@@ -43,35 +43,38 @@ layout = html.Div(
                           storage_type='memory')
             ]),
         html.Div(
-            className='account_burst dashbox',
-            children=[
-                dcc.Graph(
-                    id='bs_account_burst')
-            ]),
-        html.Div(
             className='master_time_series dashbox',
             children=[
                 dcc.Graph(
                     id='bs_master_time_series')
             ]),
         html.Div(
-            className="trans_table dashbox",
+            id='kludge to eliminate "nonexistent object" errors',
+            style={'display': 'none'},
             children=[
-                trans_table
+                html.Div(
+                    id='time_series_resolution'),
+                html.Div(
+                    id='master_time_series'),
+                html.Div(
+                    id='account_burst'),
+                html.Div(
+                    id='time_series_span'),
+                html.Div(
+                    id='transaction_time_series'),
+                html.Div(
+                    id='trans_table'),
             ]),
-        html.Div(
-            id='master_time_series')
     ])
 
 
 @app.callback(
     [Output('bs_master_time_series', 'figure')],
-    [Input('bs_period', 'value'),
-     Input('data_store', 'children')])
+    [Input('bs_period', 'value')],
+    state=[State('data_store', 'children')])
 def bs_set_period(period_value, data_store):
     try:
         period = TIME_RES_LOOKUP[period_value]
-        period_label = period['label']          # e.g., 'by Era'
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {period}')
         return
@@ -87,7 +90,7 @@ def bs_set_period(period_value, data_store):
 
     chart_fig.update_layout(
         title={'text': '$'},
-        xaxis={'showgrid': True, 'dtick': 'M3'},
+        xaxis={'showgrid': True},
         barmode='relative')
 
     return [chart_fig]

@@ -237,12 +237,18 @@ def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolutio
     else:
         tba = trans[trans['account'] == account]
 
+    latest_trans = tba['date'].max()
+
     tba = tba.set_index('date')
     tr = TIME_RES_LOOKUP[time_resolution]
     tr_label = tr['label']
 
     if tr_label == 'Total':
-        return None
+        value = tba['amount'].sum()
+        data = {'value': value, 'date': latest_trans}
+        bin_amounts = pd.DataFrame(data=data, index=[latest_trans])
+        # TODO: should probably test for this in the callback and generate
+        # a different figure, instead of hacking this into a barchart
     elif tr_label == 'Era':
         return None
     elif tr_label in ['Year', 'Quarter', 'Month']:
@@ -253,7 +259,6 @@ def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolutio
             to_frame(name='value')
         bin_amounts['date'] = bin_amounts.index
         bin_amounts['value'] = bin_amounts['value']
-        bin_amounts['text'] = ''
     else:
         # bad input data
         return None
@@ -272,10 +277,9 @@ def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolutio
         x=bin_amounts.date,
         y=bin_amounts.value,
         customdata=bin_amounts.customdata,
-        text=bin_amounts.text,
         texttemplate=bin_amounts.texttemplate,
         textposition='auto',
-        hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
+        hovertemplate='%{customdata}: %{y:$,.0f}<br>as of %{x}<extra></extra>',
         marker_color=marker_color)
 
     return bar
