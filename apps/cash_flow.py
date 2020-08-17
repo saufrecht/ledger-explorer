@@ -1,6 +1,5 @@
 import dash_core_components as dcc
 import dash_html_components as html
-import json
 import logging
 import pandas as pd
 import treelib
@@ -10,10 +9,12 @@ from dash.dependencies import Input, Output
 from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_OPTIONS, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
 from utils import chart_fig_layout, trans_table, data_from_json_store
 from utils import get_children, get_descendents
-from utils import make_account_tree_from_trans, make_bar, make_scatter, make_sunburst
+from utils import make_bar, make_scatter, make_sunburst
 
 from app import app
 
+
+ACCOUNTS = ['Income', 'Expenses']
 
 layout = html.Div(
     className="layout_box",
@@ -98,7 +99,7 @@ def apply_time_series_resolution(time_resolution, time_span, data_store):
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         return
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
@@ -145,7 +146,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store):
     selected_accounts = []
     detail_store = None
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
     for trace in figure.get('data'):
         account = trace.get('name')
@@ -213,7 +214,7 @@ def apply_burst_click(burst_clickData, detail_data, data_store):
     TODO: maybe check for input safety?
     """
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ['Income', 'Expenses'])
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
     selected_accounts = []
     tts_fig = go.Figure(layout=chart_fig_layout)

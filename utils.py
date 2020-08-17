@@ -52,7 +52,7 @@ chart_fig_layout = dict(
         font=medium_font))
 
 TIME_RES_LOOKUP = {
-    0: {'label': 'All', 'abbrev': 'all'},
+    0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12},
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
@@ -83,7 +83,7 @@ def data_from_json_store(data_store, filter=None):
     filter_accounts = []
 
     for account in filter:
-        filter_accounts = filter_accounts +  get_descendents(account, account_tree)
+        filter_accounts = filter_accounts + get_descendents(account, account_tree)
 
     if filter_accounts:
         trans = trans[trans['account'].isin(filter_accounts)]
@@ -145,7 +145,7 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
     earliest_trans = tba.index.min()
     latest_trans = tba.index.max()
 
-    if tr_label == 'All':
+    if tr_label == 'Total':
         total = tba['amount'].sum()
         bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
         bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
@@ -225,6 +225,58 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
             textposition='auto',
             hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
             marker_color=marker_color)
+
+    return bar
+
+
+def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0, time_span=1, deep=False):
+    """ returns a go.Bar object with total by time_resolution period for
+    the selected account.  If deep, include total for all descendent accounts. """
+    if deep:
+        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
+    else:
+        tba = trans[trans['account'] == account]
+
+    tba = tba.set_index('date')
+    tr = TIME_RES_LOOKUP[time_resolution]
+    tr_label = tr['label']
+
+    if tr_label == 'Total':
+        return None
+    elif tr_label == 'Era':
+        return None
+    elif tr_label in ['Year', 'Quarter', 'Month']:
+        resample_keyword = tr['resample_keyword']
+        bin_amounts = tba.resample(resample_keyword).\
+            sum()['amount'].\
+            cumsum().\
+            to_frame(name='value')
+        bin_amounts['date'] = bin_amounts.index
+        bin_amounts['value'] = bin_amounts['value']
+        bin_amounts['text'] = ''
+    else:
+        # bad input data
+        return None
+
+    try:
+        marker_color = disc_colors[color_num]
+    except IndexError:
+        # don't ever run out of colors
+        marker_color = 'var(--Cyan)'
+
+    bin_amounts['customdata'] = account
+    bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
+
+    bar = go.Bar(
+        name=account,
+        x=bin_amounts.date,
+        y=bin_amounts.value,
+        customdata=bin_amounts.customdata,
+        text=bin_amounts.text,
+        texttemplate=bin_amounts.texttemplate,
+        textposition='auto',
+        hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
+        marker_color=marker_color)
 
     return bar
 

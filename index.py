@@ -1,7 +1,9 @@
+import logging
+import pprint
+
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-import logging
 
 from app import app
 from apps import balance_sheet, cash_flow, data_source
@@ -17,7 +19,7 @@ app.layout = html.Div(
                  children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
                            dcc.Tab(label='Cash Flow', id='cf_tab', value='cf'),
                            dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs')]),
-        html.Div(id='tab-content')
+        html.Div(id='tab-content'),
     ])
 
 
@@ -27,10 +29,12 @@ def change_tab(selected_tab):
     logging.debug(f'tab selection: {selected_tab}')
     if selected_tab == 'bs':
         layout = balance_sheet.layout
-    if selected_tab == 'cf':
+    elif selected_tab == 'cf':
         layout = cash_flow.layout
+        logging.debug(f'cash_flow.layout selected')
     else:
         layout = data_source.layout
+
     return layout
 
 
