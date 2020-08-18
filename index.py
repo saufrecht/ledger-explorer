@@ -11,6 +11,7 @@ from apps import balance_sheet, cash_flow, data_source
 
 app.layout = html.Div(
     id='page-content',
+    className='page_content',
     children=[
         html.Div(id='data_store',
                  style={'display': 'none'}),

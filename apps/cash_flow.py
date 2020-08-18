@@ -112,8 +112,18 @@ def apply_time_series_resolution(time_resolution, time_span, data_store):
         chart_fig.add_trace(make_bar(trans, account_tree, eras, account, i, time_resolution, time_span, deep=True))
 
     chart_fig.update_layout(
-        title={'text': f'Average {ts_label} $, by {tr_label} '},
-        xaxis={'showgrid': True, 'dtick': 'M3'},
+        title={'text': f'Average {ts_label} $, by {tr_label} ',
+               'font': {'color': '#7f7f7f'}},
+        xaxis={'showgrid': True, 'dtick': 'M3',
+               'linecolor': 'rgba(.8,.8,.8,.5)',
+               'color': 'rgba(.2,.2,.2,.5)',
+               'gridcolor': 'rgba(.8,.8,.8,.8)'},
+        yaxis={'linecolor': 'rgba(.8,.8,.8,.5)',
+               'color': 'rgba(.2,.2,.2,.8)',
+               'gridcolor': 'rgba(.8,.8,.8,.5)'},
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'family': 'var(--sans)', 'color': 'var(--fg-color)'},
         barmode='relative')
 
     return [chart_fig]

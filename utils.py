@@ -212,6 +212,7 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
             text=bin_amounts.text,
             texttemplate=bin_amounts.texttemplate,
             textposition='auto',
+            opacity=0.9,
             hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<extra></extra>',
             marker_color=marker_color)
     else:
@@ -223,6 +224,7 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
             text=bin_amounts.text,
             texttemplate=bin_amounts.texttemplate,
             textposition='auto',
+            opacity=0.9,
             hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
             marker_color=marker_color)
 
@@ -490,6 +492,7 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
     figure.update_traces(
         go.Sunburst(),
         insidetextorientation='horizontal',
+        marker={'line': {'color': 'white'}},
         maxdepth=3,
         hovertemplate='%{label}<br>%{value}',
         texttemplate='%{label}<br>%{value}',
@@ -497,6 +500,8 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 
     figure.update_layout(
         font=big_font,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(
             t=10,
             l=5,  # NOQA
