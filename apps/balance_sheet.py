@@ -90,7 +90,7 @@ def bs_set_period(period_value, data_store):
 
     chart_fig.update_layout(
         title={'text': '$'},
-        xaxis={'showgrid': True},
+        xaxis={'showgrid': True, 'dtick': 'M3'},
         barmode='relative')
 
     return [chart_fig]

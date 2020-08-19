@@ -1,5 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
+from datetime import timedelta
 import logging
 import pandas as pd
 import treelib
@@ -13,6 +14,16 @@ from utils import get_children, get_descendents
 from utils import make_bar, make_scatter, make_sunburst
 
 from app import app
+
+
+def _pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
+    if desc_account_count > 0:
+        desc_text = f' and {desc_account_count:,d} subaccounts'
+    else:
+        desc_text = ''
+    date_range_content = f' between {start.strftime("%Y-%m-%d")} and {end.strftime("%Y-%m-%d")}'
+    result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
+    return result
 
 
 ACCOUNTS = ['Income', 'Expenses']
@@ -44,24 +55,14 @@ layout = html.Div(
                 )
             ]),
         html.Div(
-            id='detail_control_bar',
-            className="control_bar dashbox",
-            children=[
-                html.H2(
-                    id='selected_account_display',
-                    children=['Account']),
-                html.H2(
-                    id='burst_selected_account_display',
-                    children=[]),
-                html.H2(
-                    id='selected_date_range_display',
-                    children=['All Dates']),
-                dcc.Store(id='detail_store',
-                          storage_type='memory')
-            ]),
-        html.Div(
             className='account_burst dashbox',
             children=[
+                html.Div([
+                    html.H3(children='Average Monthly $'),
+                    html.Div(
+                        id='selected_account_display',
+                        children=None),
+                ]),
                 dcc.Graph(
                     id='account_burst')
             ]),
@@ -74,6 +75,11 @@ layout = html.Div(
         html.Div(
             className="trans_table dashbox",
             children=[
+                html.Div(
+                    id='selected_trans_display',
+                    children=''),
+                dcc.Store(id='time_series_selection_info',
+                          storage_type='memory'),
                 trans_table
             ]),
         html.Div(
@@ -113,17 +119,18 @@ def apply_time_series_resolution(time_resolution, time_span, data_store):
 
     chart_fig.update_layout(
         title={'text': f'Average {ts_label} $, by {tr_label} ',
-               'font': {'color': '#7f7f7f'}},
+               'font': {'color': '#eee8d5'}},
         xaxis={'showgrid': True, 'dtick': 'M3',
-               'linecolor': 'rgba(.8,.8,.8,.5)',
-               'color': 'rgba(.2,.2,.2,.5)',
-               'gridcolor': 'rgba(.8,.8,.8,.8)'},
-        yaxis={'linecolor': 'rgba(.8,.8,.8,.5)',
-               'color': 'rgba(.2,.2,.2,.8)',
-               'gridcolor': 'rgba(.8,.8,.8,.5)'},
+               'linecolor': '#657b83',
+               'color': '#657b83',
+               'gridcolor': '#657b83'},
+        yaxis={'showgrid': True,
+               'linecolor': '#657b83',
+               'color': '#657b83',
+               'gridcolor': '#657b83'},
         paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font={'family': 'var(--sans)', 'color': 'var(--fg-color)'},
+        plot_bgcolor='#586e75',
+        font={'color': '#657b83'},
         barmode='relative')
 
     return [chart_fig]
@@ -131,13 +138,13 @@ def apply_time_series_resolution(time_resolution, time_span, data_store):
 
 @app.callback(
     [Output('selected_account_display', 'children'),
-     Output('selected_date_range_display', 'children'),
-     Output('detail_store', 'data'),
+     Output('time_series_selection_info', 'data'),
      Output('account_burst', 'figure')],
     [Input('master_time_series', 'figure'),
      Input('master_time_series', 'selectedData'),
-     Input('data_store', 'children')])
-def apply_selection_from_time_series(figure, selectedData, data_store):
+     Input('data_store', 'children')],
+    state=[State('time_series_resolution', 'value')])
+def apply_selection_from_time_series(figure, selectedData, data_store, time_resolution):
     """
     Selecting specific points from the time series chart updates the
     account burst and the detail labels.
@@ -152,12 +159,15 @@ def apply_selection_from_time_series(figure, selectedData, data_store):
     TODO: maybe check for input safety?
 
     """
-    selection_start_date = None
-    selection_end_date = None
-    date_range_content = None
-    filtered_trans = None
-    selected_accounts = []
-    detail_store = None
+
+    sel_start_date = None
+    sel_start_display_date = None  # Selection may be either > or ≥, so make the display consistent
+    sel_end_date = None
+    sel_accounts = []
+    filtered_trans = pd.DataFrame()
+    desc_account_count = 0
+    time_series_selection_info = None
+    tr_label = TIME_RES_LOOKUP[time_resolution]['label']
 
     if not figure:
         raise PreventUpdate
@@ -168,61 +178,70 @@ def apply_selection_from_time_series(figure, selectedData, data_store):
         points = trace.get('selectedpoints')
         if not points:
             continue
-        selected_accounts.append(account)
+        sel_accounts.append(account)
         for point in points:
-            # back out the selection parameters (account and start/end dates)
-            # from the trace
-            # TODO: for All, x is end date
-            #       for By Era, x is start date
-            #       for A/Q/M, x is end date
-            # so fix that.
-            selection_start_date = pd.to_datetime(trace['x'][point])
-            # the last point in the time-series won't have a following point
-            try:
-                selection_end_date = pd.to_datetime(trace['x'][point + 1])
-            except IndexError:
-                selection_end_date = latest_trans
+            if tr_label == 'Era':
+                era = trace['text'][point]
+                sel_start_date = eras[eras.index == era]['start_date'][0]
+                sel_start_display_date = sel_start_date
+                sel_end_date = eras[eras.index == era]['end_date'][0]
+            else:
+                sel_end_date = pd.to_datetime(trace['x'][point])
+                # the first point in the time-series won't have a preceding point
+                if point > 0:
+                    sel_start_date = pd.to_datetime(trace['x'][point - 1])
+                    sel_start_display_date = sel_start_date + timedelta(days=1)
+                else:
+                    sel_start_date = earliest_trans
+                    sel_start_display_date = sel_start_date
 
-            logging.debug(f'point: start {selection_start_date}, end {selection_end_date}')
-            point_accounts = get_descendents(account, account_tree)
+            logging.debug(f'Trace {account}, point {point}: start {sel_start_date}, end {sel_end_date}')
+            desc_accounts = get_descendents(account, account_tree)
+            desc_account_count = desc_account_count + len(desc_accounts)
+            subtree_accounts = [account] + desc_accounts
+            new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
+                loc[trans['date'] >= sel_start_date].\
+                loc[trans['date'] <= sel_end_date]
 
-            new_trans = trans.loc[trans['account'].isin(point_accounts)].\
-                loc[trans['date'] >= selection_start_date].\
-                loc[trans['date'] <= selection_end_date]
-
-            try:
+            if len(filtered_trans) > 0:
                 filtered_trans.append(new_trans)
-            except AttributeError:
+            else:
                 filtered_trans = new_trans
 
-    # If no transactions are ultimately selected, show all transactions
-    try:
-        data_count = len(filtered_trans)
-    except TypeError:
-        data_count = 0
-    if data_count == 0:
-        filtered_trans = trans
-        selected_accounts = ['All']
+    # If no transactions are ultimately selected, show all accounts
+    filtered_count = len(filtered_trans)
 
-    sun_fig = make_sunburst(trans, selection_start_date, selection_end_date, SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
-    account_children = ', '.join(selected_accounts)
-    if selection_start_date and selection_end_date:
-        date_range_content = ['Between ',
-                              selection_start_date.strftime("%Y-%m-%d"),
-                              ' and ',
-                              selection_end_date.strftime("%Y-%m-%d")]
-        detail_store = {'start': selection_start_date, 'end': selection_end_date}
-    return [account_children, date_range_content, detail_store, sun_fig]
+    if filtered_count > 0:
+        sel_accounts_content = _pretty_account_label(sel_accounts, desc_account_count,
+                                                     sel_start_display_date,
+                                                     sel_end_date,
+                                                     filtered_count)
+    else:
+        # If no trans are selected, show everything.  Note that we
+        # could logically get here even if valid accounts are
+        # seleceted, in which case it would be confusing to get back
+        # all trans instead of none, but this should never happen haha
+        # because any clickable bar must have $$, and so, trans
+        sel_accounts_content = f'All records ({len(trans):,d})'
+        filtered_trans = trans
+        sel_start_date = earliest_trans
+        sel_end_date = latest_trans
+
+    sun_fig = make_sunburst(filtered_trans, sel_start_date, sel_end_date,
+                            SUBTOTAL_SUFFIX=SUBTOTAL_SUFFIX)
+    time_series_selection_info = {'start': sel_start_date, 'end': sel_end_date, 'count': len(filtered_trans)}
+
+    return [sel_accounts_content, time_series_selection_info, sun_fig]
 
 
 @app.callback(
     [Output('trans_table', 'data'),
      Output('transaction_time_series', 'figure'),
-     Output('burst_selected_account_display', 'children')],
+     Output('selected_trans_display', 'children')],
     [Input('account_burst', 'clickData'),
-     Input('detail_store', 'data'),
+     Input('time_series_selection_info', 'data'),
      Input('data_store', 'children')])
-def apply_burst_click(burst_clickData, detail_data, data_store):
+def apply_burst_click(burst_clickData, time_series_info, data_store):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
 
@@ -231,9 +250,14 @@ def apply_burst_click(burst_clickData, detail_data, data_store):
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
-    selected_accounts = []
+    start_date = time_series_info.get('start', earliest_trans)
+    end_date = time_series_info.get('end', latest_trans)
+    max_trans_count = time_series_info.get('count', 0)
+
+    sel_accounts = []
     tts_fig = go.Figure(layout=chart_fig_layout)
 
+    # Figure out which account(s) were selected in the sunburst click
     if burst_clickData:
         click_account = burst_clickData['points'][0]['id']
     else:
@@ -241,30 +265,27 @@ def apply_burst_click(burst_clickData, detail_data, data_store):
 
     if click_account:
         try:
-            selected_accounts = [click_account] + get_children(click_account, account_tree)
+            sel_accounts = [click_account] + get_children(click_account, account_tree)
         except treelib.exceptions.NodeIDAbsentError:
             # This is a hack.  If the account isn't there, assume that the reason
             # is that it was reidentified to 'X Leaf', and back that out.
             try:
                 if LEAF_SUFFIX in click_account:
                     revised_id = click_account.replace(LEAF_SUFFIX, '')
-                    selected_accounts = [revised_id]
+                    sel_accounts = [revised_id]
             except treelib.exceptions.NodeIDAbsentError:
                 pass
-    else:
-        title = 'All'
-        pass
 
-    if selected_accounts:
-        title = click_account
-        sel_trans = trans[trans['account'].isin(selected_accounts)]
+    if sel_accounts:
+        sel_trans = trans[trans['account'].isin(sel_accounts)]
+        title = click_account + f': {len(sel_trans)} records'
     else:
         sel_trans = trans
 
     try:
-        start_date = detail_data['start']
-        end_date = detail_data['end']
         sel_trans = sel_trans[(sel_trans['date'] >= start_date) & (sel_trans['date'] <= end_date)]
+
+        # Populate the drilldown chart below.
         tts_fig.add_shape(
             type="rect",
             x0=earliest_trans,
@@ -289,24 +310,29 @@ def apply_burst_click(burst_clickData, detail_data, data_store):
             fillcolor='#e1e1e1',
             opacity=0.6
         )
-
     except (KeyError, TypeError):
         pass
 
-    if len(selected_accounts) == 1:
+    if max_trans_count > (sel_count := len(sel_trans)):
+        title = f'Showing {sel_count:,d} records out of {max_trans_count:,d}.  Only: {", ".join(sel_accounts)}'
+    else:
+        title = f'{max_trans_count:,d} records'
+
+    if len(sel_accounts) == 1:
         try:
-            account = selected_accounts[0]
+            account = sel_accounts[0]
             tts_fig.add_trace(make_scatter(account, sel_trans))
         except TypeError:
             pass
-    elif len(selected_accounts) > 1:
+    elif len(sel_accounts) > 1:
         # TODO: design bug: certain leaves (maybe with ¿hidden children?)
         # appear as leaves in the sunburst and show only one
-        # account in the trans table, but have multiple selected_accounts
+        # account in the trans table, but have multiple sel_accounts
         # and so render as bars when they should be scatter
-        for i, account in enumerate(selected_accounts):
+        for i, account in enumerate(sel_accounts):
             tts_fig.add_trace(make_bar(trans, account_tree, eras, account, i, 4, 1, deep=True))
             tts_fig.update_layout(
                 barmode='stack',
                 showlegend=True)
+
     return [sel_trans.to_dict('records'), tts_fig, title]

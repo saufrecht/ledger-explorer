@@ -1,5 +1,4 @@
 import logging
-import pprint
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -33,7 +32,6 @@ def change_tab(selected_tab):
         layout = balance_sheet.layout
     elif selected_tab == 'cf':
         layout = cash_flow.layout
-        logging.debug(f'cash_flow.layout selected')
     else:
         layout = data_source.layout
 

@@ -126,7 +126,6 @@ def get_descendents(account_id, account_tree):
 def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0, time_span=1, deep=False):
     """ returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
-
     if deep:
         tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
     else:
@@ -321,7 +320,7 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 
     duration = (end_date - start_date) / np.timedelta64(1, 'M')
     sel_trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
-    trans = positize(trans)
+    sel_trans = positize(sel_trans)
 
     def make_subtotal_tree(trans):
         """
@@ -339,7 +338,10 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
                 # not present in the subtotals DataFrame
                 continue
 
-            norm_subtotal = round(subtotal / duration)
+            try:
+                norm_subtotal = round(subtotal / duration)
+            except OverflowError:
+                norm_subtotal = 0
             if norm_subtotal < 0:
                 norm_subtotal = 0
             node.data = {'leaf_total': norm_subtotal}
@@ -514,7 +516,8 @@ def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
 def positize(trans):
     """Negative values can't be plotted in sunbursts.  This can't be fixed with absolute value
     because that would erase the distinction between debits and credits within an account.
-    This function always returns a net-positive-value DataFrame of transactions suitable for
+    Simply reversing sign could result in a net-negative sum, which also breaks sunbursts.
+    This function always returns a net-positive sum DataFrame of transactions, suitable for
     a sunburst."""
 
     if trans.sum(numeric_only=True)['amount'] < 0:
