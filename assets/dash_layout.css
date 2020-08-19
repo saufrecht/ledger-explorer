@@ -63,7 +63,7 @@
 html {
   background-color: var(--bg-more);
   color: var(--fg);
-  font-family: var(--serif);
+  font-family: var(--sans);
 }
 
 .page_content {
@@ -71,13 +71,22 @@ html {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--sans);
+  margin: 0px 0px 0px 0px;
 }
 
 h1 {
   font-size: 200%;
-  margin: 0px 0px 0px 10px;
 }
+
+h2 {
+  font-size: 160%;
+
+}
+
+h3 {
+  font-size: 130%;
+}
+
 
 .layout_box {
   display: grid;
@@ -134,7 +143,7 @@ h1 {
 
 .dash-filter > input {
   border: 4px solid var(--bg)!important;
-  background-color: var(--fg-less)!important;
+  background-color: var(--bg-more)!important;
   color: var(--fg-more)!important;
   text-align: center!important;
 }
@@ -173,7 +182,6 @@ h1 {
 }
 
 .tab {
-    font-family: var(--sans);
     background-color: var(--bg-more)!important;
     border: none!important;
     padding: 0!important;
@@ -210,7 +218,6 @@ input {
 
 label {
     padding-right: 0.5rem;
-    font-family: var(--sans);
     font-size: 0.8rem;
     color: var(--fg-less);
 }
@@ -239,7 +246,10 @@ button {
     content: "Loading...";
     display: inline-block;
     color: var(--fg);
-    font-family: var(--sans);
     font-size: 2rem;
     visibility: visible;
+}
+
+#selected_trans_display {
+    margin-bottom: 1rem;
 }
