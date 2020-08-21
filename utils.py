@@ -51,36 +51,36 @@ chart_fig_layout = dict(
         font_color='var(--fg)',
         font=medium_font))
 
-TIME_RES_LOOKUP = {
+TIME_RES_LOOKUP: dict = {
     0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12},
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
     4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1}}
 
-TIME_RES_OPTIONS = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
+TIME_RES_OPTIONS: dict = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
 
-TIME_SPAN_LOOKUP = {
+TIME_SPAN_LOOKUP: dict = {
     0: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
     1: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
-TIME_SPAN_OPTIONS = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
+TIME_SPAN_OPTIONS: dict = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
 
 
-SUBTOTAL_SUFFIX = ' Subtotal'
-LEAF_SUFFIX = ' Leaf'
-OTHER_PREFIX = 'Other '
-MAX_SLICES = 7  # TODO: expose this in a control
+SUBTOTAL_SUFFIX: str = ' Subtotal'
+LEAF_SUFFIX: str = ' Leaf'
+OTHER_PREFIX: str = 'Other '
+MAX_SLICES: int = 7  # TODO: expose this in a control
 
 
-def data_from_json_store(data_store, filter=None):
+def data_from_json_store(data_store: str, filter: list) -> tuple:
     """ Parse data stored in Dash JSON component.  Used to move data between different
     callbacks in Dash """
 
     data = json.loads(data_store)
     trans = pd.read_json(data['trans'], orient='split')
     account_tree = make_account_tree_from_trans(trans)
-    filter_accounts = []
+    filter_accounts: list = []
 
     for account in filter:
         filter_accounts = filter_accounts + get_descendents(account, account_tree)
@@ -100,17 +100,7 @@ def data_from_json_store(data_store, filter=None):
     return trans, eras, account_tree, earliest_trans, latest_trans
 
 
-def color_variant(hex_color, brightness_offset=1):
-    """ takes a color like #87c95f and produces a lighter or darker variant
-    from https://chase-seibert.github.io/blog/2011/07/29/python-calculate-lighterdarker-rgb-colors.html """
-
-    rgb_hex = [hex_color[x:x+2] for x in [1, 3, 5]]
-    new_rgb_int = [int(hex_value, 16) + brightness_offset for hex_value in rgb_hex]
-    new_rgb_int = [min([255, max([0, i])]) for i in new_rgb_int]  # make sure new values are between 0 and 2x55
-    return '#' + ''.join([hex(i)[2:] for i in new_rgb_int])
-
-
-def get_descendents(account_id, account_tree):
+def get_descendents(account_id: str, account_tree: treelib) -> list:
     """
     Return a list of tags of all descendent accounts of the input account.
     """
@@ -123,19 +113,26 @@ def get_descendents(account_id, account_tree):
     return [x.tag for x in descendent_nodes]
 
 
-def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0, time_span=1, deep=False):
+def make_bar(trans: pd.DataFrame,
+             account_tree: treelib,
+             eras: pd.DataFrame,
+             account_id: str,
+             color_num: int = 0,
+             time_resolution: int = 0,
+             time_span: int = 1,
+             deep: bool = False):
     """ returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
     if deep:
-        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
+        tba = trans[trans['account'].isin(get_descendents(account_id, account_tree))]
     else:
-        tba = trans[trans['account'] == account]
+        tba = trans[trans['account'] == account_id]
 
     tba = tba.set_index('date')
-    tr = TIME_RES_LOOKUP[time_resolution]
-    tr_hover = tr.get('abbrev')      # e.g., "Q"
-    tr_label = tr.get('label')       # e.g., "Quarter"
-    tr_months = tr.get('months')     # e.g., 3
+    tr: dict = TIME_RES_LOOKUP[time_resolution]
+    tr_hover: str = tr.get('abbrev', None)      # e.g., "Q"
+    tr_label: str = tr.get('label', None)       # e.g., "Quarter"
+    tr_months: int = tr.get('months', None)     # e.g., 3
 
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_hover = ts.get('abbrev')      # NOQA  e.g., "y"
@@ -198,12 +195,12 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
 
-    bin_amounts['customdata'] = account
+    bin_amounts['customdata'] = account_id
     bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
 
     if tr_label == 'Era':
         bar = go.Bar(
-            name=account,
+            name=account_id,
             x=bin_amounts.midpoint,
             width=bin_amounts.width,
             y=bin_amounts.value,
@@ -216,7 +213,7 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
             marker_color=marker_color)
     else:
         bar = go.Bar(
-            name=account,
+            name=account_id,
             x=bin_amounts.date,
             y=bin_amounts.value,
             customdata=bin_amounts.customdata,
@@ -230,13 +227,22 @@ def make_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0,
     return bar
 
 
-def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolution=0, time_span=1, deep=False):
-    """ returns a go.Bar object with total by time_resolution period for
+def make_cum_bar(
+        trans: pd.DataFrame,
+        account_tree: treelib,
+        eras: pd.DataFrame,
+        account_id: str,
+        color_num: int = 0,
+        time_resolution: int = 0,
+        time_span: int = 1,
+        deep: bool = False) -> go.Bar:
+    """ returns a go.Bar object with cumulative total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
+
     if deep:
-        tba = trans[trans['account'].isin(get_descendents(account, account_tree))]
+        tba = trans[trans['account'].isin(get_descendents(account_id, account_tree))]
     else:
-        tba = trans[trans['account'] == account]
+        tba = trans[trans['account'] == account_id]
 
     latest_trans = tba['date'].max()
 
@@ -270,11 +276,11 @@ def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolutio
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
 
-    bin_amounts['customdata'] = account
+    bin_amounts['customdata'] = account_id
     bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
 
     bar = go.Bar(
-        name=account,
+        name=account_id,
         x=bin_amounts.date,
         y=bin_amounts.value,
         customdata=bin_amounts.customdata,
@@ -286,12 +292,12 @@ def make_cum_bar(trans, account_tree, eras, account, color_num=0, time_resolutio
     return bar
 
 
-def make_scatter(account, trans, color_num=0):
+def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
     """ returns scatter trace of input transactions
     """
 
     trace = go.Scatter(
-        name=account,
+        name=account_id,
         x=trans['date'],
         y=trans['amount'],
         text=trans['account'],
@@ -302,7 +308,11 @@ def make_scatter(account, trans, color_num=0):
     return trace
 
 
-def make_sunburst(trans, start_date=None, end_date=None, SUBTOTAL_SUFFIX=None):
+def make_sunburst(
+        trans: pd.DataFrame,
+        start_date: np.datetime64 = None,
+        end_date: np.datetime64 = None,
+        SUBTOTAL_SUFFIX: str = None):
     """
     Using a tree of accounts and a DataFrame of transactions,
     generate a figure for a sunburst, where each node is an account

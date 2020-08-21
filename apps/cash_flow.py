@@ -96,7 +96,7 @@ layout = html.Div(
     [Input('time_series_resolution', 'value'),
      Input('time_series_span', 'value')],
     state=[State('data_store', 'children')])
-def apply_time_series_resolution(time_resolution, time_span, data_store):
+def apply_time_series_resolution(time_resolution: int, time_span: int, data_store: str):
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -160,6 +160,9 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
 
     """
 
+    if not figure or not data_store:  # prevent from crashing when triggered from other pages
+        raise PreventUpdate
+
     sel_start_date = None
     sel_start_display_date = None  # Selection may be either > or ≥, so make the display consistent
     sel_end_date = None
@@ -168,9 +171,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     desc_account_count = 0
     time_series_selection_info = None
     tr_label = TIME_RES_LOOKUP[time_resolution]['label']
-
-    if not figure:
-        raise PreventUpdate
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
     for trace in figure.get('data'):
@@ -247,6 +247,9 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     TODO: maybe check for input safety?
     """
+
+    if not burst_clickData:  # prevent from crashing when triggered from other pages
+        raise PreventUpdate
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 

@@ -5,16 +5,16 @@ import logging
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from utils import TIME_RES_LOOKUP, TIME_RES_OPTIONS
-from utils import chart_fig_layout, trans_table, data_from_json_store
+from utils import chart_fig_layout, data_from_json_store
 from utils import get_children
 from utils import make_cum_bar
 
 from app import app
 
 
-ACCOUNTS = ['Assets', 'Liabilities']
+ACCOUNTS: list = ['Assets', 'Liabilities']
 
-layout = html.Div(
+layout: html = html.Div(
     className="layout_box",
     children=[
         html.Div(
@@ -53,17 +53,21 @@ layout = html.Div(
             style={'display': 'none'},
             children=[
                 html.Div(
-                    id='time_series_resolution'),
+                    id='account_burst'),
                 html.Div(
                     id='master_time_series'),
                 html.Div(
-                    id='account_burst'),
+                    id='selected_trans_display'),
+                html.Div(
+                    id='time_series_resolution'),
+                html.Div(
+                    id='time_series_selection_info'),
                 html.Div(
                     id='time_series_span'),
                 html.Div(
-                    id='transaction_time_series'),
-                html.Div(
                     id='trans_table'),
+                html.Div(
+                    id='transaction_time_series'),
             ]),
     ])
 

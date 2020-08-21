@@ -26,7 +26,7 @@ app.layout = html.Div(
 
 @app.callback(Output('tab-content', 'children'),
               [Input('tabs', 'value')])
-def change_tab(selected_tab):
+def change_tab(selected_tab: str):
     logging.debug(f'tab selection: {selected_tab}')
     if selected_tab == 'bs':
         layout = balance_sheet.layout
