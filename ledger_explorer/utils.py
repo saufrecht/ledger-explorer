@@ -1,7 +1,8 @@
 import json
 import numpy as np
 import pandas as pd
-import treelib
+from treelib import Tree
+from treelib import exceptions as tlexceptions
 import urllib
 
 
@@ -100,21 +101,21 @@ def data_from_json_store(data_store: str, filter: list) -> tuple:
     return trans, eras, account_tree, earliest_trans, latest_trans
 
 
-def get_descendents(account_id: str, account_tree: treelib) -> list:
+def get_descendents(account_id: str, account_tree: Tree) -> list:
     """
     Return a list of tags of all descendent accounts of the input account.
     """
 
     try:
         descendent_nodes = account_tree.subtree(account_id).all_nodes()
-    except treelib.exceptions.NodeIDAbsentError:
+    except tlexceptions.NodeIDAbsentError:
         descendent_nodes = []
 
     return [x.tag for x in descendent_nodes]
 
 
 def make_bar(trans: pd.DataFrame,
-             account_tree: treelib,
+             account_tree: Tree,
              eras: pd.DataFrame,
              account_id: str,
              color_num: int = 0,
@@ -229,7 +230,7 @@ def make_bar(trans: pd.DataFrame,
 
 def make_cum_bar(
         trans: pd.DataFrame,
-        account_tree: treelib,
+        account_tree: Tree,
         eras: pd.DataFrame,
         account_id: str,
         color_num: int = 0,
@@ -384,7 +385,7 @@ def make_sunburst(
     def set_node_total(node):
         """
         Set the total value of the node as a property of the node.  Assumes
-        a _sun_tree treelib.Tree in surrounding scope, and modifies that
+        a _sun_tree Tree in surrounding scope, and modifies that
         treelib as a side effect.
 
         Assumption: No negative leaf values
@@ -618,7 +619,7 @@ def make_account_tree_from_trans(trans):
     root, so the tree will still be a DAG
     """
 
-    tree = treelib.Tree()
+    tree = Tree()
     tree.create_node(tag='All', identifier='root')
     accounts = trans['full account name'].unique()
 
@@ -639,15 +640,15 @@ def make_account_tree_from_trans(trans):
     return tree
 
 
-def trim_excess_root(tree):
+def trim_excess_root(tree: Tree) -> Tree:
     # Remove any nodes from the root that have only 1 child.
     # I.e, replace A → B → (C, D) with B → (C, D)
     root_id = tree.root
-    root_kids = tree.children(root_id)
-    if len(root_kids) == 1:
-        tree.update_node(root_kids[0].identifier, parent=None, bpointer=None)
-        new_tree = tree.subtree(root_kids[0].identifier)
-        return new_tree
+    branches = tree.children(root_id)
+    if len(branches) == 1:
+        tree.update_node(branches[0].identifier, parent=None, bpointer=None)
+        new_tree = tree.subtree(branches[0].identifier)
+        return trim_excess_root(new_tree)
     else:
         return tree
 
