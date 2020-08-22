@@ -640,7 +640,8 @@ def make_account_tree_from_trans(trans):
 
 
 def trim_excess_root(tree):
-    # If the input tree's root has no branches, trim the superfluous node and return a shorter tree
+    # Remove any nodes from the root that have only 1 child.
+    # I.e, replace A → B → (C, D) with B → (C, D)
     root_id = tree.root
     root_kids = tree.children(root_id)
     if len(root_kids) == 1:
