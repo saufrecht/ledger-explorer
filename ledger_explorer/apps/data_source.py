@@ -1,6 +1,9 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import json
+import logging
+from typing import Iterable, List
+
 
 from dash.dependencies import Input, Output, State
 from utils import load_eras, load_transactions, make_account_tree_from_trans
@@ -55,6 +58,7 @@ layout = html.Div(
                  ]),
     ])
 
+
 @app.callback(
     [Output('data_store', 'children'),
      Output('meta_data', 'children'),
@@ -63,7 +67,10 @@ layout = html.Div(
     [Input('data_load_button', 'n_clicks')],
     state=[State('transactions_url', 'value'),
            State('eras_url', 'value')])
-def load_data(n_clicks, transactions_url, eras_url):
+def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
+    logging.debug(f'Type: n_clicks {type(n_clicks)}')
+    logging.debug(f'Type: trans {type(transactions_url)}')
+    logging.debug(f'Type: eras_url {type(eras_url)}')
     trans = load_transactions(transactions_url)
     account_tree = make_account_tree_from_trans(trans)
     earliest_trans = trans['date'].min()
@@ -72,18 +79,23 @@ def load_data(n_clicks, transactions_url, eras_url):
     data = dict(trans=trans.to_json(orient='split'),
                 eras=eras.to_json(orient='split', date_format='iso'))
 
-    meta_info = [f'Data loaded: {len(trans)} records',
-                 f'Earliest record: {earliest_trans}',
-                 f'Latest record: {latest_trans}',
-                 f'Eras loaded: {len(eras)}']
-    meta_html = [html.Div(children=x) for x in meta_info]
+    meta_info: list = [f'Data loaded: {len(trans)} records',
+                       f'Earliest record: {earliest_trans}',
+                       f'Latest record: {latest_trans}',
+                       f'Eras loaded: {len(eras)}']
+    meta_html: list = [html.Div(children=x) for x in meta_info]
 
-    records = ['first 5 records'] + trans.head(n=5).values.tolist() + \
+    records: list = ['first 5 records'] + trans.head(n=5).values.tolist() + \
         [''] + ['last 5 records'] + trans.tail(n=5).values.tolist()
-    records_html = [html.Div(children=x, className='code_row') for x in records]
+    records_html: List[str] = [html.Div(children=x, className='code_row') for x in records]
 
-    tree_records = [f'Tree nodes: {len(account_tree)}'] + [x.tag for x in account_tree.all_nodes()]
+    tree_records: List[str] = [f'Tree nodes: {len(account_tree)}'] + [x.tag for x in account_tree.all_nodes()]
 
-    account_tree_html = [html.Div(children=x, className='code_row') for x in tree_records]
+    account_tree_html: List[str] = [html.Div(children=x, className='code_row') for x in tree_records]
 
-    return [json.dumps(data), meta_html, account_tree_html, records_html]
+    result = [json.dumps(data), meta_html, account_tree_html, records_html]
+
+    for i, item in enumerate(result):
+        logging.debug(f'Type: {i} {type(item)}')
+
+    return result
