@@ -59,13 +59,21 @@ TIME_RES_LOOKUP: dict = {
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
     4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1}}
 
-TIME_RES_OPTIONS: dict = {key: value['label'] for key, value in TIME_RES_LOOKUP.items()}
+TIME_RES_OPTIONS: list = [
+    {'value': 0, 'label': 'All'},
+    {'value': 1, 'label': 'Era'},
+    {'value': 2, 'label': 'Year'},
+    {'value': 3, 'label': 'Quarter'},
+    {'value': 4, 'label': 'Month'}]
 
 TIME_SPAN_LOOKUP: dict = {
     0: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
     1: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
-TIME_SPAN_OPTIONS: dict = {key: value['label'] for key, value in TIME_SPAN_LOOKUP.items()}
+TIME_SPAN_OPTIONS: list = [
+    {'value': 0, 'label': 'Annual'},
+    {'value': 1, 'label': 'Monthly'}
+]
 
 
 SUBTOTAL_SUFFIX: str = ' Subtotal'
@@ -95,8 +103,8 @@ def data_from_json_store(data_store: str, filter: list) -> tuple:
     eras = pd.read_json(data['eras'],
                         orient='split',
                         dtype={'index': 'str', 'start_date': 'datetime64', 'end_date': 'datetime64'})
-    earliest_trans = trans['date'].min()
-    latest_trans = trans['date'].max()
+    earliest_trans: np.datetime64 = trans['date'].min()
+    latest_trans: np.datetime64 = trans['date'].max()
 
     return trans, eras, account_tree, earliest_trans, latest_trans
 
@@ -656,7 +664,6 @@ def trim_excess_root(tree: Tree) -> Tree:
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date'),
-             dict(id='account', name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',

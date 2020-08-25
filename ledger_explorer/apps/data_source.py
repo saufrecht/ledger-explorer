@@ -1,5 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import numpy as np
 import json
 import logging
 from typing import Iterable, List
@@ -73,10 +74,10 @@ def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
     logging.debug(f'Type: eras_url {type(eras_url)}')
     trans = load_transactions(transactions_url)
     account_tree = make_account_tree_from_trans(trans)
-    earliest_trans = trans['date'].min()
-    latest_trans = trans['date'].max()
+    earliest_trans: np.datetime64 = trans['date'].min()
+    latest_trans: np.datetime64 = trans['date'].max()
     eras = load_eras(eras_url, earliest_trans, latest_trans)
-    data = dict(trans=trans.to_json(orient='split'),
+    data = dict(trans=trans.to_json(orient='split', date_format='iso'),
                 eras=eras.to_json(orient='split', date_format='iso'))
 
     meta_info: list = [f'Data loaded: {len(trans)} records',

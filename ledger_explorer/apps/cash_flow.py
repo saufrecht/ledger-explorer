@@ -3,6 +3,7 @@ import dash_html_components as html
 from datetime import timedelta
 import logging
 import pandas as pd
+import numpy as np
 import treelib
 
 import plotly.graph_objects as go
@@ -16,9 +17,13 @@ from utils import make_bar, make_scatter, make_sunburst
 from app import app
 
 
-def _pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
-    if desc_account_count > 0:
-        desc_text = f' and {desc_account_count:,d} subaccounts'
+def _pretty_account_label(sel_accounts: list,
+                          descend_account_count: int,
+                          start: np.datetime64,
+                          end: np.datetime64,
+                          trans_count: int):
+    if descend_account_count > 0:
+        desc_text = f' and {descend_account_count:,d} subaccounts'
     else:
         desc_text = ''
     date_range_content = f' between {start.strftime("%Y-%m-%d")} and {end.strftime("%Y-%m-%d")}'
@@ -32,58 +37,73 @@ layout = html.Div(
     className="layout_box",
     children=[
         html.Div(
-            id='time_series_control_bar',
-            className="control_bar dashbox",
+            id="time_series_box",
             children=[
-                dcc.Slider(
-                    className='resolution-slider',
-                    id='time_series_resolution',
-                    min=0,
-                    max=4,
-                    step=1,
-                    marks=TIME_RES_OPTIONS,
-                    value=1
-                ),
-                dcc.Slider(
-                    className='span-slider',
-                    id='time_series_span',
-                    min=0,
-                    max=1,
-                    step=1,
-                    marks=TIME_SPAN_OPTIONS,
-                    value=1
-                )
+                dcc.Graph(
+                    id='master_time_series')
             ]),
         html.Div(
-            className='account_burst dashbox',
+            id='main_control_box',
+            className='control_bar',
+            children=[
+                html.Fieldset(
+                    className='control_bar',
+                    children=[
+                        html.Span(
+                            children='Group By ',
+                        ),
+                        dcc.Dropdown(
+                            id='time_series_resolution',
+                            options=TIME_RES_OPTIONS,
+                            clearable=False,
+                            value=2
+                        ),
+                    ]),
+                html.Fieldset(
+                    className="control_bar",
+                    children=[
+                        html.Span(
+                            children='Prorate to ',
+                        ),
+                        dcc.Dropdown(
+                            id='time_series_span',
+                            options=TIME_SPAN_OPTIONS,
+                            clearable=False,
+                            value=1
+                        )
+                    ]),
+                dcc.Store(id='time_series_selection_info',
+                          storage_type='memory'),
+            ]),
+        html.Div(
+            id="account_burst_box",
             children=[
                 html.Div([
-                    html.H3(children='Average Monthly $'),
+                    html.H3(
+                        id='',
+                        children='Average Monthly $'),
                     html.Div(
-                        id='selected_account_display',
+                        id='selected_trans_display',
                         children=None),
                 ]),
                 dcc.Graph(
                     id='account_burst')
             ]),
         html.Div(
-            className='master_time_series dashbox',
+            id='trans_table_box',
             children=[
-                dcc.Graph(
-                    id='master_time_series')
+                html.Div([
+                    html.H3(
+                        id='selected_record_display',
+                        children=''),
+                    html.Div(
+                        id='selected_account_display',
+                        children=None),
+                ]),
+                trans_table,
             ]),
         html.Div(
-            className="trans_table dashbox",
-            children=[
-                html.Div(
-                    id='selected_trans_display',
-                    children=''),
-                dcc.Store(id='time_series_selection_info',
-                          storage_type='memory'),
-                trans_table
-            ]),
-        html.Div(
-            className='transaction_time_series dashbox',
+            id="transaction_time_series_box",
             children=[
                 dcc.Graph(
                     id='transaction_time_series')
@@ -109,7 +129,6 @@ def apply_time_series_resolution(time_resolution: int, time_span: int, data_stor
         raise PreventUpdate
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
-
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -117,8 +136,9 @@ def apply_time_series_resolution(time_resolution: int, time_span: int, data_stor
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(trans, account_tree, eras, account, i, time_resolution, time_span, deep=True))
 
+    ts_title = f'Average {ts_label} $, by {tr_label} '
     chart_fig.update_layout(
-        title={'text': f'Average {ts_label} $, by {tr_label} ',
+        title={'text': ts_title,
                'font': {'color': '#eee8d5'}},
         xaxis={'showgrid': True, 'dtick': 'M3',
                'linecolor': '#657b83',
@@ -137,7 +157,7 @@ def apply_time_series_resolution(time_resolution: int, time_span: int, data_stor
 
 
 @app.callback(
-    [Output('selected_account_display', 'children'),
+    [Output('selected_trans_display', 'children'),
      Output('time_series_selection_info', 'data'),
      Output('account_burst', 'figure')],
     [Input('master_time_series', 'figure'),
@@ -163,9 +183,9 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     if not figure or not data_store:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
-    sel_start_date = None
-    sel_start_display_date = None  # Selection may be either > or ≥, so make the display consistent
-    sel_end_date = None
+    sel_start_date: np.datetime64 = None
+    sel_start_display_date: np.datetime64 = None  # Selection may be either > or ≥, so make the display consistent
+    sel_end_date: np.datetime64 = None
     sel_accounts = []
     filtered_trans = pd.DataFrame()
     desc_account_count = 0
@@ -237,7 +257,8 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
 @app.callback(
     [Output('trans_table', 'data'),
      Output('transaction_time_series', 'figure'),
-     Output('selected_trans_display', 'children')],
+     Output('selected_account_display', 'children'),
+     Output('selected_record_display', 'children')],
     [Input('account_burst', 'clickData'),
      Input('time_series_selection_info', 'data'),
      Input('data_store', 'children')])
@@ -253,12 +274,13 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
-    start_date = time_series_info.get('start', earliest_trans)
-    end_date = time_series_info.get('end', latest_trans)
+    start_date: np.datetime64 = pd.to_datetime(time_series_info.get('start', earliest_trans))
+    end_date: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
     max_trans_count = time_series_info.get('count', 0)
 
-    sel_accounts = []
     tts_fig = go.Figure(layout=chart_fig_layout)
+
+    sel_accounts: list = []
 
     # Figure out which account(s) were selected in the sunburst click
     if burst_clickData:
@@ -268,7 +290,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     if click_account:
         try:
-            sel_accounts = [click_account] + get_children(click_account, account_tree)
+            sel_accounts = [click_account] + get_descendents(click_account, account_tree)
         except treelib.exceptions.NodeIDAbsentError:
             # This is a hack.  If the account isn't there, assume that the reason
             # is that it was reidentified to 'X Leaf', and back that out.
@@ -281,7 +303,6 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     if sel_accounts:
         sel_trans = trans[trans['account'].isin(sel_accounts)]
-        title = click_account + f': {len(sel_trans)} records'
     else:
         sel_trans = trans
 
@@ -317,9 +338,11 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         pass
 
     if max_trans_count > (sel_count := len(sel_trans)):
-        title = f'Showing {sel_count:,d} records out of {max_trans_count:,d}.  Only: {", ".join(sel_accounts)}'
+        record_title = f'Showing {sel_count:,d} records out of {max_trans_count:,d}.'
     else:
-        title = f'{max_trans_count:,d} records'
+        record_title = f'Showing {sel_count:,d} records.'
+
+    acct_title = _pretty_account_label(sel_accounts, sel_count, start_date, end_date, max_trans_count)
 
     if len(sel_accounts) == 1:
         try:
@@ -338,4 +361,4 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
                 barmode='stack',
                 showlegend=True)
 
-    return [sel_trans.to_dict('records'), tts_fig, title]
+    return [sel_trans.to_dict('records'), tts_fig, acct_title, record_title]
