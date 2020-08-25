@@ -96,6 +96,7 @@ h3 {
 
 .layout_box > div {
     margin: 0.5rem;
+    padding: 0.5rem;
     box-shadow: var(--body-shadow)!important;
 }
 
@@ -104,31 +105,22 @@ h3 {
   grid-row: 1 / 2 ;
 }
 
-#main_control_box {
-  grid-column: 1 / 3;
-  grid-row: 2 / 3;
-}
-
 .control_bar {
   display: flex;
-  align-items: flex-start;
-  justify-items: baseline;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 #account_burst_box {
   grid-column: 1 / 2;
-  grid-row: 3 / 4;
+  grid-row: 2 / 3;
 }
 
 #trans_table_box {
   grid-column: 2 / 3;
-  grid-row: 3 / 4;
+  grid-row: 2 / 3;
 }
 
-#transaction_time_series_box {
-  grid-column: 1 / 3;
-  grid-row: 4 / 5 ;
-}
 
 .hidden {
   display: none;
@@ -141,7 +133,7 @@ h3 {
   text-align: center!important;
 }
 
-.control_bar, .dash-dropdown, .dash-graph, .Select, .select-control, .Select-value, .Select-value-label {
+.control_bar, .dash-dropdown, .dash-graph, .Select, .Select-control, .Select-value, .Select-value-label {
     background-color: var(--bg);
     color: var(--fg)!important;
 }

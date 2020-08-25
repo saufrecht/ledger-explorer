@@ -321,7 +321,8 @@ def make_sunburst(
         trans: pd.DataFrame,
         start_date: np.datetime64 = None,
         end_date: np.datetime64 = None,
-        SUBTOTAL_SUFFIX: str = None):
+        SUBTOTAL_SUFFIX: str = None,
+        time_span: int = 1):
     """
     Using a tree of accounts and a DataFrame of transactions,
     generate a figure for a sunburst, where each node is an account
@@ -337,11 +338,14 @@ def make_sunburst(
     if not end_date:
         end_date = pd.Timestamp.now()
 
+    ts = TIME_SPAN_LOOKUP[time_span]
+    ts_months = ts.get('months')     # e.g., 12
+
     duration = (end_date - start_date) / np.timedelta64(1, 'M')
     sel_trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
     sel_trans = positize(sel_trans)
 
-    def make_subtotal_tree(trans):
+    def make_subtotal_tree(trans, prorate_months):
         """
         Calculate the subtotal for each node (direct subtotal only, no children) in
         the provided transaction tree and store it in the tree.
@@ -358,7 +362,7 @@ def make_sunburst(
                 continue
 
             try:
-                norm_subtotal = round(subtotal / duration)
+                norm_subtotal = round(subtotal * ts_months / duration)
             except OverflowError:
                 norm_subtotal = 0
             if norm_subtotal < 0:
@@ -367,7 +371,7 @@ def make_sunburst(
 
         return sel_tree
 
-    _sun_tree = make_subtotal_tree(sel_trans)
+    _sun_tree = make_subtotal_tree(sel_trans, ts_months)
 
     #######################################################################
     # Total up all the nodes.
@@ -664,6 +668,7 @@ def trim_excess_root(tree: Tree) -> Tree:
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date'),
+             dict(id='account', name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
