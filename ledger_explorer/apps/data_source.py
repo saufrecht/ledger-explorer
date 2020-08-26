@@ -92,7 +92,4 @@ def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
 
     result = [json.dumps(data), meta_html, account_tree_html, records_html]
 
-    for i, item in enumerate(result):
-        logging.debug(f'Type: {i} {type(item)}')
-
     return result

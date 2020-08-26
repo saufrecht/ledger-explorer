@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 import pandas as pd
 import numpy as np
-import treelib
 
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -270,36 +269,35 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     date_end: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
     max_trans_count = time_series_info.get('count', 0)
 
-    sel_accounts: list = []
+    sub_accounts: list = []
 
     # Figure out which account(s) were selected in the sunburst click
     if burst_clickData:
         click_account = burst_clickData['points'][0]['id']
-    else:
-        click_account = []
-
-    # Add all of the sub-accounts
-    if click_account:
-        try:
-            sel_accounts = [click_account] + get_descendents(click_account, account_tree)
-        except treelib.exceptions.NodeIDAbsentError:
-            # This is a hack.  If the account isn't there, assume that's because
-            # it was reidentified to 'X Leaf', and bring it back.
-            try:
-                if LEAF_SUFFIX in click_account:
-                    revised_id = click_account.replace(LEAF_SUFFIX, '')
-                    sel_accounts = [revised_id]
-            except treelib.exceptions.NodeIDAbsentError:
-                pass
-
-    # if any accounts are selected, get those transactions.  Otherwise, get all transactions.
-    if sel_accounts:
-        sel_trans = trans[trans['account'].isin(sel_accounts)]
-        if (len_sel := len(sel_accounts)) > 1:
-            account_text = f'{click_account} and {len_sel} sub-accounts selected'
+        logging.debug(f'Click: {click_account}')
+        # strip any SUFFFIXes from the label that were added in the sunburst hack
+        if LEAF_SUFFIX in click_account:
+            revised_id = click_account.replace(LEAF_SUFFIX, '')
+        elif SUBTOTAL_SUFFIX in click_account:
+            revised_id = click_account.replace(SUBTOTAL_SUFFIX, '')
         else:
-            account_text = f'{click_account} selected'
+            revised_id = click_account
+    else:
+        revised_id = []
 
+    logging.debug(f'revised_id is {revised_id}')
+    # Add any sub-accounts
+    if revised_id:
+        sub_accounts = get_descendents(revised_id, account_tree)
+
+    logging.debug(f'sub_accounts: {sub_accounts}')
+    # if any accounts are selected, get those transactions.  Otherwise, get all transactions.
+    if sub_accounts:
+        sel_trans = trans[trans['account'].isin([revised_id] + sub_accounts)]
+        if (len_sub := len(sub_accounts)) > 0:
+            account_text = f'{revised_id} and {len_sub} sub-accounts selected'
+        else:
+            account_text = f'{revised_id} selected'
     else:
         sel_trans = trans
         account_text = f'Click a pie slice to filter from {max_trans_count} records'

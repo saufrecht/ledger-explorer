@@ -2,6 +2,7 @@ import json
 import logging
 import numpy as np
 import pandas as pd
+import time
 from treelib import Tree
 from treelib import exceptions as tlexceptions
 import urllib
@@ -70,8 +71,8 @@ TIME_SPAN_LOOKUP: dict = {
     False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
-SUBTOTAL_SUFFIX: str = ' Subtotal'
-LEAF_SUFFIX: str = ' Leaf'
+SUBTOTAL_SUFFIX: str = ' [Subtotal]'
+LEAF_SUFFIX: str = ' [Leaf]'
 OTHER_PREFIX: str = 'Other '
 MAX_SLICES: int = 7  # TODO: expose this in a control
 
@@ -117,12 +118,15 @@ def get_descendents(account_id: str, account_tree: Tree) -> list:
     Return a list of tags of all descendent accounts of the input account.
     """
 
+    start = time.process_time()
     try:
-        descendent_nodes = account_tree.subtree(account_id).all_nodes()
+        subtree_nodes = account_tree.subtree(account_id).all_nodes()
+        descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]
     except tlexceptions.NodeIDAbsentError:
-        descendent_nodes = []
+        descendent_list = []
 
-    return [x.tag for x in descendent_nodes]
+    logging.debug(f'subtree time is {time.process_time() - start}')
+    return descendent_list
 
 
 def make_bar(trans: pd.DataFrame,
@@ -514,12 +518,11 @@ def make_sunburst(
                          names='name',
                          parents='parent',
                          values='value',
-                         color='id',
                          height=600,
                          branchvalues='total')
 
     figure.update_traces(
-        go.Sunburst(),
+        go.Sunburst({'marker': {'colorscale': 'Aggrnyl'}}),
         insidetextorientation='horizontal',
         maxdepth=3,
         hovertemplate='%{label}<br>%{value}',
