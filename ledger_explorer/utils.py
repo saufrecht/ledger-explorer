@@ -674,16 +674,22 @@ def trim_excess_root(tree: Tree) -> Tree:
 
 trans_table = dash_table.DataTable(
     id='trans_table',
-    columns=[dict(id='date', name='Date'),
+    columns=[dict(id='date', name='Date', type='datetime'),
              dict(id='account', name='Account'),
              dict(id='description', name='Description'),
-             dict(id='amount', name='Amount')],
+             dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
-                  'font-size=': '1.1rem',
+                  'font-weight': '600',
                   'text-align': 'center'},
     style_cell={'overflow': 'hidden',
                 'textOverflow': 'ellipsis',
+                'backgroundColor': 'var(--bg)',
+                'border': 'none',
                 'maxWidth': 0},
+    style_data_conditional=[
+        {'if': {'row_index': 'odd'},
+         'backgroundColor': 'var(--bg-more)'},
+    ],
     style_cell_conditional=[
         {'if': {'column_id': 'date'},
          'textAlign': 'left',

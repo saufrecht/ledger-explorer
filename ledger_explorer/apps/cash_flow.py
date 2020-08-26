@@ -61,7 +61,7 @@ layout = html.Div(
                                     options=TIME_RES_OPTIONS,
                                     clearable=False,
                                     value=1,
-                                    style={'height': '1.2rem', 'width': '5rem',
+                                    style={'height': '1.2rem', 'width': '8rem',
                                            'color': 'var(--fg)',
                                            'backgroundColor': 'var(--bg-more)'}
                                 ),
@@ -306,6 +306,8 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         sel_trans = sel_trans[(sel_trans['date'] >= date_start) & (sel_trans['date'] <= date_end)]
     except (KeyError, TypeError):
         pass
+    sel_trans['date'] = pd.DatetimeIndex(sel_trans['date']).strftime("%Y-%m-%d")
+    sel_trans = sel_trans.sort_values(['date'])
 
     trans_table_text: str = f'{len(sel_trans)} records'
 
