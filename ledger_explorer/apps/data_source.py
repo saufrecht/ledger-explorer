@@ -69,17 +69,13 @@ layout = html.Div(
     state=[State('transactions_url', 'value'),
            State('eras_url', 'value')])
 def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
-    logging.debug(f'Type: n_clicks {type(n_clicks)}')
-    logging.debug(f'Type: trans {type(transactions_url)}')
-    logging.debug(f'Type: eras_url {type(eras_url)}')
     trans = load_transactions(transactions_url)
     account_tree = make_account_tree_from_trans(trans)
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
     eras = load_eras(eras_url, earliest_trans, latest_trans)
-    data = dict(trans=trans.to_json(orient='split', date_format='iso'),
-                eras=eras.to_json(orient='split', date_format='iso'))
-
+    data = dict(trans=trans.to_json(orient='split', date_format='%Y%m%d'),
+                eras=eras.to_json(orient='split', date_format='%Y%m%d'))
     meta_info: list = [f'Data loaded: {len(trans)} records',
                        f'Earliest record: {earliest_trans}',
                        f'Latest record: {latest_trans}',

@@ -1,4 +1,5 @@
 import dash_core_components as dcc
+import dash_daq as daq
 import dash_html_components as html
 from datetime import timedelta
 import logging
@@ -7,14 +8,19 @@ import numpy as np
 import treelib
 
 import plotly.graph_objects as go
+import plotly.io as pio
+
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_OPTIONS, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
+from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
 from utils import chart_fig_layout, trans_table, data_from_json_store
 from utils import get_children, get_descendents
 from utils import make_bar, make_sunburst
 
 from app import app
+
+
+pio.templates.default = 'plotly_dark'
 
 
 def _pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
@@ -55,23 +61,25 @@ layout = html.Div(
                                     id='time_series_resolution',
                                     options=TIME_RES_OPTIONS,
                                     clearable=False,
-                                    value=2,
-                                    style={'height': '1.2rem', 'width': '5rem'}
+                                    value=1,
+                                    style={'height': '1.2rem', 'width': '5rem',
+                                           'color': 'var(--fg)',
+                                           'backgroundColor': 'var(--bg-more)'}
                                 ),
                             ]),
                         html.Fieldset(
                             className="control_bar",
                             children=[
                                 html.Span(
-                                    children='Prorate to ',
+                                    children='Monthly',
                                 ),
-                                dcc.Dropdown(
+                                daq.ToggleSwitch(
                                     id='time_series_span',
-                                    options=TIME_SPAN_OPTIONS,
-                                    clearable=False,
-                                    value=1,
-                                    style={'height': '1.2rem', 'width': '7rem'}
-                                )
+                                    value=False,
+                                ),
+                                html.Span(
+                                    children='Annualized',
+                                ),
                             ]),
                     ]),
             ]),
@@ -106,7 +114,7 @@ layout = html.Div(
     [Input('time_series_resolution', 'value'),
      Input('time_series_span', 'value')],
     state=[State('data_store', 'children')])
-def apply_time_series_resolution(time_resolution: int, time_span: int, data_store: str):
+def apply_time_series_resolution(time_resolution: int, time_span: bool, data_store: str):
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -128,19 +136,9 @@ def apply_time_series_resolution(time_resolution: int, time_span: int, data_stor
 
     ts_title = f'Average {ts_label} $, by {tr_label} '
     chart_fig.update_layout(
-        title={'text': ts_title,
-               'font': {'color': '#eee8d5'}},
-        xaxis={'showgrid': True, 'dtick': 'M3',
-               'linecolor': '#657b83',
-               'color': '#657b83',
-               'gridcolor': '#657b83'},
-        yaxis={'showgrid': True,
-               'linecolor': '#657b83',
-               'color': '#657b83',
-               'gridcolor': '#657b83'},
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='#586e75',
-        font={'color': '#657b83'},
+        title={'text': ts_title},
+        xaxis={'showgrid': True, 'dtick': 'M3'},
+        yaxis={'showgrid': True},
         barmode='relative')
 
     return [chart_fig]
@@ -175,9 +173,9 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     if not figure or not data_store:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
-    sel_start_date: np.datetime64 = None
+    sel_date_start: np.datetime64 = None
     sel_start_display_date: np.datetime64 = None  # Selection may be either > or ≥, so make the display consistent
-    sel_end_date: np.datetime64 = None
+    sel_date_end: np.datetime64 = None
     sel_accounts = []
     filtered_trans = pd.DataFrame()
     desc_account_count = 0
@@ -195,26 +193,26 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         for point in points:
             if tr_label == 'Era':
                 era = trace['text'][point]
-                sel_start_date = eras[eras.index == era]['start_date'][0]
-                sel_start_display_date = sel_start_date
-                sel_end_date = eras[eras.index == era]['end_date'][0]
+                sel_date_start = eras[eras.index == era]['date_start'][0]
+                sel_start_display_date = sel_date_start
+                sel_date_end = eras[eras.index == era]['date_end'][0]
             else:
-                sel_end_date = pd.to_datetime(trace['x'][point])
+                sel_date_end = pd.to_datetime(trace['x'][point])
                 # the first point in the time-series won't have a preceding point
                 if point > 0:
-                    sel_start_date = pd.to_datetime(trace['x'][point - 1])
-                    sel_start_display_date = sel_start_date + timedelta(days=1)
+                    sel_date_start = pd.to_datetime(trace['x'][point - 1])
+                    sel_start_display_date = sel_date_start + timedelta(days=1)
                 else:
-                    sel_start_date = earliest_trans
+                    sel_date_start = earliest_trans
                     sel_start_display_date = earliest_trans
 
-            logging.debug(f'Trace {account}, point {point}: start {sel_start_date}, end {sel_end_date}')
+            logging.debug(f'Trace {account}, point {point}: start {sel_date_start}, end {sel_date_end}')
             desc_accounts = get_descendents(account, account_tree)
             desc_account_count = desc_account_count + len(desc_accounts)
             subtree_accounts = [account] + desc_accounts
             new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
-                loc[trans['date'] >= sel_start_date].\
-                loc[trans['date'] <= sel_end_date]
+                loc[trans['date'] >= sel_date_start].\
+                loc[trans['date'] <= sel_date_end]
 
             if len(filtered_trans) > 0:
                 filtered_trans.append(new_trans)
@@ -227,7 +225,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     if filtered_count > 0:
         sel_accounts_content = _pretty_account_label(sel_accounts, desc_account_count,
                                                      sel_start_display_date,
-                                                     sel_end_date,
+                                                     sel_date_end,
                                                      filtered_count)
     else:
         # If no trans are selected, show everything.  Note that we
@@ -237,15 +235,15 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         # because any clickable bar must have $$, and so, trans
         sel_accounts_content = f'Click a bar in the graph to filter from {len(trans):,d} records'
         filtered_trans = trans
-        sel_start_date = earliest_trans
-        sel_end_date = latest_trans
+        sel_date_start = earliest_trans
+        sel_date_end = latest_trans
 
-    sun_fig = make_sunburst(filtered_trans, sel_start_date, sel_end_date,
+    sun_fig = make_sunburst(filtered_trans, sel_date_start, sel_date_end,
                             SUBTOTAL_SUFFIX,
                             time_span)
-    time_series_selection_info = {'start': sel_start_date, 'end': sel_end_date, 'count': len(filtered_trans)}
+    time_series_selection_info = {'start': sel_date_start, 'end': sel_date_end, 'count': len(filtered_trans)}
 
-    title = f'Average {ts_label} $ from {sel_start_date.strftime("%Y-%m-%d")} to {sel_end_date.strftime("%Y-%m-%d")}'
+    title = f'Average {ts_label} $ from {sel_date_start.strftime("%Y-%m-%d")} to {sel_date_end.strftime("%Y-%m-%d")}'
     return [sel_accounts_content, time_series_selection_info, sun_fig, title]
 
 
@@ -268,8 +266,8 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
 
-    start_date: np.datetime64 = pd.to_datetime(time_series_info.get('start', earliest_trans))
-    end_date: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
+    date_start: np.datetime64 = pd.to_datetime(time_series_info.get('start', earliest_trans))
+    date_end: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
     max_trans_count = time_series_info.get('count', 0)
 
     sel_accounts: list = []
@@ -307,7 +305,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         account_text = f'Click a pie slice to filter from {max_trans_count} records'
 
     try:
-        sel_trans = sel_trans[(sel_trans['date'] >= start_date) & (sel_trans['date'] <= end_date)]
+        sel_trans = sel_trans[(sel_trans['date'] >= date_start) & (sel_trans['date'] <= date_end)]
     except (KeyError, TypeError):
         pass
 

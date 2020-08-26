@@ -1,4 +1,5 @@
 import json
+import logging
 import numpy as np
 import pandas as pd
 from treelib import Tree
@@ -28,7 +29,6 @@ small_font = dict(
 time_series_layout = dict(
     legend={'x': 0, 'y': 1},
     font=small_font,
-    paper_bgcolor='var(--bg)',
     titlefont=medium_font)
 
 
@@ -41,7 +41,6 @@ chart_fig_layout = dict(
         t=10,
         b=10),
     height=350,
-    paper_bgcolor='var(--bg)',
     showlegend=False,
     title=dict(
             font=big_font,
@@ -67,13 +66,8 @@ TIME_RES_OPTIONS: list = [
     {'value': 4, 'label': 'Month'}]
 
 TIME_SPAN_LOOKUP: dict = {
-    0: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
-    1: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
-
-TIME_SPAN_OPTIONS: list = [
-    {'value': 0, 'label': 'Annual'},
-    {'value': 1, 'label': 'Monthly'}
-]
+    True: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
+    False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
 SUBTOTAL_SUFFIX: str = ' Subtotal'
@@ -85,9 +79,15 @@ MAX_SLICES: int = 7  # TODO: expose this in a control
 def data_from_json_store(data_store: str, filter: list) -> tuple:
     """ Parse data stored in Dash JSON component.  Used to move data between different
     callbacks in Dash """
-
     data = json.loads(data_store)
-    trans = pd.read_json(data['trans'], orient='split')
+    trans = pd.read_json(data['trans'],
+                         orient='split',
+                         dtype={'date': 'datetime64',
+                                'description': 'object',
+                                'amount': 'int64',
+                                'account': 'object',
+                                'full account name': 'object'})
+
     account_tree = make_account_tree_from_trans(trans)
     filter_accounts: list = []
 
@@ -102,7 +102,10 @@ def data_from_json_store(data_store: str, filter: list) -> tuple:
 
     eras = pd.read_json(data['eras'],
                         orient='split',
-                        dtype={'index': 'str', 'start_date': 'datetime64', 'end_date': 'datetime64'})
+                        dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
+    # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
+    eras['date_start'] = eras['date_start'].astype('datetime64[ms]')
+    eras['date_end'] = eras['date_end'].astype('datetime64[ms]')
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
 
@@ -132,6 +135,7 @@ def make_bar(trans: pd.DataFrame,
              deep: bool = False):
     """ returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
+
     if deep:
         tba = trans[trans['account'].isin(get_descendents(account_id, account_tree))]
     else:
@@ -161,10 +165,11 @@ def make_bar(trans: pd.DataFrame,
     elif tr_label == 'Era':
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
-        bins = eras.start_date.sort_values()
+        bins = eras.date_start.sort_values()
         bin_boundary_dates = bins.tolist()
         bin_labels = bins.index.tolist()
         # there must be one more bin boundary than label, so:
+        logging.debug(f'bbd: {bin_boundary_dates[-1]}, latest_tba {latest_tba}')
         if bin_boundary_dates[-1] <= latest_tba:
             # if there's going to be any data in the last bin, add a final boundary
             bin_boundary_dates = bin_boundary_dates + [latest_tba]
@@ -175,12 +180,12 @@ def make_bar(trans: pd.DataFrame,
         tba['bin'] = pd.cut(x=tba.index, bins=bin_boundary_dates, labels=bin_labels, duplicates='drop')
         bin_amounts = pd.DataFrame({'date': bin_boundary_dates[0:-1],
                                     'value': tba.groupby('bin')['amount'].sum()})
-        bin_amounts['start_date'] = bin_boundary_dates[0:-1]
-        bin_amounts['end_date'] = bin_boundary_dates[1:]
-        bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
+        bin_amounts['date_start'] = bin_boundary_dates[0:-1]
+        bin_amounts['date_end'] = bin_boundary_dates[1:]
+        bin_amounts['delta'] = bin_amounts['date_end'] - bin_amounts['date_start']
         bin_amounts['width'] = bin_amounts['delta'] / np.timedelta64(1, 'ms')
-        bin_amounts['midpoint'] = bin_amounts['start_date'] + bin_amounts['delta'] / 2
-        bin_amounts['delta'] = bin_amounts['end_date'] - bin_amounts['start_date']
+        bin_amounts['midpoint'] = bin_amounts['date_start'] + bin_amounts['delta'] / 2
+        bin_amounts['delta'] = bin_amounts['date_end'] - bin_amounts['date_start']
         bin_amounts['months'] = bin_amounts['delta'] / np.timedelta64(1, 'M')
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
         bin_amounts['text'] = bin_amounts.index.astype(str)
@@ -319,8 +324,8 @@ def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
 
 def make_sunburst(
         trans: pd.DataFrame,
-        start_date: np.datetime64 = None,
-        end_date: np.datetime64 = None,
+        date_start: np.datetime64 = None,
+        date_end: np.datetime64 = None,
         SUBTOTAL_SUFFIX: str = None,
         time_span: int = 1):
     """
@@ -333,16 +338,16 @@ def make_sunburst(
     #######################################################################
     # Set up a new tree with totals based on date-filtered transactions
     #######################################################################
-    if not start_date:
-        start_date = trans['date'].min()
-    if not end_date:
-        end_date = pd.Timestamp.now()
+    if not date_start:
+        date_start = trans['date'].min()
+    if not date_end:
+        date_end = pd.Timestamp.now()
 
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_months = ts.get('months')     # e.g., 12
 
-    duration = (end_date - start_date) / np.timedelta64(1, 'M')
-    sel_trans = trans[(trans['date'] >= start_date) & (trans['date'] <= end_date)]
+    duration = (date_end - date_start) / np.timedelta64(1, 'M')
+    sel_trans = trans[(trans['date'] >= date_start) & (trans['date'] <= date_end)]
     sel_trans = positize(sel_trans)
 
     def make_subtotal_tree(trans, prorate_months):
@@ -510,14 +515,12 @@ def make_sunburst(
                          parents='parent',
                          values='value',
                          color='id',
-                         color_discrete_sequence=['lightskyblue', 'lightskyblue'],
                          height=600,
                          branchvalues='total')
 
     figure.update_traces(
         go.Sunburst(),
         insidetextorientation='horizontal',
-        marker={'line': {'color': 'white'}},
         maxdepth=3,
         hovertemplate='%{label}<br>%{value}',
         texttemplate='%{label}<br>%{value}',
@@ -567,16 +570,16 @@ def load_eras(source, earliest_date, latest_date):
     except urllib.error.HTTPError:
         return None
 
-    data = data.astype({'start_date': 'datetime64'})
-    data = data.astype({'end_date': 'datetime64'})
+    data = data.astype({'date_start': 'datetime64'})
+    data = data.astype({'date_end': 'datetime64'})
 
-    data = data.sort_values(by=['start_date'], ascending=False)
+    data = data.sort_values(by=['date_start'], ascending=False)
     data = data.reset_index(drop=True).set_index('name')
 
-    if pd.isnull(data.iloc[0].end_date):
-        data.iloc[0].end_date = latest_date
-    if pd.isnull(data.iloc[-1].start_date):
-        data.iloc[-1].start_date = earliest_date
+    if pd.isnull(data.iloc[0].date_end):
+        data.iloc[0].date_end = latest_date
+    if pd.isnull(data.iloc[-1].date_start):
+        data.iloc[-1].date_start = earliest_date
 
     return data
 
@@ -596,6 +599,7 @@ def load_transactions(source):
 
     # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
     data['date'] = data['date'].fillna(method='ffill')
+
     data['description'] = data['description'].fillna(method='ffill')
     data['notes'] = data['notes'].fillna(method='ffill')
 
@@ -676,8 +680,7 @@ trans_table = dash_table.DataTable(
                   'text-align': 'center'},
     style_cell={'overflow': 'hidden',
                 'textOverflow': 'ellipsis',
-                'maxWidth': 0,
-                'backgroundColor': 'var(--bg-more)'},
+                'maxWidth': 0},
     style_cell_conditional=[
         {'if': {'column_id': 'date'},
          'textAlign': 'left',

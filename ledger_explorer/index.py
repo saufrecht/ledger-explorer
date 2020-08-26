@@ -19,7 +19,8 @@ app.layout = html.Div(
                  className='custom-tabs-container',
                  children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
                            dcc.Tab(label='Cash Flow', id='cf_tab', value='cf'),
-                           dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs')]),
+                           dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs')]
+                 ),
         html.Div(id='tab-content'),
     ])
 
