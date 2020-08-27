@@ -3,10 +3,13 @@ import logging
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import plotly.io as pio
 
 from app import app
 from apps import balance_sheet, cash_flow, data_source
 
+
+pio.templates.default = 'plotly_dark'
 
 app.layout = html.Div(
     id='page-content',
@@ -28,7 +31,6 @@ app.layout = html.Div(
 @app.callback(Output('tab-content', 'children'),
               [Input('tabs', 'value')])
 def change_tab(selected_tab: str):
-    logging.debug(f'tab selection: {selected_tab}')
     if selected_tab == 'bs':
         layout = balance_sheet.layout
     elif selected_tab == 'cf':

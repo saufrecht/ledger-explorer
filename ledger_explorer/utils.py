@@ -2,7 +2,6 @@ import json
 import logging
 import numpy as np
 import pandas as pd
-import time
 from treelib import Tree
 from treelib import exceptions as tlexceptions
 import urllib
@@ -32,7 +31,6 @@ time_series_layout = dict(
     font=small_font,
     titlefont=medium_font)
 
-
 chart_fig_layout = dict(
     clickmode='event+select',
     dragmode='select',
@@ -52,29 +50,71 @@ chart_fig_layout = dict(
         font_color='var(--fg)',
         font=medium_font))
 
+
+trans_table = dash_table.DataTable(
+    id='trans_table',
+    columns=[dict(id='date', name='Date', type='datetime'),
+             dict(id='account', name='Account'),
+             dict(id='description', name='Description'),
+             dict(id='amount', name='Amount', type='numeric')],
+    style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
+                  'font-weight': '600',
+                  'text-align': 'center'},
+    style_cell={'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'backgroundColor': 'var(--bg)',
+                'border': 'none',
+                'maxWidth': 0},
+    style_data_conditional=[
+        {'if': {'row_index': 'odd'},
+         'backgroundColor': 'var(--bg-more)'},
+    ],
+    style_cell_conditional=[
+        {'if': {'column_id': 'date'},
+         'textAlign': 'left',
+         'padding': '0px 10px',
+         'width': '20%'},
+        {'if': {'column_id': 'account'},
+         'textAlign': 'left',
+         'padding': '0px px',
+         'width': '18%'},
+        {'if': {'column_id': 'description'},
+         'textAlign': 'left',
+         'padding': 'px 2px 0px 3px'},
+        {'if': {'column_id': 'amount'},
+         'padding': '0px 12px 0px 0px',
+         'width': '13%'}],
+    data=[],
+    sort_action='native',
+    page_action='native',
+    filter_action='native',
+    style_as_list_view=True,
+    page_size=20)
+
+LEAF_SUFFIX: str = ' [Leaf]'
+OTHER_PREFIX: str = 'Other '
+MAX_SLICES: int = 7  # TODO: expose this in a control
+ROOT_ACCOUNTS = [{'id': 'Assets', 'flip_negative': False},
+                 {'id': 'Equity', 'flip_negative': False},
+                 {'id': 'Expenses', 'flip_negative': True},
+                 {'id': 'Income', 'flip_negative': True},
+                 {'id': 'Liabilities', 'flip_negative': False}]
+SUBTOTAL_SUFFIX: str = ' [Subtotal]'
 TIME_RES_LOOKUP: dict = {
     0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12},
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
     4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1}}
-
 TIME_RES_OPTIONS: list = [
     {'value': 0, 'label': 'All'},
     {'value': 1, 'label': 'Era'},
     {'value': 2, 'label': 'Year'},
     {'value': 3, 'label': 'Quarter'},
     {'value': 4, 'label': 'Month'}]
-
 TIME_SPAN_LOOKUP: dict = {
     True: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
     False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
-
-
-SUBTOTAL_SUFFIX: str = ' [Subtotal]'
-LEAF_SUFFIX: str = ' [Leaf]'
-OTHER_PREFIX: str = 'Other '
-MAX_SLICES: int = 7  # TODO: expose this in a control
 
 
 def data_from_json_store(data_store: str, filter: list) -> tuple:
@@ -88,12 +128,11 @@ def data_from_json_store(data_store: str, filter: list) -> tuple:
                                 'amount': 'int64',
                                 'account': 'object',
                                 'full account name': 'object'})
-
-    account_tree = make_account_tree_from_trans(trans)
+    orig_account_tree = make_account_tree_from_trans(trans)
     filter_accounts: list = []
 
     for account in filter:
-        filter_accounts = filter_accounts + get_descendents(account, account_tree)
+        filter_accounts = filter_accounts + [account] + get_descendents(account, orig_account_tree)
 
     if filter_accounts:
         trans = trans[trans['account'].isin(filter_accounts)]
@@ -118,14 +157,12 @@ def get_descendents(account_id: str, account_tree: Tree) -> list:
     Return a list of tags of all descendent accounts of the input account.
     """
 
-    start = time.process_time()
     try:
         subtree_nodes = account_tree.subtree(account_id).all_nodes()
         descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]
     except tlexceptions.NodeIDAbsentError:
         descendent_list = []
 
-    logging.debug(f'subtree time is {time.process_time() - start}')
     return descendent_list
 
 
@@ -596,7 +633,7 @@ def load_transactions(source):
     def convert(s):  # not fast
         dates = {date: pd.to_datetime(date) for date in s.unique()}
         return s.map(dates)
-    data = pd.read_csv(source, thousands=',')
+    data = pd.read_csv(source, thousands=',', low_memory=False)
     data.columns = [x.lower() for x in data.columns]
     data['date'] = data['date'].astype({'date': 'datetime64'})
 
@@ -670,44 +707,3 @@ def trim_excess_root(tree: Tree) -> Tree:
         return trim_excess_root(new_tree)
     else:
         return tree
-
-
-trans_table = dash_table.DataTable(
-    id='trans_table',
-    columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id='account', name='Account'),
-             dict(id='description', name='Description'),
-             dict(id='amount', name='Amount', type='numeric')],
-    style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
-                  'font-weight': '600',
-                  'text-align': 'center'},
-    style_cell={'overflow': 'hidden',
-                'textOverflow': 'ellipsis',
-                'backgroundColor': 'var(--bg)',
-                'border': 'none',
-                'maxWidth': 0},
-    style_data_conditional=[
-        {'if': {'row_index': 'odd'},
-         'backgroundColor': 'var(--bg-more)'},
-    ],
-    style_cell_conditional=[
-        {'if': {'column_id': 'date'},
-         'textAlign': 'left',
-         'padding': '0px 10px',
-         'width': '18%'},
-        {'if': {'column_id': 'account'},
-         'textAlign': 'left',
-         'padding': '0px px',
-         'width': '20%'},
-        {'if': {'column_id': 'description'},
-         'textAlign': 'left',
-         'padding': 'px 2px 0px 3px'},
-        {'if': {'column_id': 'amount'},
-         'padding': '0px 12px 0px 0px',
-         'width': '13%'}],
-    data=[],
-    sort_action='native',
-    page_action='native',
-    filter_action='native',
-    style_as_list_view=True,
-    page_size=20)

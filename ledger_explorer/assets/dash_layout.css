@@ -60,6 +60,11 @@
     --table-border: 1px solid var(--fg-less);
 }
 
+
+/*———————————————————————————————————————————————————————————*/
+/* General formatting                                        */
+/*———————————————————————————————————————————————————————————*/
+
 html {
   background-color: var(--bg-more);
   color: var(--fg);
@@ -87,6 +92,9 @@ h3 {
   font-size: 130%;
 }
 
+/*———————————————————————————————————————————————————————————*/
+/* Page layout classes                                       */
+/*———————————————————————————————————————————————————————————*/
 
 .layout_box {
   display: grid;
@@ -100,16 +108,27 @@ h3 {
     box-shadow: var(--body-shadow)!important;
 }
 
-#time_series_box {
-  grid-column: 1 / 3;
-  grid-row: 1 / 2 ;
-}
-
 .control_bar {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
 }
+
+
+.hidden {
+  display: none;
+}
+
+/*———————————————————————————————————————————————————————————*/
+/* Individual page layouts                                   */
+/*———————————————————————————————————————————————————————————*/
+/* Cash_flow */
+
+#time_series_box {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2 ;
+}
+
 
 #account_burst_box {
   grid-column: 1 / 2;
@@ -122,9 +141,8 @@ h3 {
 }
 
 
-.hidden {
-  display: none;
-}
+/* Cash_flow */
+
 
 /* .dash-filter > input { */
 /*   border: 4px solid var(--bg)!important; */
@@ -237,4 +255,19 @@ button {
 
 #selected_trans_display {
     margin-bottom: 1rem;
+}
+
+.dash-cell {
+    height: 2rem;
+}
+
+.dash-cell-value {
+    font-size: 1rem;
+    font-family: var(--mono);
+}
+
+.dash-spreadsheet-inner input {
+    font-size: 0.8rem;
+    background-color: var(--bg-more)!important;
+    color: var(--fg-less)!important;
 }

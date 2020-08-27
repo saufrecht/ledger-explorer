@@ -2,12 +2,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import numpy as np
 import json
-import logging
 from typing import Iterable, List
 
 
 from dash.dependencies import Input, Output, State
-from utils import load_eras, load_transactions, make_account_tree_from_trans
+from utils import load_eras, load_transactions, make_account_tree_from_trans, ROOT_ACCOUNTS, get_descendents
 
 
 from app import app
@@ -71,6 +70,11 @@ layout = html.Div(
 def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
     trans = load_transactions(transactions_url)
     account_tree = make_account_tree_from_trans(trans)
+    for account in [ra for ra in ROOT_ACCOUNTS if ra['flip_negative'] is True]:
+        trans['amount'] = np.where(trans['account'].isin(get_descendents(account['id'], account_tree)),
+                                   trans['amount'] * -1,
+                                   trans['amount'])
+
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
     eras = load_eras(eras_url, earliest_trans, latest_trans)

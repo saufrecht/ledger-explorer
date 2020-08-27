@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 
 import plotly.graph_objects as go
-import plotly.io as pio
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -17,9 +16,6 @@ from utils import get_children, get_descendents
 from utils import make_bar, make_sunburst
 
 from app import app
-
-
-pio.templates.default = 'plotly_dark'
 
 
 def _pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
@@ -205,7 +201,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
                     sel_date_start = earliest_trans
                     sel_start_display_date = earliest_trans
 
-            logging.debug(f'Trace {account}, point {point}: start {sel_date_start}, end {sel_date_end}')
             desc_accounts = get_descendents(account, account_tree)
             desc_account_count = desc_account_count + len(desc_accounts)
             subtree_accounts = [account] + desc_accounts
@@ -274,7 +269,6 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     # Figure out which account(s) were selected in the sunburst click
     if burst_clickData:
         click_account = burst_clickData['points'][0]['id']
-        logging.debug(f'Click: {click_account}')
         # strip any SUFFFIXes from the label that were added in the sunburst hack
         if LEAF_SUFFIX in click_account:
             revised_id = click_account.replace(LEAF_SUFFIX, '')
@@ -285,15 +279,12 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     else:
         revised_id = []
 
-    logging.debug(f'revised_id is {revised_id}')
-    # Add any sub-accounts
-    if revised_id:
-        sub_accounts = get_descendents(revised_id, account_tree)
-
-    logging.debug(f'sub_accounts: {sub_accounts}')
     # if any accounts are selected, get those transactions.  Otherwise, get all transactions.
-    if sub_accounts:
-        sel_trans = trans[trans['account'].isin([revised_id] + sub_accounts)]
+    if revised_id:
+        # Add any sub-accounts
+        sub_accounts = get_descendents(revised_id, account_tree)
+        filter_accounts = [revised_id] + sub_accounts
+        sel_trans = trans[trans['account'].isin(filter_accounts)]
         if (len_sub := len(sub_accounts)) > 0:
             account_text = f'{revised_id} and {len_sub} sub-accounts selected'
         else:

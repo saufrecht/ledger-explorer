@@ -21,17 +21,14 @@ layout: html = html.Div(
             id='bs_time_series_control_bar',
             className="control_bar dashbox",
             children=[
-                dcc.Slider(
-                    className='resolution-slider',
+                dcc.Dropdown(
+                    className='resolution-dropdown',
                     id='bs_period',
-                    min=0,
-                    max=4,
-                    step=1,
-                    marks=TIME_RES_OPTIONS,
+                    options=TIME_RES_OPTIONS,
                     value=2
                 ),
                 html.H2(
-                    id='selected_account_display',
+                    id='selected_account_text',
                     children=['Account']),
                 html.H2(
                     id='burst_selected_account_display',
@@ -44,6 +41,7 @@ layout: html = html.Div(
             ]),
         html.Div(
             className='master_time_series dashbox',
+            id='time_series_box',
             children=[
                 dcc.Graph(
                     id='bs_master_time_series')
@@ -54,6 +52,8 @@ layout: html = html.Div(
             children=[
                 html.Div(
                     id='account_burst'),
+                html.Div(
+                    id='burst_title'),
                 html.Div(
                     id='master_time_series'),
                 html.Div(
@@ -66,6 +66,8 @@ layout: html = html.Div(
                     id='time_series_span'),
                 html.Div(
                     id='trans_table'),
+                html.Div(
+                    id='trans_table_text'),
                 html.Div(
                     id='transaction_time_series'),
             ]),
