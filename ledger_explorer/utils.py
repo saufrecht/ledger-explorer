@@ -6,7 +6,7 @@ from treelib import Tree
 from treelib import exceptions as tlexceptions
 import urllib
 
-
+from dash.exceptions import PreventUpdate
 import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
@@ -99,13 +99,16 @@ ROOT_ACCOUNTS = [{'id': 'Assets', 'flip_negative': False},
                  {'id': 'Expenses', 'flip_negative': True},
                  {'id': 'Income', 'flip_negative': True},
                  {'id': 'Liabilities', 'flip_negative': False}]
+ROOT_TAG = '[Total]'
+ROOT_ID = 'root'
+
 SUBTOTAL_SUFFIX: str = ' [Subtotal]'
 TIME_RES_LOOKUP: dict = {
     0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
-    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12},
-    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3},
-    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1}}
+    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
+    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y–Q%q'},  # en-dash
+    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y–%b'}}  # en-dash
 TIME_RES_OPTIONS: list = [
     {'value': 0, 'label': 'All'},
     {'value': 1, 'label': 'Era'},
@@ -113,7 +116,7 @@ TIME_RES_OPTIONS: list = [
     {'value': 3, 'label': 'Quarter'},
     {'value': 4, 'label': 'Month'}]
 TIME_SPAN_LOOKUP: dict = {
-    True: {'label': 'Annual', 'abbrev': ' ⁄y', 'months': 12},
+    True: {'label': 'Annualized', 'abbrev': ' ⁄y', 'months': 12},
     False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
@@ -144,8 +147,10 @@ def data_from_json_store(data_store: str, filter: list) -> tuple:
                         orient='split',
                         dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
     # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
-    eras['date_start'] = eras['date_start'].astype('datetime64[ms]')
-    eras['date_end'] = eras['date_end'].astype('datetime64[ms]')
+    if len(eras) > 0:
+        eras['date_start'] = eras['date_start'].astype('datetime64[ms]')
+        eras['date_end'] = eras['date_end'].astype('datetime64[ms]')
+
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
 
@@ -173,12 +178,12 @@ def make_bar(trans: pd.DataFrame,
              color_num: int = 0,
              time_resolution: int = 0,
              time_span: int = 1,
-             deep: bool = False):
+             deep: bool = False) -> go.Bar:
     """ returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
 
     if deep:
-        tba = trans[trans['account'].isin(get_descendents(account_id, account_tree))]
+        tba = trans[trans['account'].isin([account_id] + get_descendents(account_id, account_tree))]
     else:
         tba = trans[trans['account'] == account_id]
 
@@ -187,6 +192,7 @@ def make_bar(trans: pd.DataFrame,
     tr_hover: str = tr.get('abbrev', None)      # e.g., "Q"
     tr_label: str = tr.get('label', None)       # e.g., "Quarter"
     tr_months: int = tr.get('months', None)     # e.g., 3
+    tr_format: str = tr.get('format', None)     # e.g., %Y-%m
 
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_hover = ts.get('abbrev')      # NOQA  e.g., "y"
@@ -195,15 +201,49 @@ def make_bar(trans: pd.DataFrame,
     earliest_trans = tba.index.min()
     latest_trans = tba.index.max()
 
+    trace_type: str = 'periodic'
     if tr_label == 'Total':
-        total = tba['amount'].sum()
-        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
-        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
-        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
-        factor = ts_months / all_months
-        bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['text'] = f'{tr_hover}'
+        trace_type = 'total'
     elif tr_label == 'Era':
+        if len(eras) > 0:
+            trace_type = 'era'
+        else:
+            trace_type = 'total'
+    elif tr_label in ['Year', 'Quarter', 'Month']:
+        format = tr_format
+    else:
+        raise PreventUpdate
+
+    try:
+        marker_color = disc_colors[color_num]
+    except IndexError:
+        # don't ever run out of colors
+        marker_color = 'var(--Cyan)'
+
+    if trace_type == 'periodic':
+        resample_keyword = tr['resample_keyword']
+        bin_amounts = tba.resample(resample_keyword).\
+            sum()['amount'].\
+            to_frame(name='value')
+        factor = ts_months / tr_months
+        bin_amounts['x'] = bin_amounts.index.to_period().strftime(format)
+        bin_amounts['y'] = bin_amounts['value'] * factor
+        bin_amounts['text'] = f'{tr_hover}'
+        bin_amounts['customdata'] = account_id
+        bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
+        trace = go.Bar(
+            name=account_id,
+            x=bin_amounts.x,
+            y=bin_amounts.y,
+            customdata=bin_amounts.customdata,
+            text=bin_amounts.text,
+            texttemplate=bin_amounts.texttemplate,
+            textposition='auto',
+            opacity=0.9,
+            hovertemplate='%{x}<br>%{customdata}:<br>%{y:$,.0f}<br>',
+            marker_color=marker_color)
+
+    elif trace_type == 'era':
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
         bins = eras.date_start.sort_values()
@@ -223,63 +263,43 @@ def make_bar(trans: pd.DataFrame,
                                     'value': tba.groupby('bin')['amount'].sum()})
         bin_amounts['date_start'] = bin_boundary_dates[0:-1]
         bin_amounts['date_end'] = bin_boundary_dates[1:]
+        # Plotly bars want the midpoint and width:
         bin_amounts['delta'] = bin_amounts['date_end'] - bin_amounts['date_start']
         bin_amounts['width'] = bin_amounts['delta'] / np.timedelta64(1, 'ms')
         bin_amounts['midpoint'] = bin_amounts['date_start'] + bin_amounts['delta'] / 2
-        bin_amounts['delta'] = bin_amounts['date_end'] - bin_amounts['date_start']
         bin_amounts['months'] = bin_amounts['delta'] / np.timedelta64(1, 'M')
         bin_amounts['value'] = bin_amounts['value'] * (ts_months / bin_amounts['months'])
-        bin_amounts['text'] = bin_amounts.index.astype(str)
+        bin_amounts['text'] = account_id
+        bin_amounts['customdata'] = bin_amounts['text'] + '<br>' +\
+            bin_amounts.index.astype(str) + '<br>(' +\
+            bin_amounts['date_start'].astype(str) + \
+            ' to ' + bin_amounts['date_end'].astype(str) + ')'
 
-    elif tr_label in ['Year', 'Quarter', 'Month']:
-        resample_keyword = tr['resample_keyword']
-        bin_amounts = tba.resample(resample_keyword).\
-            sum()['amount'].\
-            to_frame(name='value')
-        factor = ts_months / tr_months
-        bin_amounts['date'] = bin_amounts.index
-        bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['text'] = f'{tr_hover}'
-    else:
-        # bad input data
-        return None
-
-    try:
-        marker_color = disc_colors[color_num]
-    except IndexError:
-        # don't ever run out of colors
-        marker_color = 'var(--Cyan)'
-
-    bin_amounts['customdata'] = account_id
-    bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
-
-    if tr_label == 'Era':
-        bar = go.Bar(
+        trace = go.Bar(
             name=account_id,
             x=bin_amounts.midpoint,
             width=bin_amounts.width,
             y=bin_amounts.value,
             customdata=bin_amounts.customdata,
             text=bin_amounts.text,
-            texttemplate=bin_amounts.texttemplate,
             textposition='auto',
             opacity=0.9,
-            hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<extra></extra>',
+            texttemplate='%{text}<br>%{value:$,.0f}',
+            hovertemplate='%{customdata}<br>%{value:$,.0f}',
             marker_color=marker_color)
     else:
-        bar = go.Bar(
-            name=account_id,
-            x=bin_amounts.date,
-            y=bin_amounts.value,
-            customdata=bin_amounts.customdata,
-            text=bin_amounts.text,
-            texttemplate=bin_amounts.texttemplate,
-            textposition='auto',
-            opacity=0.9,
-            hovertemplate='%{customdata}: %{y:$,.0f}<br>%{text}<br>starting %{x}<extra></extra>',
-            marker_color=marker_color)
-
-    return bar
+        # assume it's a total
+        total = tba['amount'].sum()
+        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
+        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
+        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
+        factor = ts_months / all_months
+        bin_amounts['value'] = bin_amounts['value'] * factor
+        bin_amounts['text'] = f'{tr_hover}'
+        trace = go.Bar(x=bin_amounts['text'],
+                       y=bin_amounts['value'],
+                       text=account_id)
+    return trace
 
 
 def make_cum_bar(
@@ -387,7 +407,7 @@ def make_sunburst(
     ts = TIME_SPAN_LOOKUP[time_span]
     ts_months = ts.get('months')     # e.g., 12
 
-    duration = (date_end - date_start) / np.timedelta64(1, 'M')
+    duration_m = pd.to_timedelta((date_end - date_start), unit='ms') / np.timedelta64(1, 'M')
     sel_trans = trans[(trans['date'] >= date_start) & (trans['date'] <= date_end)]
     sel_trans = positize(sel_trans)
 
@@ -408,7 +428,7 @@ def make_sunburst(
                 continue
 
             try:
-                norm_subtotal = round(subtotal * ts_months / duration)
+                norm_subtotal = round(subtotal * ts_months / duration_m)
             except OverflowError:
                 norm_subtotal = 0
             if norm_subtotal < 0:
@@ -465,9 +485,13 @@ def make_sunburst(
 
         if children:
             # if it has children, rename it to subtotal, but
-            # don't change the identity.
-            subtotal_tag = tag + SUBTOTAL_SUFFIX
-            _sun_tree.update_node(node_id, tag=subtotal_tag)
+            # don't change the identity.  Don't do this for
+            # the root node, which doesn't need a rename
+            # and will look worse if it gets one
+
+            if node_id != ROOT_ID:
+                subtotal_tag = tag + SUBTOTAL_SUFFIX
+                _sun_tree.update_node(node_id, tag=subtotal_tag)
 
             # If it has its own leaf_total, move that amount
             # to a new leaf node
@@ -592,6 +616,11 @@ def positize(trans):
     return trans
 
 
+def pretty_date(date: np.datetime64) -> str:
+    # convert Numpy datetime64 to 'YYYY-MMM-DD'
+    return pd.to_datetime(str(date)).strftime("%Y–%m–%d")  # en-dash
+
+
 def get_children(account_id, account_tree):
     """
     Return a list of tags of all direct child accounts of the input account.
@@ -606,9 +635,9 @@ def load_eras(source, earliest_date, latest_date):
     """
 
     try:
-        data = pd.read_csv(source)
+        data: pd.DataFrame = pd.read_csv(source)
     except urllib.error.HTTPError:
-        return None
+        return pd.DataFrame()
 
     data = data.astype({'date_start': 'datetime64'})
     data = data.astype({'date_end': 'datetime64'})
@@ -633,7 +662,12 @@ def load_transactions(source):
     def convert(s):  # not fast
         dates = {date: pd.to_datetime(date) for date in s.unique()}
         return s.map(dates)
-    data = pd.read_csv(source, thousands=',', low_memory=False)
+
+    try:
+        data: pd.DataFrame = pd.read_csv(source, thousands=',', low_memory=False)
+    except urllib.error.HTTPError:
+        return pd.DataFrame()
+
     data.columns = [x.lower() for x in data.columns]
     data['date'] = data['date'].astype({'date': 'datetime64'})
 
@@ -676,7 +710,7 @@ def make_account_tree_from_trans(trans):
     """
 
     tree = Tree()
-    tree.create_node(tag='All', identifier='root')
+    tree.create_node(tag=ROOT_TAG, identifier=ROOT_ID)
     accounts = trans['full account name'].unique()
 
     for account in accounts:
@@ -684,7 +718,7 @@ def make_account_tree_from_trans(trans):
         for i, branch in enumerate(branches):
             name = branch
             if i == 0:
-                parent = 'root'
+                parent = ROOT_ID
             else:
                 parent = branches[i-1]
             if not tree.get_node(name):
