@@ -1,105 +1,749 @@
 Date,Transaction ID,Number,Description,Notes,Commodity/Currency,Void Reason,Action,Memo,Full Account Name,Account Name,Amount With Sym,Amount Num.,Reconcile,Reconcile Date,Rate/Price
-03/01/2015,4a1efb8f1af04a478695eceb8e231022,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
-01/01/2019,01faca5a75ed4fed9f36f6dea04b9f9c,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
-06/20/2020,66b168165d694e26af2db601ac2487e0,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
-01/01/2018,dc977f5a6cdd45e088b262aee5c89994,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-01/01/2018,344063e78c1b44c294d4b62dd9caceb2,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-02/01/2018,01352e266ada46e582dc5cb70e394642,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-02/01/2018,9a57a019324444a8a4660a03e226539d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-03/01/2018,c91c1f17c6ad421e98fbc05b3ac0b3e2,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-03/01/2018,a6322a7fb3ab4b8d9d22cb352c3ba588,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-04/01/2018,fdc5e030785945cc854acdc79bd17b1e,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-04/01/2018,abc4bc6e6fa942bb91c344988259ee91,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-05/01/2018,f77d36413c5b47dd8438121b1c9a8880,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-05/01/2018,677edca37f134a52b8f007a154210f8b,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-06/01/2018,0387db66ae114c738240b3c029a0148d,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-06/01/2018,baef245283ce40aeac66ed2e50c737fe,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-07/01/2018,8c2c70ffeff34695906ca4fa50263334,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-07/18/2018,f07be8beece44ed19a360b688418d0b3,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-08/01/2018,6246e50b044b4e87ad479e5b527c9304,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-08/01/2018,f00895b844b842b0bb740900ec1b59a9,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-09/01/2018,405d70900e0e4480affcd836926da74b,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-09/01/2018,2b2c20591f7a4ac986817839e13f4071,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-10/01/2018,bd5bf4e8bf0249b4b07db62a3d0b2fb8,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-11/01/2018,028839ed31cd4fb7b8fccde716306371,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-12/01/2018,aac12fa51b814cf6a994e4b777499b9d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.00
-12/15/2018,228f17de390d457f8aecabfc08fe1766,,Big Bonus,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$15,000.00","15,000.00",n,,1.00
-,,,,,,,,,Income:Bonus,Bonus,"-$15,000.00","-15,000.00",n,,1.00
-01/01/2019,14a97e47830f4167a2f3e1268db34bfe,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-02/03/2019,8ce5ca4520ab4012bc73f988d2bb6772,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-03/03/2019,a7d8b9419d4542b8a97a80310c793de3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-04/03/2019,81439f2ded344b77aa955ee9a15a93d4,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-05/03/2019,5fd1fcecfc1949b59cdf208259ec1582,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-05/15/2019,04f6f35f3d70425aa45f85dee30af0ad,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
-,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
-06/01/2019,5b6c34d060864f89b8658edde637ff92,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-07/01/2019,4fe075089ca14219a612a3aedbd334b1,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
-,,,,,,,,bought gas for Jim Anchower,Expenses:Charity,Charity,$20.00,20.00,n,,1.00
-07/01/2019,b833a9ce67714a4fa78a605161fffb83,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-07/05/2019,559ab52a76bc4d0c8f0ef32428dd3772,,lots of beans,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$255.00,-255.00,n,,1.00
-,,,,,,,,,Expenses:Groceries,Groceries,$255.00,255.00,n,,1.00
-09/01/2019,23d71d3b64e74d86857e1587728d0fcf,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-10/01/2019,41bca29b74164d5483e2d5bd922ebb3b,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-11/01/2019,bf5b4cfc6ac341c5a7da95387957b8f3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.00
-02/02/2020,be6cd187812748cabe508cbe4c0c30a6,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
-03/01/2020,0915e09ba9704cd389504cd7704a06bb,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
-,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
-03/02/2020,caccec592dcb41ceade22785b05b8a70,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
-03/15/2020,de04f1f8162645518f939fee912f0a0c,,nice clothes,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.00
-,,,,,,,,,Expenses:Clothes,Clothes,$150.00,150.00,n,,1.00
-04/01/2020,5136ceebb76e476bac4faef604653458,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.00
-,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.00
-,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.00
-04/02/2020,b6f7e34729a64617a4b034a5d0ba6bc0,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
-05/02/2020,e03584c11e1a47ec8020db9e98e04cc4,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
-06/02/2020,ab1bccdaa6c24cc196a96a4819131746,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.00
-,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.00
-06/20/2020,4a47c806adaf4480b9320133911be9f7,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.00
-,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.00
+03/01/2015,4a1efb8f1af04a478695eceb8e231022,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.0000
+01/01/2019,01faca5a75ed4fed9f36f6dea04b9f9c,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.0000
+06/20/2020,66b168165d694e26af2db601ac2487e0,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.0000
+01/01/2016,8462fcee179545069f5d9627889b5f29,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+01/01/2016,07dc21ea4b254808b1b202f11db9d5d3,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+01/01/2016,2f2b2d90b4f044358d81acb614b187f7,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+01/01/2016,8e40c94814f345ea89e6b8817bc985d9,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+01/01/2016,030e4216febc4015bd9f2b162b3ddf0d,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+01/01/2016,d9834aaca4de4b10ad300c23b6a76ccf,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+02/01/2016,be0c4faf19e04ca48e07c4164c12156c,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+02/01/2016,a56aa57453ad456ea1db7b144d65238f,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+02/01/2016,2771b7fe6cbb49c989843209e98d7140,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+02/01/2016,0644b1252f69452a968b3ae28ac40c69,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+02/01/2016,0ec7f8824abe448d97cfb99ad117a179,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+02/01/2016,40ebe2922d5b4fe9a4485ef9fc18c4a4,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+03/01/2016,d340bc09e8f047e091f3641d2d66e8c2,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+03/01/2016,f16984add24d4066ad79c121bae1e5a5,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+03/01/2016,ea665b1b249c40d1ac1ff4cd96d4a5eb,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+03/01/2016,c953c2f516594f5e9284b60035c0e252,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+03/01/2016,a7e8ba5a9f7d4e9c9fd1fd7105693f19,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+03/01/2016,8eb94bca41f04ff58ec7538dfc68b8dc,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+04/01/2016,4126fd8659354353b0c80543b7e0ac4d,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+04/01/2016,e3c6228b229a46a2bb58ace5f9e36671,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+04/01/2016,11cf3f7e2ff947a4ba220ebbc77f46aa,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+04/01/2016,268767c58b314aa0a317f4b188271d7f,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+04/01/2016,c85a726bb9ac48a08bd1fd2e0ea76898,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+04/01/2016,b5a57011e2c542fdaab42ec99b7613b6,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+04/01/2016,194177335f164049b5c9a6deb6cc710d,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+04/01/2016,bccac225afdb448fa54aa7cf78c00acd,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+04/01/2016,f3a5a0bceff04026abad58272a485f69,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+05/01/2016,372f9efeff4642b28ac30650f22f5998,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+05/01/2016,a15b7efd54df42f79155a6eaa9ffadbd,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+05/01/2016,d09be3d0e2474610b330f9df66b1f30b,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+05/01/2016,7016c60626a04f5e8ed6494869b64224,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+05/01/2016,6801fb2fbbc147c9b3135ba13a4c62e7,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+05/01/2016,caccaa5435434acf8442333597760d34,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+05/01/2016,b353801fbaaf41199b40dddf2c6e3f41,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+05/01/2016,1389d220f96849f7a668fe673440f2b3,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+05/01/2016,2ee7ef81f54f421fab77de50259159c1,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+06/01/2016,0a24460c93e04d6da8dce01ad3ec9534,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+06/01/2016,590a15dee94b4b698e1c979373053de3,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+06/01/2016,061694803d5c467489aa172b9e18c435,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+06/01/2016,8247b72ac298427abba960aafec70971,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+06/01/2016,b2ab710e065341399541b61cff319bb3,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+06/01/2016,ff4234348900485a8d80ee390913a49c,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+06/01/2016,6390dd9d5182405c94c8d6e486abe589,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+06/01/2016,b26c881753394f03aa61717a09a8889b,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+06/01/2016,8162ed0e0c9d424e9713b6eac3a0bd83,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+07/01/2016,64d149ddfc73459f98cf3796420b9ff5,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+07/01/2016,7655eb1f301e4371bad90d3cc404334d,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+07/01/2016,5fb56af211234c4fb32990783ef7b8ef,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+07/01/2016,b6db1c97ed3f4f439b8f5a8795b15a07,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+07/01/2016,1c37feca135c4da3a3d34e42f54d3e21,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+07/01/2016,16c3e7cae3cd4de2ba2b01e04ea01dec,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+07/01/2016,c5840fa57056487fa0eed5a2b37e1858,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+07/01/2016,4e3a10fe0b994a918e29034eb0525fa7,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+07/01/2016,50f56d4340b94238a88fb275202d0e32,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+08/01/2016,b33f9367ebce477f9b08fcdb17d7bc42,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+08/01/2016,aabf03f63d754bb49bffd6363d3a473a,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+08/01/2016,a738ba86224c4dd9bfb1e9dcf497ecea,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+08/01/2016,d2937d8189104660a594b48c79df809c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+08/01/2016,d0ef64c054ad438abe30618965d0b9c2,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+08/01/2016,40d88f13159e4b96810a4be621fc0c39,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+08/01/2016,d896267ec381420a9d734abdbbd2679b,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+08/01/2016,2dac18a58f604e499e8b980f85cd756f,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+08/01/2016,ccb74916053640d3b3f40abf428cd1f4,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+09/01/2016,c8c1e3eba09d41e0bf0ba20b5b0277d0,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+09/01/2016,2bd59af75cec4c50ab1729cdc4dad890,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+09/01/2016,4b8da613ef99410d8fd25f864e391f45,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+09/01/2016,2866282491474fc6a0cf3d33f62ca595,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+09/01/2016,523649e87f2d466fa4b04f7bb911c155,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+09/01/2016,7ea35f5241334dadae41c1c8a38b12ec,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+09/01/2016,24ffabf539df482daff93517e97799a2,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+09/01/2016,89a0dd362d434355b4d8ea31663a9459,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+09/01/2016,f0a650b066384e518bd9020e9ed37154,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+10/01/2016,7b095d7ccc064f3a8b2e295d68b82035,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+10/01/2016,847b69b35ac74211a15f38943342e193,,Second Job paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,$955.00,955.00,n,,1.0000
+,,,,,,,,,Income:Salary,Salary,-$955.00,-955.00,n,,1.0000
+10/01/2016,63c5377f650e45a5904bdfa10463c10a,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+10/01/2016,e8b98573aa874143ae016c999bada1aa,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+10/01/2016,c462d9df661f49d39b30e6bcbba56066,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+10/01/2016,c1b3860d58e6476aae882cea838400c8,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+10/01/2016,af7075013ccf4db4aada54e72fb8a834,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+10/01/2016,e3fd6ded713e4c6fa980481de83f260b,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+10/01/2016,af6d7c0e736140509784095ca11b2be4,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+11/01/2016,4a83bdc6cb8846d9b2aa38d62bf60e93,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+11/01/2016,89f7195b5dd6467a9054dd4e041753e1,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+11/01/2016,d5ed4fc438bf4091a63be05fbe4c0696,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+11/01/2016,5995d8f1284b40e9b1ba41c043175810,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+11/01/2016,5880a4d41ff54dca8863cd5c9b45a9ca,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+11/01/2016,27ef73dcb6214e06a2b4bbc5b7090cc2,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+11/01/2016,622b814f85ef451fb53411686c82db47,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+11/01/2016,6b0dab6090bd49909cadf7b8bd078c76,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+12/01/2016,304db6caf16848709f62f1ff1c43965c,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+12/01/2016,81eeaca7929c485890599a3eebc39b2f,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+12/01/2016,73b216c515e745338031b7c8f1ce6106,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+12/01/2016,81b331f6d60e4306ae5c9eca65994325,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+12/01/2016,7c2182e752d34fbf9ce8144fa6aaa51b,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+12/01/2016,e97607a1cde84505b895bfc10be717d3,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+12/01/2016,c405526b2d0e4c56a443d7dbfb99682f,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+12/01/2016,cbb9ef38c5d64d078f6269dcf1f3a3e2,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+01/01/2017,b97d2dcbc8544b4f9184df89174d3c37,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+01/01/2017,c857cd1aad4a49a496d2e2dd05e51ea9,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+01/01/2017,2695b3ee8bd6487090ca2919c9525bef,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+01/01/2017,651059580308419d83516166c8382908,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+01/01/2017,0d4480ee07c54b6d97193dcb4903d4dc,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+01/01/2017,0222282ecc7648ee9e49f9f76a0f968e,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+01/01/2017,8492823b08b7421d98f36657123390b9,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+01/01/2017,242d46da1daa4809966f1d38ea23e113,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+02/01/2017,6ce12599ae6d48e49517ee08a5a13f5b,,McDonalds monthly paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,105.00","1,105.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$1,105.00","-1,105.00",n,,1.0000
+02/01/2017,a25ea93de93f4ef8a37f688d144f7c95,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+02/01/2017,d400bd16eec8451fa09b8bc08e7bf9cf,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+02/01/2017,18be004258bd446590b3e4a6d1cb72ad,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+02/01/2017,d3d3f69e63e44dd69a9b1181eca59822,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+02/01/2017,ab47ec4c3e794d1d9e50459579ffe2a3,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+02/01/2017,73b8058a8d1e4efb892fdc38cf85bbef,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+02/01/2017,68fbed7535524ec59fe7b14ec06d2103,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+03/01/2017,91a1faf8b42f46e28d8c13764c4d4e14,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+03/01/2017,4c9a08798eb744f58c59903d977863ab,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+03/01/2017,7f97062e34ee4987b807f04134a716ad,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+03/01/2017,63fe495de4ad4f51b0f98c28c916dcb7,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+03/01/2017,5000940907bc4855aae9735e4ff0395a,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+03/01/2017,8ba66463c45743d9a02ce1e54f3e6647,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+03/01/2017,852c6b17040744c68d203c501672f42e,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+04/01/2017,498325e94f174213ac21f4387ff9be09,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+04/01/2017,5d2d563b3ec445acaafca3a7ee4f7d0a,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+04/01/2017,4516b4a3fe3b4ef094840a64e802d2f0,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+04/01/2017,939faa119f7948d7b6868ac4bef30d74,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+04/01/2017,f652e5fbeefa42078d63296e744dae76,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+04/01/2017,e19bcb50d35a442487c6a205f1ab557e,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+04/01/2017,6afbca36e9e246d8930e3348f067ac98,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+05/01/2017,ae89c449ce6a494ba6ffdbe3f1c069c5,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+05/01/2017,195a1e4a55324d55bebf1d8d99252d86,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+05/01/2017,962b41b5d3d846ddb5e3e907a4b55b4d,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+05/01/2017,ef7abaffdd244891a291c9a04cd91b26,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+05/01/2017,c676669c4e7f4c1485ff435efdce2ce8,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+05/01/2017,1c6563b6ac9b4e3088d72c8f6aa967ce,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+05/01/2017,d8d075195eb94ccb9b8e070dde332d24,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+06/01/2017,3bd8e71e9e2d4a4e8d40da90bfb7ffad,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+06/01/2017,20da5ee6397e483f806e2bcb7ab81c42,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+06/01/2017,f2d69814ea764d31b989447720f72be0,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+06/01/2017,29a04c568feb4d91969481466c24ba31,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+06/01/2017,9003890465df43acad4e20cce1384556,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+06/01/2017,4ad7359792d4430da4540bc2efc7e907,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+06/01/2017,a3c27a1828444a6ab419c1ac73ddb2ad,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+07/01/2017,15abd71e85ef4536908e3575c5230f4e,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+07/01/2017,bea4c0992c2f431b8e5c65fa916ea273,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+07/01/2017,9fac97a0f8704b7d82609b1b495396f1,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+07/01/2017,462d38fb62174f21b6aaef5ad2509f12,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+07/01/2017,02015ea98b8749ac8a42339522d1b6b8,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+07/01/2017,f21e0d98ad2544b2a7af3fb10ea74eaf,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+07/01/2017,76c767d5102b4655b32aa2e6f38a175d,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+08/01/2017,7be512eedaf848deb22be39e65e63c87,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+08/01/2017,48394a4640b74193a856186143daa065,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+08/01/2017,7f005d43ffe34e7e80face01c6aeeee9,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+08/01/2017,a89d6de5fc784063b69acc3180a75911,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+08/01/2017,369c7c1fff884282926da9ebd82ded5a,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+08/01/2017,1fd5746ae0d64a21856c34216750b648,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+08/01/2017,665b14d7b9c84a0f9a65e568061e641a,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+09/01/2017,da12b1304ab14755b4d76784a8483923,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+09/01/2017,b191c2b179e74c8bb0be3462557c42fe,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+09/01/2017,9e448703be154a5e8e6a0114af0215cc,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+09/01/2017,90c612dc95ff43e9b9b32ca0772072d6,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+09/01/2017,ea6823a4b89e4e97a6a0e4a41893ba34,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+09/01/2017,63e9e214c98d4e97b28b0ccd1574ae1a,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+09/01/2017,fffb861231794cab84c32853998a92e5,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+10/01/2017,0e651f17c49d404888f3b525cee98ea1,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+10/01/2017,63ae90afa14145cd8ece77c2cdd335a7,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+10/01/2017,4effbc89a4584133a6bcfdf74a54e14c,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+10/01/2017,6aaaa1d88d924352814a1dc5d145a7dd,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+10/01/2017,9c86baf055d14582bfd8d86a8747ed41,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+10/01/2017,ba4e5d8bfbdf49b78158eacef983481f,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+10/01/2017,2dffa240006c458e8ef14960413a50b0,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+11/01/2017,81925034329a4292ade720d5c686604b,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+11/01/2017,ce7c3d8799754684b51c563adb01fb5c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+11/01/2017,e914b84d853a43d1853595267a6be972,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+11/01/2017,a496c3b2b49e4c2d8aaf229eb61f7c09,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+11/01/2017,66dca61077f94dda896330246259a84c,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+11/01/2017,4da1c7267af7482b97c76621e651eda0,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+11/01/2017,de3c3b35e5224492b41dd964fd068d0d,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+12/01/2017,0798d08d7aca4234bdd6a821cedae549,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+12/01/2017,4acf5856b1b14fc7b1c68fe40de18423,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+12/01/2017,90af99d3fbd1454684483062884ec06e,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+12/01/2017,2e249fb59ed548cbb22dc2abf71f8d0a,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+12/01/2017,96798759c06f43909e51fec80de0654a,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+12/01/2017,d2a4ab89c48e4721a8ba3dc6702a47b0,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+12/01/2017,01a3655e357a4d8aa63f2f1a89e37e2a,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+01/01/2018,dc977f5a6cdd45e088b262aee5c89994,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+01/01/2018,344063e78c1b44c294d4b62dd9caceb2,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+01/01/2018,00ceacada7c647a08db52127170ca533,,McDonalds/Visa rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$600.00,-600.00,n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,$600.00,600.00,n,,1.0000
+01/01/2018,25b199bd67ba473e8129daa50c276d52,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+01/01/2018,1bfa65b945684e9fbf74ea203e05d565,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+01/01/2018,b6326cd5440d4de7af0501a55c7de898,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+01/01/2018,6ce29e5b85f847bca754927942c4268d,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+01/01/2018,7dc0f96465c24a76b8e1bae9c348a609,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+01/01/2018,e532e22457be4818882196e6211db137,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+02/01/2018,01352e266ada46e582dc5cb70e394642,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+02/01/2018,9a57a019324444a8a4660a03e226539d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+02/01/2018,87c33b1841e04a0295ca713db420c407,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+02/01/2018,1e89a5bcde994046b500e1cc01069953,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+02/01/2018,9d23d0f4456844b0b066301754ccb616,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+02/01/2018,54c270fd36e7485b8964dce4e328fd62,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+02/01/2018,4c321eef93c84ac29b29b74992d09510,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+02/01/2018,3166918b13fc4954b7e8d6239fa0880c,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+03/01/2018,c91c1f17c6ad421e98fbc05b3ac0b3e2,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+03/01/2018,a6322a7fb3ab4b8d9d22cb352c3ba588,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+03/01/2018,dee85ed6db12453b8fdbad0d19efbd97,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+03/01/2018,846d383469974303825a5f401ed8b71c,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+03/01/2018,00d5802249fa41eca9db7f6be33ca98f,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+03/01/2018,65f95a4db3a242ea945b86097b045b39,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+03/01/2018,4a3ea16f25554097b1bf3ccf33e6968f,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+03/01/2018,c5d1e82600f1444d90c70862c0492d22,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+04/01/2018,fdc5e030785945cc854acdc79bd17b1e,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+04/01/2018,abc4bc6e6fa942bb91c344988259ee91,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+04/01/2018,e2ddebdc02c44707b4def9c9bdb23e6c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+04/01/2018,d2bc697df52f4ad9a91043d6ec7f07e6,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+04/01/2018,903fde51e34f4587b018ca5ee1701383,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+04/01/2018,5192507b24fe4f8689d5392fa2ca9457,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+04/01/2018,1f1b6726e174442cae07801a349eb916,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+04/01/2018,74a83e27a38a474ea5035b4d78369d77,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+05/01/2018,f77d36413c5b47dd8438121b1c9a8880,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+05/01/2018,677edca37f134a52b8f007a154210f8b,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+05/01/2018,787b810aba9b4f44a0744ad87b4b916e,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+05/01/2018,1db7fe89581a42a39d8b3fb22e14f558,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+05/01/2018,37d24eccbb4a4e1e861708499e8d099c,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+05/01/2018,b9317b2076904cc8a79ab86d8c75afff,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+05/01/2018,464bc33d7f334977bd04861683641493,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+05/01/2018,f481286466e84882b3fb5d05661c0327,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+06/01/2018,0387db66ae114c738240b3c029a0148d,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+06/01/2018,baef245283ce40aeac66ed2e50c737fe,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+06/01/2018,cca22aabaac74f73b7a36a92a558a0a7,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+06/01/2018,dda7875259ff498382b4791c26bc61dd,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+06/01/2018,60d795a4f9184dcb87165a8bcfafc81e,,renter's insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Health Insurance,Health Insurance,$20.00,20.00,n,,1.0000
+06/01/2018,26da9cb5e37b4fdf9b5a44f1e502d876,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+06/01/2018,f3d07d46532a4d84b8545773a4274055,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+06/01/2018,eabdd3f641d04e21b463ffe3d560b513,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+07/01/2018,8c2c70ffeff34695906ca4fa50263334,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+07/01/2018,3b134d8f1d374c0ea72eb2a375b69311,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+07/01/2018,ef8a6d4f26ef4110af9795fc9a7cc3c6,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+07/01/2018,b5fecb0c85404d5b94a680cd2b73b92d,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+07/01/2018,bdecd454fa414c25851bab0304588b80,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+07/01/2018,4bb0501f79844ad48c3b2a58675377d9,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+07/18/2018,f07be8beece44ed19a360b688418d0b3,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+08/01/2018,6246e50b044b4e87ad479e5b527c9304,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+08/01/2018,f00895b844b842b0bb740900ec1b59a9,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+08/01/2018,25b9697d6f104caf819dcd2d27ef7aab,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+08/01/2018,a252dfd59f444693869f07b42b8b630d,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+08/01/2018,47b655d91a86473caea3a47c0282d04a,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+08/01/2018,5889d8bf181f4b0db77f127826fe695c,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+08/01/2018,6028b3d6bd654181828b1ca3b7d40825,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+09/01/2018,405d70900e0e4480affcd836926da74b,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+09/01/2018,2b2c20591f7a4ac986817839e13f4071,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+09/01/2018,412ff254165242a8908568bebbedcaa4,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+09/01/2018,68dff95160a646a9a46d710723a73e80,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+09/01/2018,253bbbec78d6479ca803e71bc784e0b2,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+09/01/2018,25bef582b2bf43bbade4be9a32013fe2,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+09/01/2018,3a2489005b83445ab23303b1cf3e4951,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+10/01/2018,bd5bf4e8bf0249b4b07db62a3d0b2fb8,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+10/01/2018,210ea4e2c98d40eb9c6e15f3b87f152c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+10/01/2018,8d580a1e4c114b179a594f03806a967c,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+10/01/2018,4add5919a7ca4fa8976d3d6dc97498a3,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+10/01/2018,5edbf51eac324a0e836592a7a81b5d94,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+10/01/2018,0c2054d23e1f4d32bde9a3dbc5e8b958,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+11/01/2018,028839ed31cd4fb7b8fccde716306371,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+11/01/2018,72bd2c9481574816b7e823992a31459d,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+11/01/2018,31c46e7ee71e4423bf0ba901e10ab7d8,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+11/01/2018,661f1faa3e8842edaa9f0dc998d23b4f,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+11/01/2018,7988a96dfc4448639ff22fdff3edac75,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+11/01/2018,9ad47aaf8e834f6c8485af8eaf48a9c5,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+12/01/2018,aac12fa51b814cf6a994e4b777499b9d,,some rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$1,500.00","-1,500.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$1,500.00","1,500.00",n,,1.0000
+12/01/2018,602e081f963047aea618a3f19159bf9f,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+12/01/2018,6db9e88528f8436e91cc5f0f44353fc3,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+12/01/2018,9b7d03e6e9e140af855fa20011ba5caa,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+12/01/2018,42314cfc8247402f9fb8bf472439a1b7,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+12/01/2018,75b3e8e9f8a144d18eb04fd9f440ea88,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+12/15/2018,228f17de390d457f8aecabfc08fe1766,,Big Bonus,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$15,000.00","15,000.00",n,,1.0000
+,,,,,,,,,Income:Bonus,Bonus,"-$15,000.00","-15,000.00",n,,1.0000
+01/01/2019,14a97e47830f4167a2f3e1268db34bfe,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+01/01/2019,76bc0a6e847844dd887faa42cfe6acbc,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+01/01/2019,c82d701290d54e6a8867d3e16f53aa71,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+01/01/2019,d025016e70a147b4bb4bae71d41af17e,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+01/01/2019,58c0b61e0cac4cf398f6ba7f22e873ab,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+01/01/2019,3dddd0bffbf649da8372ac9039d95ae1,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+02/01/2019,24f422fa785940ddb60eae0f21014af7,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+02/01/2019,0d3de0a479ea4142951989f46a3edc13,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+02/01/2019,5287beb8507b491a9859b364bdaeef38,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+02/01/2019,564ec0945c8b46769b668010b5f3ddab,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+02/01/2019,830e7bfc3398483c81c6c7db762df9f7,,McDonald's recommended Other Expenses,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Miscellaneous,Miscellaneous,$100.00,100.00,n,,1.0000
+02/03/2019,8ce5ca4520ab4012bc73f988d2bb6772,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+03/01/2019,5d3f64272657445e9daf91549ac4c0ea,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+03/01/2019,f397c4848ee1468d9621dd3a08912fb0,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+03/01/2019,e44f150b731240a3be0e920e981dbadc,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+03/01/2019,b9c3a89c077141af982c52029fa1f538,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+03/03/2019,a7d8b9419d4542b8a97a80310c793de3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+04/01/2019,df1dc50b2a644bad820f27ddc2d39b45,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+04/01/2019,41ba48dfb6bb4eb9a6adb5503c72bcea,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+04/01/2019,dca4be03c23248fe922a2aa20196f384,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+04/01/2019,0d86d624899c4b48b529100255381daf,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+04/03/2019,81439f2ded344b77aa955ee9a15a93d4,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+05/01/2019,94dddffd277341a7a8c7869f5c164c8c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+05/01/2019,1549732fa0e048cbb390c3f6b4ac9dd7,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+05/01/2019,12cf3c5c62c446c7bf653c542f6a30dd,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+05/01/2019,d2e1627cc0b3487d840673f2d1fbebd8,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+05/03/2019,5fd1fcecfc1949b59cdf208259ec1582,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+05/15/2019,04f6f35f3d70425aa45f85dee30af0ad,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.0000
+06/01/2019,5b6c34d060864f89b8658edde637ff92,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+06/01/2019,179fdf3046a940bf847c1b89908fbe82,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+06/01/2019,f6b45a7d5e8849919c73fe07646b4279,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+06/01/2019,f943019c433449e3a183d1ef51c7ada1,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+06/01/2019,941525bedce845909adc341ee1b6ac31,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+07/01/2019,4fe075089ca14219a612a3aedbd334b1,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,bought gas for Jim Anchower,Expenses:Charity,Charity,$20.00,20.00,n,,1.0000
+07/01/2019,b833a9ce67714a4fa78a605161fffb83,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+07/01/2019,4690a8f1bca146d7b1bb8af49d8d3069,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+07/01/2019,7c2c3965d1d44dd389fac4570f445998,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+07/01/2019,f8eae6b116764edebb432d23e22628c5,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+07/01/2019,59a8398f55354c34819fa8ab959e5ddf,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+07/05/2019,559ab52a76bc4d0c8f0ef32428dd3772,,lots of beans,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$255.00,-255.00,n,,1.0000
+,,,,,,,,,Expenses:Groceries,Groceries,$255.00,255.00,n,,1.0000
+08/01/2019,4ecf9f3dd3dc4bdebdfa338464b47ac8,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+08/01/2019,2af586efcabe4005b0f7346cb9fa84d8,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+08/01/2019,87fd9fa1d71d4224bd8dfc4913cf43fb,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+08/01/2019,c5f33afd0a88458d9e86ee0a051bcdbb,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+09/01/2019,23d71d3b64e74d86857e1587728d0fcf,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+09/01/2019,e9c1f593b5124d0fafc56c283140a1a7,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+09/01/2019,790ba3c4c1d74504838e79a95ead088a,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+09/01/2019,200f85bc9d66483a856ff3858f14d6a0,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+09/01/2019,8ebecdfd7e454229a130523a0055470a,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+10/01/2019,41bca29b74164d5483e2d5bd922ebb3b,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+10/01/2019,7dbd1567272d4c23b097f77aa269cb69,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+10/01/2019,d33c4cc3ad8644afa963fca322852822,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+10/01/2019,e3f05d54a2754a27abcb8f2a3cdb03f9,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+10/01/2019,91660875ec204aae96f6c13e004a8ef9,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+11/01/2019,bf5b4cfc6ac341c5a7da95387957b8f3,,rent went up,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$2,000.00","-2,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$2,000.00","2,000.00",n,,1.0000
+11/01/2019,0e2eb33e8f084a0db5914b6c0b752658,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+11/01/2019,1f6e39907187439d95a4835f495b0c4c,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+11/01/2019,a0c6141676b841c19c4d73e772fbc80c,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+11/01/2019,4c621a196f3f44ee9c2a9553a4bc4368,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+12/01/2019,af427dad4e8c4842bdb45a32c06c192b,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+12/01/2019,067787efaa8e4e63bf3de24823b516f2,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+12/01/2019,f20696401aca423ea7b92c3b59234043,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+12/01/2019,2abaf49fa03844f2bff0dde337908d86,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+01/01/2020,98e8c8ada77049fc8719092287664d85,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+01/01/2020,87ea974891bf44a58d30065890be4f45,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+01/01/2020,778e1335cdda41cb9fb680c3d1d46096,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+01/01/2020,db82ef657787424c8cd950f7911ca727,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+02/01/2020,91eb0ef3a8b8460b89e9c742fe464a39,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+02/01/2020,483d52ff7db14c5bac9443e84b61a0a2,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+02/01/2020,c56cab3195a149bfbeed66ee9ce96747,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+02/01/2020,f7c6452c31cb44ba91f6670c18064c9a,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+02/02/2020,be6cd187812748cabe508cbe4c0c30a6,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.0000
+03/01/2020,0915e09ba9704cd389504cd7704a06bb,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.0000
+03/01/2020,2a091ae4f27e4d209d139b632d41b55c,,Car Payment,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Auto,Auto,$150.00,150.00,n,,1.0000
+03/01/2020,ef3b29c3b6824523865dfa832f7793a5,,Car Insurance,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$80.00,-80.00,n,,1.0000
+,,,,,,,,,Expenses:Insurance:Auto Insurance,Auto Insurance,$80.00,80.00,n,,1.0000
+03/01/2020,7d09bb762df6468a988517abfef4986d,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+03/01/2020,3ac8953f7d354826b796247015767fc4,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+03/02/2020,caccec592dcb41ceade22785b05b8a70,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.0000
+03/15/2020,de04f1f8162645518f939fee912f0a0c,,nice clothes,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$150.00,-150.00,n,,1.0000
+,,,,,,,,,Expenses:Clothes,Clothes,$150.00,150.00,n,,1.0000
+04/01/2020,5136ceebb76e476bac4faef604653458,,Johnny Paycheck,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$4,000.00","4,000.00",n,,1.0000
+,,,,,,,,,Expenses:Taxes,Taxes,"$1,000.00","1,000.00",n,,1.0000
+,,,,,,,,,Income:Salary,Salary,"-$5,000.00","-5,000.00",n,,1.0000
+04/01/2020,71f6c397d804460c81e0e10c8abaf6b6,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+04/01/2020,1176ddb719e7479c933ca8627f508de7,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+04/02/2020,b6f7e34729a64617a4b034a5d0ba6bc0,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.0000
+05/01/2020,bebbcaff3bd9428ba064a88a26d52000,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+05/01/2020,e1181bafb08b48efb91234fd070000e7,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+05/02/2020,e03584c11e1a47ec8020db9e98e04cc4,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.0000
+06/01/2020,05f0377b9812438bb6fda473e2115766,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+06/01/2020,620c292954704fa386938ab7063f718d,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+06/02/2020,ab1bccdaa6c24cc196a96a4819131746,,lots of rent,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"-$3,000.00","-3,000.00",n,,1.0000
+,,,,,,,,,Expenses:Rent,Rent,"$3,000.00","3,000.00",n,,1.0000
+06/20/2020,4a47c806adaf4480b9320133911be9f7,,Dinoco Station #111,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$20.00,-20.00,n,,1.0000
+,,,,,,,,,Expenses:Auto:Gas,Gas,$20.00,20.00,n,,1.0000
+07/01/2020,89499ae96baa4eafbbd15fd99bed3bbb,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+07/01/2020,e9f4277747fd4785b22417e50177f7bf,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
+08/01/2020,8bfa96036d014b52bc05ab1fa8a11250,,Regional Monopolist NW,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.0000
+,,,,,,,,,Expenses:Cable,Cable,$100.00,100.00,n,,1.0000
+08/01/2020,5f1b7d31d35c47c2b408aaca83c38195,,French Power Co,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$90.00,-90.00,n,,1.0000
+,,,,,,,,,Expenses:Utilities:Electric,Electric,$90.00,90.00,n,,1.0000
