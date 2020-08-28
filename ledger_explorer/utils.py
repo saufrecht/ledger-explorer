@@ -104,13 +104,11 @@ ROOT_ID = 'root'
 
 SUBTOTAL_SUFFIX: str = ' [Subtotal]'
 TIME_RES_LOOKUP: dict = {
-    0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
     4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
 TIME_RES_OPTIONS: list = [
-    {'value': 0, 'label': 'All'},
     {'value': 1, 'label': 'Era'},
     {'value': 2, 'label': 'Year'},
     {'value': 3, 'label': 'Quarter'},
@@ -202,9 +200,7 @@ def make_bar(trans: pd.DataFrame,
     latest_trans = tba.index.max()
 
     trace_type: str = 'periodic'
-    if tr_label == 'Total':
-        trace_type = 'total'
-    elif tr_label == 'Era':
+    if tr_label == 'Era':
         if len(eras) > 0:
             trace_type = 'era'
         else:
@@ -324,13 +320,7 @@ def make_cum_bar(
     tr = TIME_RES_LOOKUP[time_resolution]
     tr_label = tr['label']
 
-    if tr_label == 'Total':
-        value = tba['amount'].sum()
-        data = {'value': value, 'date': latest_trans}
-        bin_amounts = pd.DataFrame(data=data, index=[latest_trans])
-        # TODO: should probably test for this in the callback and generate
-        # a different figure, instead of hacking this into a barchart
-    elif tr_label == 'Era':
+    if tr_label == 'Era':
         return None
     elif tr_label in ['Year', 'Quarter', 'Month']:
         resample_keyword = tr['resample_keyword']

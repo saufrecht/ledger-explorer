@@ -42,7 +42,7 @@ layout = html.Div(
                             placeholder='URL for eras csv file'
                         )]),
                     html.Div([
-                        html.Button('Load', id='data_load_button')
+                        html.Button('Reload', id='data_load_button')
                     ]),
                 ]),
             ]),

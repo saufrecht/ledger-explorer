@@ -44,12 +44,11 @@ layout = html.Div(
                                 html.Span(
                                     children='Group By ',
                                 ),
-                                dcc.Dropdown(
+                                dcc.RadioItems(
                                     id='time_series_resolution',
                                     options=TIME_RES_OPTIONS,
-                                    clearable=False,
                                     value=3,
-                                    style={'height': '1.2rem', 'width': '8rem',
+                                    style={'height': '1.2rem',
                                            'color': 'var(--fg)',
                                            'backgroundColor': 'var(--bg-more)'}
                                 ),
@@ -194,9 +193,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
             era = eras.loc[(eras['date_start'] < period) & (eras['date_end'] > period)]
             period_start = era['date_start'][0]
             period_end = era['date_end'][0]
-        elif tr_label == 'Total':
-            period_start = earliest_trans
-            period_end = latest_trans
         elif tr_label == 'Year':
             period_start = datetime(int(period), 1, 1)
             period_end = datetime(int(period), 12, 31)
