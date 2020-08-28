@@ -250,7 +250,6 @@ def make_bar(trans: pd.DataFrame,
         bin_boundary_dates = bins.tolist()
         bin_labels = bins.index.tolist()
         # there must be one more bin boundary than label, so:
-        logging.debug(f'bbd: {bin_boundary_dates[-1]}, latest_tba {latest_tba}')
         if bin_boundary_dates[-1] <= latest_tba:
             # if there's going to be any data in the last bin, add a final boundary
             bin_boundary_dates = bin_boundary_dates + [latest_tba]

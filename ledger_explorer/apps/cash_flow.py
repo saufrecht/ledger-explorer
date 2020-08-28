@@ -169,8 +169,8 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
         return result
 
-    period_start: np.datetime64 = None
-    period_start: np.datetime64 = None
+    min_period_start: np.datetime64 = None
+    max_period_end: np.datetime64 = None
     sel_accounts = []
     filtered_trans = pd.DataFrame()
     desc_account_count = 0
@@ -197,26 +197,26 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         elif tr_label == 'Total':
             period_start = earliest_trans
             period_end = latest_trans
+        elif tr_label == 'Year':
+            period_start = datetime(int(period), 1, 1)
+            period_end = datetime(int(period), 12, 31)
+        elif tr_label == 'Quarter':
+            try:
+                year: int = int(period[0:4])
+            except ValueError:
+                PreventUpdate
+            try:
+                Q: int = int(period[6:7])
+            except ValueError:
+                PreventUpdate
+            start_month: int = ((Q * 3) - 2)
+            period_start = datetime(year, start_month, 1)
+            period_end = _month_end(period_start + timedelta(days=63))
+        elif tr_label == 'Month':
+            period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
+            period_end = _month_end(period_start)
         else:
-            if tr_label == 'Year':
-                period_start = datetime(int(period), 1, 1)
-                period_end = datetime(int(period), 12, 31)
-            elif tr_label == 'Quarter':
-                try:
-                    year: int = int(period[0:4])
-                except ValueError:
-                    PreventUpdate
-                try:
-                    Q: int = int(period[6:7])
-                except ValueError:
-                    PreventUpdate
-                start_month: int = ((Q * 3) - 2)
-                period_start = datetime(year, start_month, 1)
-                period_end = _month_end(period_start + timedelta(days=63))
-            elif tr_label == 'Month':
-                period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
-                period_end = _month_end(period_start)
-
+            PreventUpdate
         return (np.datetime64(period_start), np.datetime64(period_end))
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
@@ -228,9 +228,15 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         sel_accounts.append(account)
         for point in points:
             point_x = trace['x'][point]
-            logging.debug(f'label: {tr_label}, point_x: {point_x}')
             period_start, period_end = _date_range_from_period(tr_label, point_x)
-
+            if min_period_start is None:
+                min_period_start = period_start
+            else:
+                min_period_start = min(min_period_start, period_start)
+            if max_period_end is None:
+                max_period_end = period_end
+            else:
+                max_period_end = max(max_period_end, period_end)
             desc_accounts = get_descendents(account, account_tree)
             desc_account_count = desc_account_count + len(desc_accounts)
             subtree_accounts = [account] + desc_accounts
@@ -239,18 +245,17 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
                 loc[trans['date'] <= period_end]
 
             if len(filtered_trans) > 0:
-                filtered_trans.append(new_trans)
+                filtered_trans = filtered_trans.append(new_trans)
             else:
                 filtered_trans = new_trans
 
     # If no transactions are ultimately selected, show all accounts
     filtered_count = len(filtered_trans)
-
     if filtered_count > 0:
         # TODO: desc_account_count is still wrong.
         sel_accounts_content = _pretty_account_label(sel_accounts, desc_account_count,
-                                                     period_start,
-                                                     period_end,
+                                                     min_period_start,
+                                                     max_period_end,
                                                      filtered_count)
     else:
         # If no trans are selected, show everything.  Note that we
@@ -260,15 +265,15 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
         # because any clickable bar must have $$, and so, trans
         sel_accounts_content = f'Click a bar in the graph to filter from {len(trans):,d} records'
         filtered_trans = trans
-        period_start = earliest_trans
-        period_end = latest_trans
+        min_period_start = earliest_trans
+        max_period_end = latest_trans
 
-    sun_fig = make_sunburst(filtered_trans, period_start, period_end,
+    sun_fig = make_sunburst(filtered_trans, min_period_start, max_period_end,
                             SUBTOTAL_SUFFIX,
                             time_span)
-    time_series_selection_info = {'start': period_start, 'end': period_end, 'count': len(filtered_trans)}
+    time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
 
-    title = f'Average {ts_label} $ from {pretty_date(period_start)} to {pretty_date(period_end)}'
+    title = f'Average {ts_label} $ from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
     return [sel_accounts_content, time_series_selection_info, sun_fig, title]
 
 
