@@ -214,7 +214,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
                 period_start = datetime(year, start_month, 1)
                 period_end = _month_end(period_start + timedelta(days=63))
             elif tr_label == 'Month':
-                period_start = datetime.strptime(period + '–01', '%Y–%b–%d')  # en-dash, not hyphen
+                period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
                 period_end = _month_end(period_start)
 
         return (np.datetime64(period_start), np.datetime64(period_end))
@@ -328,7 +328,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         sel_trans = sel_trans[(sel_trans['date'] >= date_start) & (sel_trans['date'] <= date_end)]
     except (KeyError, TypeError):
         pass
-    sel_trans['date'] = pd.DatetimeIndex(sel_trans['date']).strftime("%Y–%m–%d")
+    sel_trans['date'] = pd.DatetimeIndex(sel_trans['date']).strftime("%Y-%m-%d")
     sel_trans = sel_trans.sort_values(['date'])
 
     trans_table_text: str = f'{len(sel_trans)} records'

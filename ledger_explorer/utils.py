@@ -107,8 +107,8 @@ TIME_RES_LOOKUP: dict = {
     0: {'label': 'Total', 'abbrev': 'Total'},
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
-    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y–Q%q'},  # en-dash
-    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y–%b'}}  # en-dash
+    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
+    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
 TIME_RES_OPTIONS: list = [
     {'value': 0, 'label': 'All'},
     {'value': 1, 'label': 'Era'},
@@ -618,7 +618,7 @@ def positize(trans):
 
 def pretty_date(date: np.datetime64) -> str:
     # convert Numpy datetime64 to 'YYYY-MMM-DD'
-    return pd.to_datetime(str(date)).strftime("%Y–%m–%d")  # en-dash
+    return pd.to_datetime(str(date)).strftime("%Y-%m-%d")
 
 
 def get_children(account_id, account_tree):
