@@ -3,11 +3,12 @@ import json
 import pandas as pd
 from treelib import Tree
 from typing import Iterable, List
+from urllib import error
 
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-from utils import load_eras, load_transactions, make_account_tree_from_trans, ROOT_ACCOUNTS, get_descendents
+from utils import load_eras, load_transactions, make_account_tree_from_trans, ROOT_ACCOUNTS, get_descendents, pretty_date
 
 
 from app import app
@@ -46,16 +47,29 @@ layout = html.Div(
                     ]),
                 ]),
             ]),
-        html.Div(id='meta_data',
+        html.Div(id='meta_data_box',
                  children=[
+                     html.H4("Files Loaded"),
+                     html.Div(
+                         id='meta_data',
+                         children=[]),
                  ]),
-        html.Div(id='account_tree',
-                 className='code',
+        html.Div(id='account_tree_box',
                  children=[
-                 ]),
-        html.Div(id='records',
-                 className='code',
+                     html.H4("Account Tree Loaded"),
+                     html.Div(
+                         id='account_tree',
+                         className='code',
+                         children=[]),
+                     ]),
+        html.Div(id='records_box',
                  children=[
+                     html.H4("Transactions Loaded"),
+                     html.Div(
+                         id='records',
+                         className='code',
+                         children=[
+                         ]),
                  ]),
     ])
 
@@ -69,7 +83,11 @@ layout = html.Div(
     state=[State('transactions_url', 'value'),
            State('eras_url', 'value')])
 def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
-    trans: pd.DataFrame = load_transactions(transactions_url)
+    try:
+        trans: pd.DataFrame = load_transactions(transactions_url)
+    except error.URLError as E:
+        return [None, f'Error loading transactions: {E}', None, None]
+
     account_tree: Tree = make_account_tree_from_trans(trans)
     for account in [ra for ra in ROOT_ACCOUNTS if ra['flip_negative'] is True]:
         trans['amount'] = np.where(trans['account'].isin(get_descendents(account['id'], account_tree)),
@@ -78,12 +96,17 @@ def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
 
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
-    eras: pd.DataFrame = load_eras(eras_url, earliest_trans, latest_trans)
+
+    try:
+        eras: pd.DataFrame = load_eras(eras_url, earliest_trans, latest_trans)
+    except error.URLError:
+        eras = pd.DataFrame()
+
     data = dict(trans=trans.to_json(orient='split', date_format='%Y%m%d'),
                 eras=eras.to_json(orient='split', date_format='%Y%m%d'))
     meta_info: list = [f'Data loaded: {len(trans)} records',
-                       f'Earliest record: {earliest_trans}',
-                       f'Latest record: {latest_trans}',
+                       f'Earliest record: {pretty_date(earliest_trans)}',
+                       f'Latest record: {pretty_date(latest_trans)}',
                        f'Eras loaded: {len(eras)}']
     meta_html: list = [html.Div(children=x) for x in meta_info]
 
