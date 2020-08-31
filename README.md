@@ -1,5 +1,5 @@
 # ledger-explorer
-Navigate any hierarchical ledger graphically, all the way down to individual transactions.  The special thing here is moving quickly from a graphical view of aggregate data, like a pie chart or bar chart, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (in my limited experienc) rare in off-the-shelf F/OSS tools.  The Plotly Dashboard works very well for this purpose.
+Navigate a hierarchical ledger graphically, all the way down to individual transactions.  This tool's purpose is enabling quick navigation through a graphical view of aggregate data in a pie chart or bar chart, representing tens of thousands of records, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (in my limited experienc) rare in off-the-shelf F/OSS interactive visualization tools.  The Plotly Dashboard works very well for this purpose.
 
 
 ![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/screenshot.png?s=600)
@@ -40,42 +40,44 @@ Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash exp
 1. Browse to http://localhost:8050
 
 
-### Usage
+# Usage
 
-#### Data Source tab
+## Data Source tab
 
 This tab determines which data the program uses.  It reads Transaction CSV exports from GnuCash, and can read any csv file with these properties:
 * one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or either the credit or the debit from double-entry.
 * The following columns are present and labelled exactly:
-** Required: *Account Name*
-** Optional: *Description* and/or *Notes*.  Any blanks in these fields get filled with the closest previous entry.
-** Optional: *Memo*.  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
-** Required: *Full Account Name*.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
-** Required: *Date* Entry date.
-** Required: *Amount Num* Value of the transaction.  Ledger Explorer assumes all values are the same currency.
+ * Required: *Account Name*
+ * Optional: *Description* and/or *Notes*.  Any blanks in these fields get filled with the closest previous entry.
+ * Optional: *Memo*.  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
+ * Required: *Full Account Name*.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
+ * Required: *Date* Entry date.
+ * Required: *Amount Num* Value of the transaction.  Ledger Explorer assumes all values are the same currency.
 
 If installed as described above, this tab will load the provided sample transaction file automatically.
 
-#### Cash Flow
+## Cash Flow
 
-##### Features
-# A time series of all transactions in Expenses and Income, grouped by Year, Quarter, or Month
-# A sunburst view of all transactions in the selected time series bar or bars.
-# A transaction table showing all transactions in the selected sunburst pie slice (account) and its child accounts.
+### Features
 
-##### Controls
-* Click or draw a selection box on the time series to narrow down the data selection.
-* Click on a pie slice in the sunburst to select transactions to load.
-* Click Era/Year/Quarter/Month button to change the grouping period of data.
-* Monthly/Annualized toggle.  Click to show Annualized values, i.e., Monthly values times twelve.
-* transaction table supports sorting and filtering for any field …
+1. A time series of all transactions in Expenses and Income, grouped by Year, Quarter, or Month
+1. A sunburst view of all transactions in the selected time series bar or bars.
+1. A transaction table showing all transactions in the selected sunburst pie slice (account) and its child accounts.
 
-#### Balance Sheet
+### Controls
 
-##### Features
-* Time series of cumulative value of all Assets, Liabilities, and Equity.  Grouped by Year, Quarter, or Month.
-* A transaction table showing all transactions, and cumulative total, for selected accounts up to the point of selection.
+1. Click or draw a selection box on the time series to narrow down the data selection.
+1. Click on a pie slice in the sunburst to select transactions to load.
+1. Click Era/Year/Quarter/Month button to change the grouping period of data.
+1. Monthly/Annualized toggle.  Click to show Annualized values, i.e., Monthly values times twelve.
+1. transaction table supports sorting and filtering for any field …
+
+## Balance Sheet
+
+### Features
+1. Time series of cumulative value of all Assets, Liabilities, and Equity.  Grouped by Year, Quarter, or Month.
+1. A transaction table showing all transactions, and cumulative total, for selected accounts up to the point of selection.
 
 # Known Bugs
 
-# If no era file is present, clicking the Era selector will cause an error.
+1. If no era file is present, clicking the Era selector will cause an error.
