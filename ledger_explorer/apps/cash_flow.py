@@ -200,11 +200,11 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
             try:
                 year: int = int(period[0:4])
             except ValueError:
-                PreventUpdate
+                raise PreventUpdate
             try:
                 Q: int = int(period[6:7])
             except ValueError:
-                PreventUpdate
+                raise PreventUpdate
             start_month: int = ((Q * 3) - 2)
             period_start = datetime(year, start_month, 1)
             period_end = _month_end(period_start + timedelta(days=63))
@@ -212,7 +212,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
             period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
             period_end = _month_end(period_start)
         else:
-            PreventUpdate
+            raise PreventUpdate
         return (np.datetime64(period_start), np.datetime64(period_end))
 
     trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)

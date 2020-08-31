@@ -9,8 +9,6 @@ from app import app
 from apps import balance_sheet, cash_flow, data_source
 
 
-pio.templates.default = 'plotly_dark'
-
 app.layout = html.Div(
     id='page-content',
     className='page_content',

@@ -48,13 +48,21 @@
     }
 }
 
+
+/*———————————————————————————————————————————————————————————*/
+/* Fonts                                                     */
+/*———————————————————————————————————————————————————————————*/
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@300;400;700&family=Lusitana:wght@400;700&family=Palanquin:wght@400;600;700&display=swap');
+
+
 /*———————————————————————————————————————————————————————————*/
 /* Global variables                                          */
 /*———————————————————————————————————————————————————————————*/
 :root {
-    --serif: 'Lusitana', serif;
-    --sans: 'Palanquin', sans-serif;
-    --mono: 'Lucida Console', Monaco, monospace;
+    --serif: Lusitana, serif;
+    --sans: Palanquin, Fira Sans, Calibri, sans-serif;
+    --mono: 'IBM Plex Mono', Monaco, monospace;
     --corner: 0.3rem;
     --small-corner: 0.2rem;
     --table-border: 1px solid var(--fg-less);
@@ -85,7 +93,6 @@ h1 {
 
 h2 {
   font-size: 160%;
-
 }
 
 h3 {
@@ -112,6 +119,7 @@ h3 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  background-color: var(--bg);
 }
 
 
@@ -188,8 +196,10 @@ h3 {
     background-color: var(--bg-more)!important;
     border: none!important;
     padding: 0!important;
-    vertical-align: center!important;
-    height: 1.5rem;
+    height: 1.7rem;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1.3rem;
     margin-bottom: 0.2rem!important;
 }
 
@@ -213,7 +223,6 @@ fieldset > div {
 }
 
 input {
-    background-color: var(--bg-more);
     color: var(--fg-less);
     border: none;
     box-shadow: var(--box-shadow)!important;

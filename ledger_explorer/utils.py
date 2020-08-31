@@ -1,5 +1,4 @@
 import json
-import logging
 import numpy as np
 import pandas as pd
 from treelib import Tree
@@ -91,14 +90,57 @@ trans_table = dash_table.DataTable(
     style_as_list_view=True,
     page_size=20)
 
+
+# TODO: replace with class or something
+bs_trans_table = dash_table.DataTable(
+    id='bs_trans_table',
+    columns=[dict(id='date', name='Date', type='datetime'),
+             dict(id='account', name='Account'),
+             dict(id='description', name='Description'),
+             dict(id='amount', name='Amount', type='numeric'),
+             dict(id='total', name='Total', type='numeric')],
+    style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
+                  'font-weight': '600',
+                  'text-align': 'center'},
+    style_cell={'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'backgroundColor': 'var(--bg)',
+                'border': 'none',
+                'maxWidth': 0},
+    style_data_conditional=[
+        {'if': {'row_index': 'odd'},
+         'backgroundColor': 'var(--bg-more)'},
+    ],
+    style_cell_conditional=[
+        {'if': {'column_id': 'date'},
+         'textAlign': 'left',
+         'padding': '0px 10px',
+         'width': '20%'},
+        {'if': {'column_id': 'account'},
+         'textAlign': 'left',
+         'padding': '0px px',
+         'width': '18%'},
+        {'if': {'column_id': 'description'},
+         'textAlign': 'left',
+         'padding': 'px 2px 0px 3px'},
+        {'if': {'column_id': 'amount'},
+         'padding': '0px 12px 0px 0px',
+         'width': '13%'}],
+    data=[],
+    sort_action='native',
+    page_action='native',
+    filter_action='native',
+    style_as_list_view=True,
+    page_size=20)
+
 LEAF_SUFFIX: str = ' [Leaf]'
 OTHER_PREFIX: str = 'Other '
 MAX_SLICES: int = 7  # TODO: expose this in a control
 ROOT_ACCOUNTS = [{'id': 'Assets', 'flip_negative': False},
-                 {'id': 'Equity', 'flip_negative': False},
+                 {'id': 'Equity', 'flip_negative': True},
                  {'id': 'Expenses', 'flip_negative': True},
                  {'id': 'Income', 'flip_negative': True},
-                 {'id': 'Liabilities', 'flip_negative': False}]
+                 {'id': 'Liabilities', 'flip_negative': True}]
 ROOT_TAG = '[Total]'
 ROOT_ID = 'root'
 
@@ -196,9 +238,6 @@ def make_bar(trans: pd.DataFrame,
     ts_hover = ts.get('abbrev')      # NOQA  e.g., "y"
     ts_months = ts.get('months')     # e.g., 12
 
-    earliest_trans = tba.index.min()
-    latest_trans = tba.index.max()
-
     trace_type: str = 'periodic'
     if tr_label == 'Era':
         if len(eras) > 0:
@@ -238,7 +277,6 @@ def make_bar(trans: pd.DataFrame,
             opacity=0.9,
             hovertemplate='%{x}<br>%{customdata}:<br>%{y:$,.0f}<br>',
             marker_color=marker_color)
-
     elif trace_type == 'era':
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
@@ -269,7 +307,6 @@ def make_bar(trans: pd.DataFrame,
             bin_amounts.index.astype(str) + '<br>(' +\
             bin_amounts['date_start'].astype(str) + \
             ' to ' + bin_amounts['date_end'].astype(str) + ')'
-
         trace = go.Bar(
             name=account_id,
             x=bin_amounts.midpoint,
@@ -283,77 +320,46 @@ def make_bar(trans: pd.DataFrame,
             hovertemplate='%{customdata}<br>%{value:$,.0f}',
             marker_color=marker_color)
     else:
-        # assume it's a total
-        total = tba['amount'].sum()
-        bin_amounts = pd.DataFrame({'date': latest_trans, 'value': total}, index=[earliest_trans])
-        bin_amounts = bin_amounts.append({'date': earliest_trans, 'value': 0}, ignore_index=True)
-        all_months = ((latest_trans - earliest_trans) / np.timedelta64(1, 'M'))
-        factor = ts_months / all_months
-        bin_amounts['value'] = bin_amounts['value'] * factor
-        bin_amounts['text'] = f'{tr_hover}'
-        trace = go.Bar(x=bin_amounts['text'],
-                       y=bin_amounts['value'],
-                       text=account_id)
+        PreventUpdate
     return trace
 
 
-def make_cum_bar(
+def make_cum_area(
         trans: pd.DataFrame,
-        account_tree: Tree,
-        eras: pd.DataFrame,
         account_id: str,
         color_num: int = 0,
-        time_resolution: int = 0,
-        time_span: int = 1,
-        deep: bool = False) -> go.Bar:
-    """ returns a go.Bar object with cumulative total by time_resolution period for
-    the selected account.  If deep, include total for all descendent accounts. """
+        time_resolution: int = 0) -> go.Scatter:
+    """ returns an object with cumulative total by time_resolution period for
+    the selected account."""
 
-    if deep:
-        tba = trans[trans['account'].isin(get_descendents(account_id, account_tree))]
-    else:
-        tba = trans[trans['account'] == account_id]
-
-    latest_trans = tba['date'].max()
-
-    tba = tba.set_index('date')
     tr = TIME_RES_LOOKUP[time_resolution]
-    tr_label = tr['label']
+    resample_keyword = tr['resample_keyword']
+    trans = trans.set_index('date')
 
-    if tr_label == 'Era':
-        return None
-    elif tr_label in ['Year', 'Quarter', 'Month']:
-        resample_keyword = tr['resample_keyword']
-        bin_amounts = tba.resample(resample_keyword).\
-            sum()['amount'].\
-            cumsum().\
-            to_frame(name='value')
-        bin_amounts['date'] = bin_amounts.index
-        bin_amounts['value'] = bin_amounts['value']
-    else:
-        # bad input data
-        return None
-
+    bin_amounts = trans.resample(resample_keyword, label='left').sum().cumsum()
+    bin_amounts['date'] = bin_amounts.index
+    bin_amounts['value'] = bin_amounts['amount']
+    bin_amounts['label'] = account_id
     try:
         marker_color = disc_colors[color_num]
     except IndexError:
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
-
-    bin_amounts['customdata'] = account_id
     bin_amounts['texttemplate'] = '%{customdata}'  # workaround for passing variables through layers of plotly
-
-    bar = go.Bar(
+    scatter = go.Scatter(
+        x=bin_amounts['date'],
+        y=bin_amounts['value'],
         name=account_id,
-        x=bin_amounts.date,
-        y=bin_amounts.value,
-        customdata=bin_amounts.customdata,
-        texttemplate=bin_amounts.texttemplate,
-        textposition='auto',
-        hovertemplate='%{customdata}: %{y:$,.0f}<br>as of %{x}<extra></extra>',
-        marker_color=marker_color)
+        mode='lines+markers',
+        marker={'symbol': 'circle', 'opacity': 1, 'color': marker_color},
+        customdata=bin_amounts['label'],
+        hovertemplate='%{customdata}<br>%{y:$,.0f}<br>%{x}<extra></extra>',
+        line={'width': 0.5, 'color': marker_color},
+        hoverlabel={'namelength': 15},
+        stackgroup='one'
+    )
 
-    return bar
+    return scatter
 
 
 def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
