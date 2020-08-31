@@ -125,7 +125,10 @@ bs_trans_table = dash_table.DataTable(
          'padding': 'px 2px 0px 3px'},
         {'if': {'column_id': 'amount'},
          'padding': '0px 12px 0px 0px',
-         'width': '13%'}],
+         'width': '11%'},
+        {'if': {'column_id': 'total'},
+         'padding': '0px 12px 0px 0px',
+         'width': '11%'}],
     data=[],
     sort_action='native',
     page_action='native',
@@ -336,7 +339,7 @@ def make_cum_area(
     resample_keyword = tr['resample_keyword']
     trans = trans.set_index('date')
 
-    bin_amounts = trans.resample(resample_keyword, label='left').sum().cumsum()
+    bin_amounts = trans.resample(resample_keyword).sum().cumsum()
     bin_amounts['date'] = bin_amounts.index
     bin_amounts['value'] = bin_amounts['amount']
     bin_amounts['label'] = account_id
