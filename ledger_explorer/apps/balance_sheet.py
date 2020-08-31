@@ -163,6 +163,9 @@ def apply_selection_from_bs_time_series(bsa_master_time_series,
         new_text = f'{account}: {len(sel_trans)} records through {pretty_date(end_date)}'
         sel_text = sel_text + [new_text]
 
+    if len(sel_trans) == 0:
+        raise PreventUpdate
+
     sel_trans = sel_trans.set_index('date').sort_index()
     sel_trans['total'] = sel_trans['amount'].cumsum()
     sel_trans['date'] = pd.DatetimeIndex(sel_trans.index).strftime("%Y-%m-%d")
