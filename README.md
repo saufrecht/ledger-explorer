@@ -44,17 +44,21 @@ Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash exp
 
 ## Data Source tab
 
+### Features
 This tab determines which data the program uses.  It reads Transaction CSV exports from GnuCash, and can read any csv file with these properties:
 * one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or either the credit or the debit from double-entry.
 * The following columns are present and labelled exactly:
- * Required: *Account Name*
- * Optional: *Description* and/or *Notes*.  Any blanks in these fields get filled with the closest previous entry.
- * Optional: *Memo*.  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
- * Required: *Full Account Name*.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
- * Required: *Date* Entry date.
- * Required: *Amount Num* Value of the transaction.  Ledger Explorer assumes all values are the same currency.
+  * Required: **Account Name**
+  * Optional: **Description** and/or *Notes*.  Any blanks in these fields get filled with the closest previous entry.
+  * Optional: **Memo**.  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
+  * Required: **Full Account Name**.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
+  * Required: **Date** Entry date.
+  * Required: **Amount Num** Value of the transaction.  Ledger Explorer assumes all values are the same currency.
 
-If installed as described above, this tab will load the provided sample transaction file automatically.
+### Usage
+
+1. If installed as described above, this tab will load the provided sample transaction file automatically.
+1. To load other data, enter the file name and click *reload*.
 
 ## Cash Flow
 
