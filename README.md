@@ -2,7 +2,7 @@
 Navigate a hierarchical ledger graphically, all the way down to individual transactions.  This tool's purpose is enabling quick navigation through a graphical view of aggregate data in a pie chart or bar chart, representing tens of thousands of records, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (in my limited experienc) rare in off-the-shelf F/OSS interactive visualization tools.  The Plotly Dashboard works very well for this purpose.
 
 
-![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/montage.png?s=820x838)
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/montage.jpg?s=820x838)
 
 # Installation
 
@@ -66,6 +66,8 @@ This tab determines which data the program uses.  It reads Transaction CSV expor
 
 ## Cash Flow
 
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/cash_flow_2.jpg)
+
 ### Features
 
 1. A time series of all transactions in Expenses and Income, grouped by Year, Quarter, or Month
@@ -81,6 +83,8 @@ This tab determines which data the program uses.  It reads Transaction CSV expor
 1. transaction table supports sorting and filtering for any field …
 
 ## Balance Sheet
+
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/balance_sheet.jpg)
 
 ### Features
 1. Time series of cumulative value of all Assets, Liabilities, and Equity.  Grouped by Year, Quarter, or Month.
