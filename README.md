@@ -2,7 +2,7 @@
 Navigate a hierarchical ledger graphically, all the way down to individual transactions.  This tool's purpose is enabling quick navigation through a graphical view of aggregate data in a pie chart or bar chart, representing tens of thousands of records, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (in my limited experienc) rare in off-the-shelf F/OSS interactive visualization tools.  The Plotly Dashboard works very well for this purpose.
 
 
-![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/screenshot.png?s=600)
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/montage.png?s=820x838)
 
 # Installation
 
@@ -21,7 +21,9 @@ The path `~/.venv_le` is completely arbitrary and your naming conventions may va
 
 `pip install -r requirements.txt`
 
-### Export data from Gnucash
+### Prepare data
+
+#### Export data from Gnucash
 
 1. `File` → `Export` → `Export Transactions to CSV …`
 2. `Next`
@@ -44,16 +46,18 @@ Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash exp
 
 ## Data Source tab
 
+![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/data_source.png)
+
 ### Features
 This tab determines which data the program uses.  It reads Transaction CSV exports from GnuCash, and can read any csv file with these properties:
 * one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or either the credit or the debit from double-entry.
 * The following columns are present and labelled exactly:
-  * Required: **Account Name**
-  * Optional: **Description** and/or *Notes*.  Any blanks in these fields get filled with the closest previous entry.
-  * Optional: **Memo**.  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
-  * Required: **Full Account Name**.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
-  * Required: **Date** Entry date.
-  * Required: **Amount Num** Value of the transaction.  Ledger Explorer assumes all values are the same currency.
+  * **Account Name**.
+  * **Description** and/or **Notes** *(optional)*.  Any blanks in these fields get filled with the closest previous entry.
+  * **Memo** *(optional)*  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
+  * **Full Account Name**.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
+  * **Date**. Entry date.
+  * **Amount Num**. Value of the transaction.  Ledger Explorer assumes all values are the same currency.
 
 ### Usage
 
@@ -85,3 +89,16 @@ This tab determines which data the program uses.  It reads Transaction CSV expor
 # Known Bugs
 
 1. If no era file is present, clicking the Era selector will cause an error.
+
+# Roadmap
+
+1. Complete unit testing
+1. Verify running in gunicorn
+1. Publish somewhere as a free service
+1. Implement night mode using Dash's native commands
+1. Add ability to import at least 1 public data set, maybe national budget?
+1. Improve navigation and charting tools
+
+# Contributing
+
+Yes, please.  Questions, requests, better documentation, and patches welcome.
