@@ -1,5 +1,5 @@
 # ledger-explorer
-Navigate any hierarchical ledger graphically, all the way down to individual transactions.  The special thing here is moving quickly from a graphical view of aggregate data, like a pie chart or bar chart, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (to me) rare in off-the-shelf F/OSS tools.  The Plotly Dashboard works very well for this purpose.
+Navigate any hierarchical ledger graphically, all the way down to individual transactions.  The special thing here is moving quickly from a graphical view of aggregate data, like a pie chart or bar chart, to a list of specific transactions.  This seems like a really obvious feature but has been surprisingly (in my limited experienc) rare in off-the-shelf F/OSS tools.  The Plotly Dashboard works very well for this purpose.
 
 
 ![Screenshot](https://github.com/saufrecht/ledger-explorer/raw/master/screenshot.png?s=600)
@@ -30,10 +30,6 @@ The path `~/.venv_le` is completely arbitrary and your naming conventions may va
 
 ### Set up local webserver
 In Ubuntu, `sudo apt install nginx` should be enough.
-TODO: permissions to allow publishing files as user
-
-#### Publish style sheet to local webserver
-`sudo cp dash_layout.css /var/www/html`
 
 #### Publish transaction data to local webserver
 `sudo cp sample_data.csv /var/www/html/transactions.csv`
@@ -43,4 +39,5 @@ TODO: permissions to allow publishing files as user
 1. Browse to http://localhost:8050
 
 # Known Bugs
-yes
+
+# If no era file is present, clicking the Era selector will cause an error.

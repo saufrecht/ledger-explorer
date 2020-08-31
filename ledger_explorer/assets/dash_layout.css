@@ -1,0 +1,282 @@
+/*———————————————————————————————————————————————————————————*/
+/* Color scheme                                              */
+/*———————————————————————————————————————————————————————————*/
+/* Solarized */
+
+:root {
+  --lightest:       #fdf6e3; /* Base3  */
+  --light:          #eee8d5; /* Base2  */
+  --dark-lightest:  #93a1a1; /* Base1  */
+  --dark-lighterer: #839496; /* Base0  */
+  --dark-lighter:   #657b83; /* Base00 */
+  --dark-light:     #586e75; /* Base01 */
+  --dark:           #073642; /* Base02 */
+  --darkest:        #002b36; /* Base03 */
+  --yellow:         #b58900;
+  --green:          #859900;
+  --gray:           #e1e1e1;
+  --magenta:        #d33682;
+  --violet:         #6c71c4;
+  --cyan:           #2aa198;
+  --orange:         #cb4b16;
+  --red:            #dc322f;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-more: var(--lightest);
+        --bg:      var(--light);         /* body background */
+        --fg:      var(--dark-light);
+        --fg-less: var(--dark-lighter);
+        --fg-more: var(--darkest);
+        --accent:  var(--magenta);
+        --body-shadow: 0.1em 0.2em 0.3em rgba(0, 0, 0, 0.3), 0.2em 0.3em 0.3em 0 rgba(0, 0, 0, 0.28);
+        --box-shadow: 0.1em 0.1em 0.2em rgba(0, 0, 0, 0.2), 0.1em 0.2em .4em 0 rgba(0, 0, 0, 0.19);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-more:  var(--darkest);
+        --bg:       var(--dark);
+        --fg:       var(--dark-lightest);
+        --fg-less:  var(--dark-lighterer);
+        --fg-more:  var(--dark-lightest);
+        --accent:  var(--magenta);
+        --body-shadow: none;
+        --box-shadow: none;
+    }
+}
+
+
+/*———————————————————————————————————————————————————————————*/
+/* Fonts                                                     */
+/*———————————————————————————————————————————————————————————*/
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@300;400;700&family=Lusitana:wght@400;700&family=Palanquin:wght@400;600;700&display=swap');
+
+
+/*———————————————————————————————————————————————————————————*/
+/* Global variables                                          */
+/*———————————————————————————————————————————————————————————*/
+:root {
+    --serif: Lusitana, serif;
+    --sans: Palanquin, Fira Sans, Calibri, sans-serif;
+    --mono: 'IBM Plex Mono', Monaco, monospace;
+    --corner: 0.3rem;
+    --small-corner: 0.2rem;
+    --table-border: 1px solid var(--fg-less);
+}
+
+
+/*———————————————————————————————————————————————————————————*/
+/* General formatting                                        */
+/*———————————————————————————————————————————————————————————*/
+
+html {
+  background-color: var(--bg-more);
+  color: var(--fg);
+  font-family: var(--sans);
+}
+
+.page_content {
+  background-color: var(--bg);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0px 0px 0px 0px;
+}
+
+h1 {
+  font-size: 200%;
+}
+
+h2 {
+  font-size: 160%;
+}
+
+h3 {
+  font-size: 130%;
+}
+
+/*———————————————————————————————————————————————————————————*/
+/* Page layout classes                                       */
+/*———————————————————————————————————————————————————————————*/
+
+.layout_box {
+  display: grid;
+  grid-gap: 6px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.layout_box > div {
+    margin: 0.5rem;
+    padding: 0.5rem;
+    box-shadow: var(--body-shadow)!important;
+}
+
+.control_bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  background-color: var(--bg);
+}
+
+
+.hidden {
+  display: none;
+}
+
+/*———————————————————————————————————————————————————————————*/
+/* Individual page layouts                                   */
+/*———————————————————————————————————————————————————————————*/
+/* Cash_flow */
+
+#time_series_box {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2 ;
+}
+
+
+#account_burst_box {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+#trans_table_box {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+
+
+/* Cash_flow */
+
+
+/* .dash-filter > input { */
+/*   border: 4px solid var(--bg)!important; */
+/*   background-color: var(--bg-more)!important; */
+/*   color: var(--fg-more)!important; */
+/*   text-align: center!important; */
+/* } */
+
+/* .control_bar, .dash-dropdown, .dash-graph, .Select, .Select-control, .Select-value, .Select-value-label { */
+/*     background-color: var(--bg); */
+/*     color: var(--fg)!important; */
+/* } */
+
+/* .rc-slider-track { */
+/*     background-color: var(--accent); */
+/* } */
+
+/* .rc-slider-rail { */
+/*     background-color: var(--accent); */
+/* } */
+
+/* .rc-slider-handle { */
+/*     background-color: var(--fg-more); */
+
+/* } */
+
+/* .rc-slider-dot { */
+/*     border-color: var(--fg); */
+   
+/* } */
+
+/* .rc-slider-mark-text { */
+/*     color: var(--fg-less); */
+
+/* } */
+
+/* .rc-slider-mark-text-active { */
+/*     color: var(--fg-more); */
+
+/* } */
+
+.tab {
+    background-color: var(--bg-more)!important;
+    border: none!important;
+    padding: 0!important;
+    height: 1.7rem;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 0.2rem!important;
+}
+
+.tab--selected {
+    color: var(--fg-more)!important;
+    background-color: var(--bg)!important;
+    border-top: 2px solid var(--accent)!important
+}
+
+
+fieldset {
+    border: 1px solid var(--fg-less);
+    background-color: var(--bg)!important;
+}
+
+fieldset > div {
+    padding-bottom: 0.5rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: right;
+}
+
+input {
+    color: var(--fg-less);
+    border: none;
+    box-shadow: var(--box-shadow)!important;
+}
+
+label {
+    padding-right: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--fg-less);
+}
+
+.code {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+}
+
+div.code_row + div.code_row {
+    margin-top: 1rem;
+}
+
+button {
+    color: var(--fg-more);
+    background-color: var(--bg-more);
+    border-color: var(--fg-more);
+}
+
+
+*[data-dash-is-loading="true"]{
+    visibility: hidden;
+}
+
+*[data-dash-is-loading="true"]::before{
+    content: "Loading...";
+    display: inline;
+    color: var(--fg);
+    font-size: 1rem;
+    visibility: visible;
+}
+
+#selected_trans_display {
+    margin-bottom: 1rem;
+}
+
+.dash-cell {
+    height: 2rem;
+}
+
+.dash-cell-value {
+    font-size: 1rem;
+    font-family: var(--mono);
+}
+
+.dash-spreadsheet-inner input {
+    font-size: 0.8rem;
+    background-color: var(--bg-more)!important;
+    color: var(--fg-less)!important;
+}
