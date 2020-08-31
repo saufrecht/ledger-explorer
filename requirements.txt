@@ -12,6 +12,7 @@ future==0.18.2
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
+more_itertools==8.5.0
 numpy==1.19.1
 packaging==20.4
 pandas==1.1.0
