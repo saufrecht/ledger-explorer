@@ -12,36 +12,76 @@ Navigate a hierarchical ledger graphically, all the way down to individual trans
 
 `cd ledger-explorer`
 
-## Make a virtual environment
+## Make and activate a virtual environment
 
-`python3 -m venv ~/.venv_le`
+The path for your virtual environment should not be inside the source-controlled ledger-explorer directory; if it is, you'll need to modify `.gitignore` to ignore it.  The ideal place for this directory depends on your local configuration.  One reasonable and safe choice on Mac/Linux is `~/.venv_le`.  On Windows, best practice is unclear (or unknown to your humble but lazy documenter).  Using a virtual environment is technically optional but a very very good idea. See [Python documentation on Virtual Environments](https://docs.python.org/3/tutorial/venv.html) for more information.
 
-The path `~/.venv_le` is completely arbitrary and your naming conventions may vary.  This is a best practice, not a requirement for running this program.  See [Python documentation on Virtual Environments](https://docs.python.org/3/tutorial/venv.html) for more information.
+You will need to activate the virtual environment every time you open a new shell to run Ledger Explorer.
 
-`source ~/.venv_le/bin/activate`
+### Mac and Linux
+
+1. `python3 -m venv /path/to/myenv`
+2. `source /path/to/myenv/bin/activate`
+
+### Windows
+
+1. `c:\>c:\Python35\python -m venv c:\path\to\myenv`
+2. .\path\to\myenv\Scripts\activate
+
+### Install prerequisite Python modules
 
 `pip install -r requirements.txt`
 
-### Prepare data
+## Prepare data
 
-#### Export data from Gnucash
+### Export data from Gnucash
 
 1. `File` → `Export` → `Export Transactions to CSV …`
 2. `Next`
 3. `Select All`, `Next`
 4. Enter filename, for example, `transactions.csv`
 
-#### Publish your data
-Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash export, which is a local file, you have to publish that file on a webserver that your browser can access.  On Ubuntu, this can be done with:
+### Publish your data
+Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash export, which is a local file, you have to publish that file on a webserver that your browser can access.  There are many ways to do this; here are a few quick ones:
+
+#### Ubuntu
 
 `sudo apt install nginx`
 
 `sudo cp sample_data.csv /var/www/html/transactions.csv`
 
-### Run program
-1. `python ledger_explorer/index.py`
-1. Browse to http://localhost:8050
+#### Windows 10 and IIS
 
+**UNTESTED**
+
+From [O'Reilly](https://www.oreilly.com/library/view/professional-microsoft-iis/9781118417379/c04_level1_4.xhtml)
+
+1. Open Powershell
+1. Type or paste `import-module ServerManager` and enter
+2. Type or paste `Add-WindowsFeature Web-Server`
+3. Copy sample_data.csv to the home directory of the webserver (which is ???)
+
+#### Windows 10 and NginX
+
+From the [nginx documentation](https://nginx.org/en/docs/windows.html)
+
+> To install nginx/Windows, download the [latest mainline version distribution](https://nginx.org/en/download.html) (1.19.2), since the mainline branch of nginx contains all known fixes. Then unpack the distribution, go to the nginx-1.19.2 directory, and run nginx. Here is an example for the drive C: root directory:
+```
+cd c:\
+unzip nginx-1.19.2.zip
+cd nginx-1.19.2
+start nginx
+```
+
+And then copy sample_data.csv to `C:\nginx-1-19.2\`.
+
+## Run program
+1. `python ledger_explorer/index.py`
+1. Browse to http://localhost:8050.  If everything works, you should see something similar to the screenshot.
+
+### Warnings
+1. This is the development mode for Dash; do not deploy this on the web or otherwise use in a production environment.
+1. Anyone on your local network, for example anyone on the same wifi, may be able to access this site.
 
 # Usage
 
