@@ -9,6 +9,7 @@ Navigate a hierarchical ledger graphically, all the way down to individual trans
 ## get the code
 
 `git clone https://github.com/saufrecht/ledger-explorer.git`
+
 `cd ledger-explorer`
 
 ## Make a virtual environment
