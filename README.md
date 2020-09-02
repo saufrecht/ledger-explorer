@@ -11,6 +11,13 @@ Navigate a hierarchical ledger graphically, all the way down to individual trans
 
 `cd ledger-explorer`
 
+## Confirm Python version 3.8 or higher
+
+Use `python --version` to confirm your version of Python.  It must be version 3.8.0 or higher.
+
+* This version is included in Ubuntu 20.04.
+* [Windows Download](https://www.python.org/downloads/windows/)
+
 ## Make and activate a virtual environment
 
 The path for your virtual environment should not be inside the source-controlled ledger-explorer directory; if it is, you'll need to modify `.gitignore` to ignore it.  The ideal place for this directory depends on your local configuration.  One reasonable and safe choice on Mac/Linux is `~/.venv_le`.  On Windows, best practice is unclear (or unknown to your humble but lazy documenter).  Using a virtual environment is technically optional but a very very good idea. See [Python documentation on Virtual Environments](https://docs.python.org/3/tutorial/venv.html) for more information.
@@ -24,7 +31,7 @@ You will need to activate the virtual environment every time you open a new shel
 
 ### Windows
 
-1. `c:\>c:\Python35\python -m venv c:\path\to\myenv`
+1. `c:\>c:\Python38\python -m venv c:\path\to\myenv`
 2. .\path\to\myenv\Scripts\activate
 
 ### Install prerequisite Python modules
