@@ -44,7 +44,7 @@ You will need to activate the virtual environment every time you open a new shel
 ### Publish your data
 Ledger Explorer loads data from a URL.  So, if you want to load your Gnucash export, which is a local file, you have to publish that file on a webserver that your browser can access.  There are many ways to do this; here are a few quick ones:
 
-#### Ubuntu
+#### Linux
 
 `sudo apt install nginx`
 
