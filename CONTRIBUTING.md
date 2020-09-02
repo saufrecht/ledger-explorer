@@ -1,0 +1,1 @@
+Yes please!  All bugs, suggestions, code, testing, and complaints are welcome.  All accepted changes are licensed GPL 3.0.  All participation is subject to the [Code of Conduct](https://github.com/saufrecht/ledger-explorer/blob/master/CODE_OF_CONDUCT.md).
