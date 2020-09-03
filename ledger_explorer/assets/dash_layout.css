@@ -285,3 +285,17 @@ button {
     background-color: var(--bg-more)!important;
     color: var(--fg-less)!important;
 }
+
+.upload_target {
+    border: 2px dotted var(--accent);
+    border-radius: var(--small-corner);
+    background-color: var(--bg-more);
+    padding: 0.7rem;
+    text-align: center;
+}
+
+.upload_target a {
+    color: var(--violet)!important;
+    text-decoration: underline;
+    cursor: pointer;
+}

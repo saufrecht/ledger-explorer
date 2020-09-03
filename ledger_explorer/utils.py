@@ -166,6 +166,9 @@ TIME_SPAN_LOOKUP: dict = {
 def data_from_json_store(data_store: str, filter: list = []) -> tuple:
     """ Parse data stored in Dash JSON component.  Used to move data between different
     callbacks in Dash """
+    if not data_store or len(data_store) == 0:
+        raise PreventUpdate
+
     data = json.loads(data_store)
     trans = pd.read_json(data['trans'],
                          orient='split',
@@ -632,17 +635,15 @@ def load_eras(source, earliest_date, latest_date):
     arbitrary bins
     """
 
-    try:
-        data: pd.DataFrame = pd.read_csv(source)
-    except urllib.error.HTTPError:
-        return pd.DataFrame()
-
-    data = data.astype({'date_start': 'datetime64'})
-    data = data.astype({'date_end': 'datetime64'})
+    data = pd.read_json(source,
+                        orient='split',
+                        dtype={'date_start': 'datetime64',
+                               'date_end': 'datetime64'})
 
     data = data.sort_values(by=['date_start'], ascending=False)
     data = data.reset_index(drop=True).set_index('name')
 
+    # if the first start or last end is missing, substitute earliest/lastest possible date
     if pd.isnull(data.iloc[0].date_end):
         data.iloc[0].date_end = latest_date
     if pd.isnull(data.iloc[-1].date_start):
@@ -653,18 +654,21 @@ def load_eras(source, earliest_date, latest_date):
 
 def load_transactions(source):
     """
-    Load a csv matching the transaction export format from Gnucash.
+    Load a json_encoded dataframe matching the transaction export format from Gnucash.
     Uses columns 'Account Name', 'Description', 'Memo', Notes', 'Full Account Name', 'Date', 'Amount Num.'
     """
+
+    data = pd.read_json(source,
+                         orient='split',
+                         dtype={'date': 'datetime64',
+                                'description': 'object',
+                                'amount': 'int64',
+                                'account': 'object',
+                                'full account name': 'object'})
 
     def convert(s):  # not fast
         dates = {date: pd.to_datetime(date) for date in s.unique()}
         return s.map(dates)
-
-    try:
-        data: pd.DataFrame = pd.read_csv(source, thousands=',', low_memory=False)
-    except urllib.error.HTTPError:
-        return pd.DataFrame()
 
     data.columns = [x.lower() for x in data.columns]
     data['date'] = data['date'].astype({'date': 'datetime64'})
