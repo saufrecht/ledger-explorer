@@ -1,9 +1,8 @@
+import logging
 import dash_core_components as dcc
 import dash_html_components as html
 from more_itertools import intersperse
-import logging
 import pandas as pd
-
 
 import plotly.graph_objects as go
 import dash
@@ -94,6 +93,7 @@ layout: html = html.Div(
     [Input('bs_period', 'value')],
     state=[State('data_store', 'children')])
 def bs_set_period(period_value, data_store):
+    """ When the balance sheet period selector changes, update the time series """
     try:
         period = TIME_RES_LOOKUP[period_value]
     except IndexError:

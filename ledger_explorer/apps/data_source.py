@@ -1,14 +1,18 @@
-import numpy as np
 import json
-import pandas as pd
-from treelib import Tree
 from typing import Iterable, List
 from urllib import error
+from treelib import Tree
+
+import numpy as np
+import pandas as pd
 
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-from utils import load_eras, load_transactions, make_account_tree_from_trans, ROOT_ACCOUNTS, get_descendents, pretty_date
+from dash.exceptions import PreventUpdate
+from utils import load_eras, load_transactions, make_account_tree_from_trans, get_descendents, pretty_date
+from utils import data_from_json_store
+from utils import ROOT_ACCOUNTS
 
 
 from app import app
@@ -49,40 +53,42 @@ layout = html.Div(
             ]),
         html.Div(id='meta_data_box',
                  children=[
-                     html.H4("Files Loaded"),
+                     html.H4("Files"),
                      html.Div(
                          id='meta_data',
-                         children=[]),
+                         children=['none']),
                  ]),
         html.Div(id='account_tree_box',
                  children=[
-                     html.H4("Account Tree Loaded"),
+                     html.H4("Account Tree"),
                      html.Div(
                          id='account_tree',
                          className='code',
-                         children=[]),
-                     ]),
+                         children=['none'])
+                 ]),
         html.Div(id='records_box',
                  children=[
-                     html.H4("Transactions Loaded"),
+                     html.H4("Transactions"),
                      html.Div(
                          id='records',
                          className='code',
-                         children=[
-                         ]),
+                         children=['none']),
                  ]),
     ])
 
 
 @app.callback(
-    [Output('data_store', 'children'),
-     Output('meta_data', 'children'),
-     Output('account_tree', 'children'),
-     Output('records', 'children')],
+    [Output('data_store', 'children')],
     [Input('data_load_button', 'n_clicks')],
     state=[State('transactions_url', 'value'),
            State('eras_url', 'value')])
-def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
+def load_url(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
+    """ When the Load from URL button is clicked, load the designated files
+    and update the data store"""
+
+    if not n_clicks or n_clicks == 0:
+        raise PreventUpdate
+
     try:
         trans: pd.DataFrame = load_transactions(transactions_url)
     except error.URLError as E:
@@ -104,6 +110,21 @@ def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
 
     data = dict(trans=trans.to_json(orient='split', date_format='%Y%m%d'),
                 eras=eras.to_json(orient='split', date_format='%Y%m%d'))
+
+    return [json.dumps(data)]
+
+
+@app.callback(
+    [Output('meta_data', 'children'),
+     Output('account_tree', 'children'),
+     Output('records', 'children')],
+    [Input('data_store', 'children')])
+def load_data(data_store) -> Iterable:
+    """ When data store changes, refresh all of the data meta-information
+    and display """
+
+    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store)
+
     meta_info: list = [f'Data loaded: {len(trans)} records',
                        f'Earliest record: {pretty_date(earliest_trans)}',
                        f'Latest record: {pretty_date(latest_trans)}',
@@ -117,6 +138,5 @@ def load_data(n_clicks: int, transactions_url: str, eras_url: str) -> Iterable:
     tree_records: List[str] = [f'Tree nodes: {len(account_tree)}'] + [x.tag for x in account_tree.all_nodes()]
 
     account_tree_html: List[str] = [html.Div(children=x, className='code_row') for x in tree_records]
-    result = [json.dumps(data), meta_html, account_tree_html, records_html]
 
-    return result
+    return [meta_html, account_tree_html, records_html]

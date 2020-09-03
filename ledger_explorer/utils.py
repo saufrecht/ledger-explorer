@@ -163,7 +163,7 @@ TIME_SPAN_LOOKUP: dict = {
     False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
-def data_from_json_store(data_store: str, filter: list) -> tuple:
+def data_from_json_store(data_store: str, filter: list = []) -> tuple:
     """ Parse data stored in Dash JSON component.  Used to move data between different
     callbacks in Dash """
     data = json.loads(data_store)
