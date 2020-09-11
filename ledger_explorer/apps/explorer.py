@@ -1,14 +1,12 @@
 import calendar
-import logging
-from datetime import datetime, timedelta
-from typing import Tuple
-
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
-
+from datetime import datetime, timedelta
+import logging
 import pandas as pd
 import numpy as np
+from typing import Tuple
 
 import plotly.graph_objects as go
 
@@ -18,11 +16,10 @@ from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_LOOKUP, LEAF_SUFF
 from utils import chart_fig_layout, trans_table, data_from_json_store, pretty_date
 from utils import get_children, get_descendents
 from utils import make_bar, make_sunburst
+from utils import ex_trans_table
 
 from app import app
 
-
-ACCOUNTS = ['Income', 'Expenses']
 
 layout = html.Div(
     className="layout_box",
@@ -31,14 +28,14 @@ layout = html.Div(
             className="time_series_box",
             children=[
                 dcc.Graph(
-                    id='master_time_series'),
+                    id='ex_master_time_series'),
                 html.Div(
                     className="control_bar",
                     children=[
-                        dcc.Store(id='time_series_selection_info',
+                        dcc.Store(id='ex_time_series_selection_info',
                                   storage_type='memory'),
                         html.Div(
-                            id='selected_trans_display',
+                            id='ex_selected_trans_display',
                             children=None),
                         html.Fieldset(
                             className='control_bar',
@@ -47,9 +44,9 @@ layout = html.Div(
                                     children='Group By ',
                                 ),
                                 dcc.RadioItems(
-                                    id='time_series_resolution',
+                                    id='ex_time_series_resolution',
                                     options=TIME_RES_OPTIONS,
-                                    value=3,
+                                    value=2,
                                     style={'height': '1.2rem',
                                            'color': 'var(--fg)',
                                            'backgroundColor': 'var(--bg-more)'}
@@ -62,7 +59,7 @@ layout = html.Div(
                                     children='Monthly',
                                 ),
                                 daq.ToggleSwitch(
-                                    id='time_series_span',
+                                    id='ex_time_series_span',
                                     value=False,
                                 ),
                                 html.Span(
@@ -72,38 +69,37 @@ layout = html.Div(
                     ]),
             ]),
         html.Div(
-            id="account_burst_box",
+            className="ex_account_burst_box",
             children=[
                 html.Div([
                     html.H3(
-                        id='burst_title',
+                        id='ex_burst_title',
                         children=''),
                     html.Div(
-                        id='selected_account_text',
+                        id='ex_selected_account_text',
                         children='Click a pie slice to filter records'),
                 ]),
                 dcc.Graph(
-                    id='account_burst'),
+                    id='ex_account_burst'),
             ]),
         html.Div(
             id='trans_table_box',
             children=[
                 html.Div(
-                    id='trans_table_text',
+                    id='ex_trans_table_text',
                     children=''
                 ),
-                trans_table
+                ex_trans_table,
             ]),
     ])
 
 
 @app.callback(
-    [Output('master_time_series', 'figure')],
-    [Input('time_series_resolution', 'value'),
-     Input('time_series_span', 'value')],
+    [Output('ex_master_time_series', 'figure')],
+    [Input('ex_time_series_resolution', 'value'),
+     Input('ex_time_series_span', 'value')],
     state=[State('data_store', 'children')])
-def apply_time_series_resolution(time_resolution: int, time_span: bool, data_store: str):
-    """ Handle the display controls """
+def make_time_series(time_resolution: int, time_span: bool, data_store: str):
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -114,8 +110,7 @@ def apply_time_series_resolution(time_resolution: int, time_span: bool, data_sto
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         raise PreventUpdate
-
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -123,10 +118,10 @@ def apply_time_series_resolution(time_resolution: int, time_span: bool, data_sto
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(trans, account_tree, eras, account, i, time_resolution, time_span, deep=True))
 
-    ts_title = f'Average {ts_label} $, by {tr_label} '
+    ts_title = f'Average {ts_label} {unit}, by {tr_label} '
     chart_fig.update_layout(
         title={'text': ts_title},
-        xaxis={'showgrid': True, 'dtick': 'M3'},
+        xaxis={'showgrid': True, 'nticks': 20},
         yaxis={'showgrid': True},
         barmode='relative')
 
@@ -134,15 +129,15 @@ def apply_time_series_resolution(time_resolution: int, time_span: bool, data_sto
 
 
 @app.callback(
-    [Output('selected_trans_display', 'children'),
-     Output('time_series_selection_info', 'data'),
-     Output('account_burst', 'figure'),
-     Output('burst_title', 'children')],
-    [Input('master_time_series', 'figure'),
-     Input('master_time_series', 'selectedData'),
+    [Output('ex_selected_trans_display', 'children'),
+     Output('ex_time_series_selection_info', 'data'),
+     Output('ex_account_burst', 'figure'),
+     Output('ex_burst_title', 'children')],
+    [Input('ex_master_time_series', 'figure'),
+     Input('ex_master_time_series', 'selectedData'),
      Input('data_store', 'children')],
-    state=[State('time_series_resolution', 'value'),
-           State('time_series_span', 'value')])
+    state=[State('ex_time_series_resolution', 'value'),
+           State('ex_time_series_span', 'value')])
 def apply_selection_from_time_series(figure, selectedData, data_store, time_resolution, time_span):
     """
     Selecting specific points from the time series chart updates the
@@ -154,8 +149,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     Note: all of the necessary information is in figure but that doesn't seem
     to trigger reliably.  Adding selectedData as a second Input causes reliable
     triggering.
-
-    TODO: maybe check for input safety?
 
     """
 
@@ -176,7 +169,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     sel_accounts = []
     filtered_trans = pd.DataFrame()
     desc_account_count = 0
-    time_series_selection_info = None
+    ex_time_series_selection_info = None
     tr_label = TIME_RES_LOOKUP[time_resolution]['label']
     ts_label = TIME_SPAN_LOOKUP[time_span]['label']
 
@@ -218,7 +211,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
             raise PreventUpdate
         return (np.datetime64(period_start), np.datetime64(period_end))
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
 
     if len(trans) == 0:
         raise PreventUpdate
@@ -274,18 +267,18 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     sun_fig = make_sunburst(filtered_trans, min_period_start, max_period_end,
                             SUBTOTAL_SUFFIX,
                             time_span)
-    time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
+    ex_time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
 
-    title = f'Average {ts_label} $ from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
-    return [sel_accounts_content, time_series_selection_info, sun_fig, title]
+    title = f'Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
+    return [sel_accounts_content, ex_time_series_selection_info, sun_fig, title]
 
 
 @app.callback(
-    [Output('trans_table', 'data'),
-     Output('selected_account_text', 'children'),
-     Output('trans_table_text', 'children')],
-    [Input('account_burst', 'clickData'),
-     Input('time_series_selection_info', 'data'),
+    [Output('ex_trans_table', 'data'),
+     Output('ex_selected_account_text', 'children'),
+     Output('ex_trans_table_text', 'children')],
+    [Input('ex_account_burst', 'clickData'),
+     Input('ex_time_series_selection_info', 'data'),
      Input('data_store', 'children')])
 def apply_burst_click(burst_clickData, time_series_info, data_store):
     """
@@ -297,7 +290,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     if not burst_clickData:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
 
     date_start: np.datetime64 = pd.to_datetime(time_series_info.get('start', earliest_trans))
     date_end: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
@@ -339,6 +332,5 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     sel_trans['date'] = pd.DatetimeIndex(sel_trans['date']).strftime("%Y-%m-%d")
     sel_trans = sel_trans.sort_values(['date'])
 
-    trans_table_text: str = f'{len(sel_trans)} records'
-
-    return [sel_trans.to_dict('records'), account_text, trans_table_text]
+    ex_trans_table_text: str = f'{len(sel_trans)} records'
+    return [sel_trans.to_dict('records'), account_text, ex_trans_table_text]

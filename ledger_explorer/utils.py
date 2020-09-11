@@ -1,14 +1,145 @@
 import json
+import logging
 import numpy as np
 import pandas as pd
 from treelib import Tree
-from treelib import exceptions as tlexceptions
-import urllib
+from treelib import exceptions as tle
 
 from dash.exceptions import PreventUpdate
 import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
+
+
+pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
+
+
+PARENT_COL = 'parent account'
+ACCOUNT_COL = 'account'
+FAN_COL = 'full account name'
+
+
+class LError(Exception):
+    """ Base class for package errors"""
+
+
+class ATree(Tree):
+    """ Subclass of treelib Tree for holding extra functions """
+    # TODO: Bring the other make_account_tree functions here
+
+    ROOT_TAG = '[Total]'
+    ROOT_ID = 'root'
+
+    def dict_of_paths(self) -> dict:
+        res = []
+        for leaf in self.all_nodes():
+            res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
+        return {x[-1]: ':'.join(x) for x in res}
+
+    def trim_excess_root(self) -> Tree:
+        """ Remove any nodes from the root that have only 1 child.
+        I.e, replace A → B → (C, D) with B → (C, D) """
+        root_id = self.root
+        branches = self.children(root_id)
+        if len(branches) == 1:
+            self.update_node(branches[0].identifier, parent=None, bpointer=None)
+            new_tree = self.subtree(branches[0].identifier)
+            return new_tree.trim_excess_root()
+        else:
+            return self
+
+    @classmethod
+    def from_names(cls, full_names: list, delim: str = ':') -> Tree:
+        """extract all accounts from a list of Gnucash-like account paths
+
+        Assumes each account name is a full path, delimiter is :.
+        Creating each node the first time it's seen should handle these cases:
+        - Parent accounts with no transactions and therefore no distinct rows
+        - Nodes are presented out of order
+        data, so reconstruct the complete tree implied by the
+        transaction data.
+
+        If there are multiple heads in the data, they will all belong
+        to root, so the tree will still be a DAG
+
+        """
+        clean_list = full_names.unique()
+        tree = ATree()
+        tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
+        for account in clean_list:
+            try:
+                if account and len(account) > 0:
+                    branches = account.split(delim)  # example: Foo:Bar:Baz
+                    for i, branch in enumerate(branches):
+                        name = branch
+                        if i == 0:
+                            parent = cls.ROOT_ID
+                        else:
+                            parent = branches[i-1]
+                        if not tree.get_node(name):
+                            tree.create_node(tag=name,
+                                             identifier=name,
+                                             parent=parent)
+            except tle.NodeIDAbsentError as E:
+                logging.info(f'Problem building account tree: {E}')
+                # TODO: write some bad sample data to see what errors we should catch here.
+                #  presumably: account not a list; branch in account not a string
+                continue
+        tree = tree.trim_excess_root()
+        return tree
+
+    @classmethod
+    def from_parents(cls, parent_list: pd.DataFrame) -> Tree:
+        """Extract all accounts from dataframe of parent-child relationships.
+        Similar assumptions as cls.from_names, except: parents may not
+        exist when needed, and thus should be created directly under node
+        when needed, and then moved to the right place in a second pass.
+
+        """
+        clean_list = parent_list[[ACCOUNT_COL, PARENT_COL]]
+        tree = ATree()
+        tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
+        for row in clean_list.itertuples(index=False):
+            try:
+                name = row[0]  # index assumes clean_list fixed column order
+                parent = row[1]
+                if not tree.get_node(parent):
+                    tree.create_node(tag=parent,
+                                     identifier=parent,
+                                     parent=cls.ROOT_ID)
+                if not tree.get_node(name):
+                    tree.create_node(tag=name,
+                                     identifier=name,
+                                     parent=parent)
+            except tle.NodeIDAbsentError as E:
+                logging.info(f'Error creating parent list: {E}')
+                # TODO: write some bad sample data to see what errors we should catch here.
+                #  presumably: account not a list; branch in account not a string
+                continue
+
+        # second pass, to get orphaned nodes in the right place
+        for row in clean_list.itertuples(index=False):
+            try:
+                name = row[0]
+                parent = row[1]
+                tree.move_node(name, parent)
+            except tle.NodeIDAbsentError as E:
+                logging.info(f'Error moving node: {E}')
+                # TODO: write some bad sample data to see what errors we should catch here.
+                #  presumably: account not a list; branch in account not a string
+                continue
+
+        return tree
+
+
+    @staticmethod
+    def stuff_tree_into_trans(trans: pd.DataFrame, tree: Tree) -> pd.DataFrame:
+        """ Convert the tree into full account name format and add/update the
+        full account field in trans accordingly.
+        This should probably be a static method on TransFrame, once that Class exists."""
+        paths = tree.dict_of_paths()
+        trans[FAN_COL] = trans[ACCOUNT_COL].map(paths)
+        return trans
 
 
 disc_colors = px.colors.qualitative.D3
@@ -53,7 +184,7 @@ chart_fig_layout = dict(
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id='account', name='Account'),
+             dict(id=ACCOUNT_COL, name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
@@ -73,7 +204,7 @@ trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': 'account'},
+        {'if': {'column_id': ACCOUNT_COL},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -91,11 +222,11 @@ trans_table = dash_table.DataTable(
     page_size=20)
 
 
-# TODO: replace with class or something
+# TODO: replace with class or something; I guess put all this in __init__?
 bs_trans_table = dash_table.DataTable(
     id='bs_trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id='account', name='Account'),
+             dict(id=ACCOUNT_COL, name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric'),
              dict(id='total', name='Total', type='numeric')],
@@ -116,7 +247,92 @@ bs_trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': 'account'},
+        {'if': {'column_id': ACCOUNT_COL},
+         'textAlign': 'left',
+         'padding': '0px px',
+         'width': '18%'},
+        {'if': {'column_id': 'description'},
+         'textAlign': 'left',
+         'padding': 'px 2px 0px 3px'},
+        {'if': {'column_id': 'amount'},
+         'padding': '0px 12px 0px 0px',
+         'width': '11%'},
+        {'if': {'column_id': 'total'},
+         'padding': '0px 12px 0px 0px',
+         'width': '11%'}],
+    data=[],
+    sort_action='native',
+    page_action='native',
+    filter_action='native',
+    style_as_list_view=True,
+    page_size=20)
+
+
+ex_trans_table = dash_table.DataTable(
+    id='ex_trans_table',
+    columns=[dict(id='date', name='Date', type='datetime'),
+             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id='description', name='Description'),
+             dict(id='amount', name='Amount', type='numeric')],
+    style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
+                  'font-weight': '600',
+                  'text-align': 'center'},
+    style_cell={'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'backgroundColor': 'var(--bg)',
+                'border': 'none',
+                'maxWidth': 0},
+    style_data_conditional=[
+        {'if': {'row_index': 'odd'},
+         'backgroundColor': 'var(--bg-more)'},
+    ],
+    style_cell_conditional=[
+        {'if': {'column_id': 'date'},
+         'textAlign': 'left',
+         'padding': '0px 10px',
+         'width': '20%'},
+        {'if': {'column_id': ACCOUNT_COL},
+         'textAlign': 'left',
+         'padding': '0px px',
+         'width': '18%'},
+        {'if': {'column_id': 'description'},
+         'textAlign': 'left',
+         'padding': 'px 2px 0px 3px'},
+        {'if': {'column_id': 'amount'},
+         'padding': '0px 12px 0px 0px',
+         'width': '13%'}],
+    data=[],
+    sort_action='native',
+    page_action='native',
+    filter_action='native',
+    style_as_list_view=True,
+    page_size=20)
+
+
+trans_table_format = dict(
+    columns=[dict(id='date', name='Date', type='datetime'),
+             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id='description', name='Description'),
+             dict(id='amount', name='Amount', type='numeric'),
+             dict(id='total', name='Total', type='numeric')],
+    style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
+                  'font-weight': '600',
+                  'text-align': 'center'},
+    style_cell={'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'backgroundColor': 'var(--bg)',
+                'border': 'none',
+                'maxWidth': 0},
+    style_data_conditional=[
+        {'if': {'row_index': 'odd'},
+         'backgroundColor': 'var(--bg-more)'},
+    ],
+    style_cell_conditional=[
+        {'if': {'column_id': 'date'},
+         'textAlign': 'left',
+         'padding': '0px 10px',
+         'width': '20%'},
+        {'if': {'column_id': ACCOUNT_COL},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -144,17 +360,17 @@ ROOT_ACCOUNTS = [{'id': 'Assets', 'flip_negative': False},
                  {'id': 'Expenses', 'flip_negative': True},
                  {'id': 'Income', 'flip_negative': True},
                  {'id': 'Liabilities', 'flip_negative': True}]
-ROOT_TAG = '[Total]'
-ROOT_ID = 'root'
 
 SUBTOTAL_SUFFIX: str = ' [Subtotal]'
 TIME_RES_LOOKUP: dict = {
     1: {'label': 'Era', 'abbrev': 'era'},
     2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
+    5: {'label': 'Decade', 'abbrev': '10Y', 'resample_keyword': '10A', 'months': 120, 'format': '%Y'},
     3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
     4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
 TIME_RES_OPTIONS: list = [
     {'value': 1, 'label': 'Era'},
+    {'value': 5, 'label': 'Decade'},
     {'value': 2, 'label': 'Year'},
     {'value': 3, 'label': 'Quarter'},
     {'value': 4, 'label': 'Month'}]
@@ -164,30 +380,42 @@ TIME_SPAN_LOOKUP: dict = {
 
 
 def data_from_json_store(data_store: str, filter: list = []) -> tuple:
-    """ Parse data stored in Dash JSON component.  Used to move data between different
-    callbacks in Dash """
+    """Parse data stored in Dash JSON component, in order to move data
+    between different callbacks in Dash.  Returns the transaction
+    list, account tree, and eras.  If provided with a filter, returns
+    the filtered transaction list and filtered account tree.  Also
+    includes earliest and latest trans (post-filter, if any) for
+    convenience.
+
+    """
+
+    data = json.loads(data_store)
+    data_error = data.get('error', None)
+    if data_error:
+        raise PreventUpdate
+
     if not data_store or len(data_store) == 0:
         raise PreventUpdate
 
-    data = json.loads(data_store)
     trans = pd.read_json(data['trans'],
                          orient='split',
-                         dtype={'date': 'datetime64',
+                         dtype={'date': 'datetime64[ms]',
                                 'description': 'object',
                                 'amount': 'int64',
-                                'account': 'object',
-                                'full account name': 'object'})
-    orig_account_tree = make_account_tree_from_trans(trans)
+                                ACCOUNT_COL: 'object',
+                                FAN_COL: 'object'})
+
+    orig_account_tree = ATree.from_names(trans[FAN_COL])
     filter_accounts: list = []
 
     for account in filter:
         filter_accounts = filter_accounts + [account] + get_descendents(account, orig_account_tree)
 
     if filter_accounts:
-        trans = trans[trans['account'].isin(filter_accounts)]
+        trans = trans[trans[ACCOUNT_COL].isin(filter_accounts)]
 
     # rebuild account tree from filtered trans
-    account_tree = make_account_tree_from_trans(trans)
+    account_tree = ATree.from_names(trans[FAN_COL])
 
     eras = pd.read_json(data['eras'],
                         orient='split',
@@ -200,7 +428,9 @@ def data_from_json_store(data_store: str, filter: list = []) -> tuple:
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
 
-    return trans, eras, account_tree, earliest_trans, latest_trans
+    unit = data.get('unit', '$')
+
+    return trans, eras, account_tree, unit, earliest_trans, latest_trans
 
 
 def get_descendents(account_id: str, account_tree: Tree) -> list:
@@ -211,7 +441,7 @@ def get_descendents(account_id: str, account_tree: Tree) -> list:
     try:
         subtree_nodes = account_tree.subtree(account_id).all_nodes()
         descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]
-    except tlexceptions.NodeIDAbsentError:
+    except tle.NodeIDAbsentError:
         descendent_list = []
 
     return descendent_list
@@ -229,9 +459,9 @@ def make_bar(trans: pd.DataFrame,
     the selected account.  If deep, include total for all descendent accounts. """
 
     if deep:
-        tba = trans[trans['account'].isin([account_id] + get_descendents(account_id, account_tree))]
+        tba = trans[trans[ACCOUNT_COL].isin([account_id] + get_descendents(account_id, account_tree))]
     else:
-        tba = trans[trans['account'] == account_id]
+        tba = trans[trans[ACCOUNT_COL] == account_id]
 
     tba = tba.set_index('date')
     tr: dict = TIME_RES_LOOKUP[time_resolution]
@@ -250,7 +480,7 @@ def make_bar(trans: pd.DataFrame,
             trace_type = 'era'
         else:
             trace_type = 'total'
-    elif tr_label in ['Year', 'Quarter', 'Month']:
+    elif tr_label in ['Decade', 'Year', 'Quarter', 'Month']:
         format = tr_format
     else:
         raise PreventUpdate
@@ -376,7 +606,7 @@ def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
         name=account_id,
         x=trans['date'],
         y=trans['amount'],
-        text=trans['account'],
+        text=trans[ACCOUNT_COL],
         ids=trans.index,
         mode='markers',
         marker=dict(
@@ -417,9 +647,9 @@ def make_sunburst(
         Calculate the subtotal for each node (direct subtotal only, no children) in
         the provided transaction tree and store it in the tree.
         """
-        trans = trans.reset_index(drop=True).set_index('account')
-        sel_tree = make_account_tree_from_trans(trans)
-        subtotals = trans.groupby('account').sum()['amount']
+        trans = trans.reset_index(drop=True).set_index(ACCOUNT_COL)
+        sel_tree = ATree.from_names(trans[FAN_COL])
+        subtotals = trans.groupby(ACCOUNT_COL).sum()['amount']
         for node in sel_tree.all_nodes():
             try:
                 subtotal = subtotals.loc[node.tag]
@@ -490,7 +720,7 @@ def make_sunburst(
             # the root node, which doesn't need a rename
             # and will look worse if it gets one
 
-            if node_id != ROOT_ID:
+            if node_id != _sun_tree.ROOT_ID:
                 subtotal_tag = tag + SUBTOTAL_SUFFIX
                 _sun_tree.update_node(node_id, tag=subtotal_tag)
 
@@ -629,16 +859,14 @@ def get_children(account_id, account_tree):
     return [x.tag for x in account_tree.children(account_id)]
 
 
-def load_eras(source, earliest_date, latest_date):
+def load_eras(data, earliest_date, latest_date):
     """
     If era data file is available, use it to construct
     arbitrary bins
     """
 
-    data = pd.read_json(source,
-                        orient='split',
-                        dtype={'date_start': 'datetime64',
-                               'date_end': 'datetime64'})
+    data['date_start'] = data['date_start'].astype({'date_start': 'datetime64'})
+    data['date_end'] = data['date_end'].astype({'date_end': 'datetime64'})
 
     data = data.sort_values(by=['date_start'], ascending=False)
     data = data.reset_index(drop=True).set_index('name')
@@ -652,94 +880,41 @@ def load_eras(source, earliest_date, latest_date):
     return data
 
 
-def load_transactions(source):
+def load_transactions(data: pd.DataFrame):
     """
     Load a json_encoded dataframe matching the transaction export format from Gnucash.
-    Uses columns 'Account Name', 'Description', 'Memo', Notes', 'Full Account Name', 'Date', 'Amount Num.'
+    Uses columns ACCOUNT_COL, 'Description', 'Memo', Notes', FAN_COL, 'Date', 'Amount Num.'
     """
 
-    data = pd.read_json(source,
-                         orient='split',
-                         dtype={'date': 'datetime64',
-                                'description': 'object',
-                                'amount': 'int64',
-                                'account': 'object',
-                                'full account name': 'object'})
-
-    def convert(s):  # not fast
-        dates = {date: pd.to_datetime(date) for date in s.unique()}
-        return s.map(dates)
-
-    data.columns = [x.lower() for x in data.columns]
-    data['date'] = data['date'].astype({'date': 'datetime64'})
-
-    # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
-    data['date'] = data['date'].fillna(method='ffill')
-
-    data['description'] = data['description'].fillna(method='ffill')
-    data['notes'] = data['notes'].fillna(method='ffill')
-
-    # data['date'] = convert(data['date']) # supposedly faster, but not actually much faster, and broken
-    data = data.rename(columns={'amount num.': 'amount', 'account name': 'account'})
+    # try to parse date.  TODO: Maybe move this to a function so it can be re-used in era parsing
+    try:
+        data['date'] = data['date'].astype({'date': 'datetime64'})
+    except ValueError:
+        # try to parse date a different way: accept YYYY
+        data['date'] = pd.to_datetime(data['date'], format='%Y').astype({'date': 'datetime64[ms]'})
 
     data['amount'] = data['amount'].replace(to_replace=',', value='')
-    data['amount'] = data['amount'].astype(float).round(decimals=0).astype(int)
+    data['amount'] = data['amount'].fillna(value=0)
+    data['amount'] = data['amount'].astype(float, errors='ignore').round(decimals=0).astype(int, errors='ignore')
+
+    #######################################################################
+    # Gnucash-specific filter:
+    # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
+    try:
+        data['date'] = data['date'].fillna(method='ffill')
+        data['description'] = data['description'].fillna(method='ffill').astype(str)
+        data['notes'] = data['notes'].fillna(method='ffill').astype(str)
+        data['notes'] = data['notes']
+        data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
+    except Exception as E:
+        # TODO: handle this better, so it runs only when gnucash is indicated
+        logging.debug(f'Error with gnucash columns {E}')
+        pass
+
+    #######################################################################
 
     data.fillna('', inplace=True)  # Any remaining fields with invalid numerical data should be text fields
     data.where(data.notnull(), None)
 
-    data['memo'] = data['memo'].astype(str)
-    data['description'] = data['description'].astype(str)
-    data['notes'] = data['notes'].astype(str)
-
-    data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
-    trans = data[['date', 'description', 'amount', 'account', 'full account name']]
+    trans = data[['date', 'description', 'amount', ACCOUNT_COL, FAN_COL]]
     return trans
-
-
-def make_account_tree_from_trans(trans):
-    """ extract all accounts from a list of Gnucash account paths
-
-    Each account name is a full path.  Parent accounts with no
-    transactions will be missing from the data, so reconstruct the
-    complete tree implied by the transaction data.
-
-    As long as the accounts are sorted hierarchically, the algorithm
-    should never encounter a missing parent except the first node.
-
-    If there are multiple heads in the data, they will all belong to
-    root, so the tree will still be a DAG
-    """
-
-    tree = Tree()
-    tree.create_node(tag=ROOT_TAG, identifier=ROOT_ID)
-    accounts = trans['full account name'].unique()
-
-    for account in accounts:
-        branches = account.split(':')  # example: Foo:Bar:Baz
-        for i, branch in enumerate(branches):
-            name = branch
-            if i == 0:
-                parent = ROOT_ID
-            else:
-                parent = branches[i-1]
-            if not tree.get_node(name):
-                tree.create_node(tag=name,
-                                 identifier=name,
-                                 parent=parent)
-
-    tree = trim_excess_root(tree)
-    return tree
-
-
-def trim_excess_root(tree: Tree) -> Tree:
-    # Remove any nodes from the root that have only 1 child.
-    # I.e, replace A → B → (C, D) with B → (C, D)
-    root_id = tree.root
-    branches = tree.children(root_id)
-    if len(branches) == 1:
-        tree.update_node(branches[0].identifier, parent=None, bpointer=None)
-        new_tree = tree.subtree(branches[0].identifier)
-        return trim_excess_root(new_tree)
-    else:
-        return tree
