@@ -25,10 +25,27 @@ class LError(Exception):
 
 class ATree(Tree):
     """ Subclass of treelib Tree for holding extra functions """
-    # TODO: Bring the other make_account_tree functions here
 
     ROOT_TAG = '[Total]'
     ROOT_ID = 'root'
+
+    # def __init__(self):
+    #    super().__init__()
+
+    # def __repr__(self):
+    #     """ For debugging.  Includes redirect_stdout, which has global impact. """
+    #     f = io.StringIO()
+    #     with redirect_stdout(f):
+    #         self.show()
+    #     return f.getvalue()
+
+    # @classmethod
+    # def __new__(cls):
+    #     """ Create and return a new ATree, which is a treelib.Tree with extra methods"""
+    #     breakpoint()
+    #     logging.debug(f'cls {cls}')
+    #     obj = super(ATree, cls).__new__()
+    #     return obj
 
     def dict_of_paths(self) -> dict:
         res = []
@@ -36,17 +53,23 @@ class ATree(Tree):
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
         return {x[-1]: ':'.join(x) for x in res}
 
-    def trim_excess_root(self) -> Tree:
-        """ Remove any nodes from the root that have only 1 child.
-        I.e, replace A → B → (C, D) with B → (C, D) """
-        root_id = self.root
-        branches = self.children(root_id)
-        if len(branches) == 1:
-            self.update_node(branches[0].identifier, parent=None, bpointer=None)
-            new_tree = self.subtree(branches[0].identifier)
-            return new_tree.trim_excess_root()
-        else:
-            return self
+    # def trim_excess_root(self) -> Tree:
+    #     """ Remove any nodes from the root that have only 1 child.
+    #     I.e, replace A → B → (C, D) with B → (C, D)
+    #     It feels like this should be an instance method, but when that was tried,
+    #     ran into problems with subtleties of subclassing and scope:
+    #       AttributeError: 'Tree' object has no attribute 'trim_excess_root'
+    #     Method was in inspect and dir() but not __dir__.  :(
+    #     """
+
+    #     root_id = self.root
+    #     branches = self.children(root_id)
+    #     if len(branches) == 1:
+    #         self.update_node(branches[0].identifier, parent=None, bpointer=None)
+    #         new_tree = self.subtree(branches[0].identifier)
+    #         return new_tree.trim_excess_root()
+    #     else:
+    #         return self
 
     @classmethod
     def from_names(cls, full_names: list, delim: str = ':') -> Tree:
@@ -65,7 +88,7 @@ class ATree(Tree):
         """
         clean_list = full_names.unique()
         tree = ATree()
-        tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
+        tree.create_node(tag=tree.ROOT_TAG, identifier=tree.ROOT_ID)
         for account in clean_list:
             try:
                 if account and len(account) > 0:
@@ -73,7 +96,7 @@ class ATree(Tree):
                     for i, branch in enumerate(branches):
                         name = branch
                         if i == 0:
-                            parent = cls.ROOT_ID
+                            parent = tree.ROOT_ID
                         else:
                             parent = branches[i-1]
                         if not tree.get_node(name):
@@ -85,7 +108,7 @@ class ATree(Tree):
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
-        tree = tree.trim_excess_root()
+        # tree = tree.trim_excess_root()  waiting for trim_excess_root to get fixed
         return tree
 
     @classmethod
@@ -97,7 +120,7 @@ class ATree(Tree):
 
         """
         clean_list = parent_list[[ACCOUNT_COL, PARENT_COL]]
-        tree = ATree()
+        tree = cls()
         tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
         for row in clean_list.itertuples(index=False):
             try:
@@ -130,7 +153,6 @@ class ATree(Tree):
                 continue
 
         return tree
-
 
     @staticmethod
     def stuff_tree_into_trans(trans: pd.DataFrame, tree: Tree) -> pd.DataFrame:
@@ -719,7 +741,6 @@ def make_sunburst(
             # don't change the identity.  Don't do this for
             # the root node, which doesn't need a rename
             # and will look worse if it gets one
-
             if node_id != _sun_tree.ROOT_ID:
                 subtotal_tag = tag + SUBTOTAL_SUFFIX
                 _sun_tree.update_node(node_id, tag=subtotal_tag)

@@ -23,8 +23,6 @@ from utils import PARENT_COL, ACCOUNT_COL, FAN_COL
 
 from app import app
 
-from contextlib import redirect_stdout
-
 
 class LoadError(LError):
     """ Errors during data load """
@@ -49,7 +47,7 @@ def rename_columns(data: pd.DataFrame, labels: List):
     return data
 
 
-def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, labels: List = [], delim: str='') -> Dict:
+def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, labels: List = [], delim: str = '') -> Dict:  # NOQA
     """ Try and convert the provided data into usable transaction, tree,
     and era data.  Includes column renaming, and field-level business logic.
     Return a dict of trans and account_tree and eras.
@@ -461,7 +459,7 @@ def load_era_files(eras_file, filename: str) -> Iterable:
      Input('ds_delimiter', 'value'),
      Input('ds_unit', 'value')],
     state=[State('filter_store', 'children')])
-def transform_load(url_store, trans_file_store, tree_file_store, eras_file_store, n_clicks, ds_delimiter: str, ds_unit: str, filter_store):
+def transform_load(url_store, trans_file_store, tree_file_store, eras_file_store, n_clicks, ds_delimiter: str, ds_unit: str, filter_store):  # NOQA
     """ Go through all of the data input controls (uploads and URLs),
     clean up all the raw data, and put it into the data_store for the
     tab pages to use.  Business logic in this function is only at the
@@ -540,9 +538,6 @@ def load_metadata(data_store) -> Iterable:
         [''] + ['last 5 records'] + trans.tail(n=5).values.tolist()
     records_html: List[str] = [html.Div(children=x, className='code_row') for x in records]
 
-    f = io.StringIO()
-    with redirect_stdout(f):
-        account_tree.show()
-        account_tree_pre = f.getvalue()
+    account_tree_pre = f'Account tree: {len(account_tree)} records, {account_tree.depth()} levels deep'
 
     return [meta_html, account_tree_pre, records_html]
