@@ -58,7 +58,7 @@ layout: html = html.Div(
             ]),
         html.Div(
             id='kludge to eliminate "nonexistent object" errors',
-            style={'display': 'none'},
+            className='hidden',
             children=[
                 html.Div(
                     id='account_burst'),
@@ -99,7 +99,11 @@ def bs_set_period(period_value, data_store):
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {period}')
         return
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+
+    dd = data_from_json_store(data_store, ACCOUNTS)
+    trans = dd.get('trans')
+    account_tree = dd.get('account_tree')
+
     result = []
     for account in ACCOUNTS:
         chart_fig = go.Figure(layout=chart_fig_layout)
@@ -142,7 +146,9 @@ def apply_selection_from_bs_time_series(bsa_master_time_series,
     inputs = {'bsa_master_time_series': bsa_master_time_series, 'bsl_master_time_series': bsl_master_time_series,
               'bse_master_time_series': bse_master_time_series}
     selection = inputs[click]
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    dd = data_from_json_store(data_store, ACCOUNTS)
+    trans = dd.get('trans')
+
     trans_filter: dict = {}
     sel_trans: pd.DataFrame = pd.DataFrame()
     sel_text: list = []

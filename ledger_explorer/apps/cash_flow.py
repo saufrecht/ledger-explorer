@@ -115,7 +115,11 @@ def apply_time_series_resolution(time_resolution: int, time_span: bool, data_sto
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         raise PreventUpdate
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    dd = data_from_json_store(data_store, ACCOUNTS)
+    trans = dd.get('trans')
+    eras = dd.get('eras')
+    account_tree = dd.get('account_tree')
+
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -218,7 +222,12 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
             raise PreventUpdate
         return (np.datetime64(period_start), np.datetime64(period_end))
 
-    trans, eras, account_tree, earliest_trans, latest_trans = data_from_json_store(data_store, ACCOUNTS)
+    dd = data_from_json_store(data_store)
+    trans = dd.get('trans')
+    eras = dd.get('eras')
+    account_tree = dd.get('account_tree')
+    earliest_trans = dd.get('earliest_trans')
+    latest_trans = dd.get('latest_trans')
 
     if len(trans) == 0:
         raise PreventUpdate

@@ -18,7 +18,7 @@ from utils import load_eras, load_transactions, get_descendents, pretty_date
 from utils import data_from_json_store
 from utils import ROOT_ACCOUNTS
 from utils import LError, ATree
-from utils import PARENT_COL, ACCOUNT_COL, FAN_COL
+from utils import PARENT_COL, ACCOUNT_COL, FAN_COL, DELIM, LABELS
 
 
 from app import app
@@ -47,7 +47,7 @@ def rename_columns(data: pd.DataFrame, labels: List):
     return data
 
 
-def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, labels: List = [], delim: str = '') -> Dict:  # NOQA
+def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, labels: List = LABELS, delim: str = DELIM) -> Dict:  # NOQA
     """ Try and convert the provided data into usable transaction, tree,
     and era data.  Includes column renaming, and field-level business logic.
     Return a dict of trans and account_tree and eras.
@@ -57,7 +57,7 @@ def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
         raw_trans = rename_columns(raw_trans, labels)
         trans: pd.DataFrame = load_transactions(raw_trans)
     except Exception as E:
-        raise LoadError(f'Could not import the transactions because: {E}')
+        raise LoadError(f'Could not import the transactions because: {type(E)}, {E}')
 
     account_tree: Tree = ATree()
     # look for account tree in separate tree file
@@ -120,13 +120,8 @@ def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
     return data
 
 
-TREE_SOURCE_OPTIONS = list = [
-    {'value': 1, 'label': 'foo'},
-    {'value': 2, 'label': 'bar'},
-]
-
 layout = html.Div(
-    className="layout_box",
+    className="layout_box col3",
     children=[
         html.Div(
             id='trans_file_store',
@@ -141,229 +136,141 @@ layout = html.Div(
             id='url_store',
             className='hidden'),
         html.Div(
-            id='filter_store',
-            className='hidden'),
-        html.Div(
-            className="flex_down",
+            className='flex_down',
             children=[
-                html.Fieldset(
-                    className='flex_forward',
+                html.H3('Data Source'),
+                html.Div(
+                    className="flex_down",
                     children=[
-                        dcc.Upload(
-                            id='transactions_file',
-                            className='upload_target',
-                            children=html.H4([
-                                'START HERE: Drag and Drop Transaction file here, or ',
-                                html.A('Select File')])),
-                        dcc.Upload(
-                            id='tree_file',
-                            className='upload_target',
-                            children=html.Div([
-                                'OPTIONAL: Drag and Drop Account Tree file here, or ',
-                                html.A('Select File')])),
-                        dcc.Upload(
-                            id='eras_file',
-                            className='upload_target',
-                            children=html.Div([
-                                'OPTIONAL: Drag and Drop Custom Time Period file here, or ',
-                                html.A('Select File')])),
-                    ]),
-                html.Fieldset(
-                    className='flex_forward',
-                    children=[
-                        html.Div(
-                            className='flex_down some_space',
+                        html.Fieldset(
+                            className='flex_down',
                             children=[
-                                dcc.Input(
-                                    id='transactions_url',
-                                    type='url',
-                                    value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
-                                    # value='http://localhost/transactions.csv',
-                                    placeholder='URL for transaction csv file'),
-                                html.Label(
-                                    htmlFor='transactions_url',
-                                    children='Transaction Source URL'),
+                                dcc.Upload(
+                                    id='transactions_file',
+                                    className='upload_target',
+                                    children=html.Div([
+                                        'Drop here, or ',
+                                        html.A('Select File')])),
+                                html.Div(
+                                    className='flex_down some_space',
+                                    children=[
+                                        dcc.Input(
+                                            id='transactions_url',
+                                            type='url',
+                                            # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
+                                            value='http://localhost/le_data.csv',
+                                            placeholder='URL for transaction csv file'),
+                                        html.Label(
+                                            id='trans_url_label',
+                                            htmlFor='transactions_url',
+                                            children='Transaction Source URL'),
+                                    ]),
                             ]),
-                        html.Div(
-                            className='flex_down some_space',
-                            children=[
-                                dcc.Input(
-                                    id='tree_url',
-                                    type='url',
-                                    value='http://localhost/account_tree.csv',
-                                    placeholder='https://your/custom/account_tree.csv'),
-                                html.Label(
-                                    htmlFor='tree_url',
-                                    children='Account Tree source URL (optional)'),
-                            ]),
-                        html.Div(
-                            className='flex_down some_space',
-                            children=[
-                                dcc.Input(
-                                    id='eras_url',
-                                    type='url',
-                                    value='http://localhost/eras.csv',
-                                    placeholder='URL for eras csv file'),
-                                html.Label(
-                                    htmlFor='eras_url',
-                                    children='Eras source URL (optional)')
-                            ]),
-                        html.Button('Load URLs', id='data_load_button'),
                     ]),
-                html.Fieldset(
-                    className="field_grid",
-                    children=[
-                        html.Div(
-                            className='three_col',
-                            children="If column names in the source data don't match the Fields listed, enter new column names.  Matching and renaming ignores capitalization."),  # NOQA
-                        html.H4('Column Name'),
-                        html.H4(' → Field'),
-                        html.Div('Read a CSV or XLS file, one row per transaction.'),
-                        dcc.Input(
-                            id='account_name_col',
-                            size='10',
-                            value='entity',
-                            placeholder='Account',
-                            debounce=True
-                        ),
-                        html.Label(
-                            htmlFor='account_name_col',
-                            children=' → Account'),
-                        html.Div('required'),
-                        dcc.Input(
-                            id='amount_col',
-                            value='annual co2 emissions',
-                            size='10',
-                            placeholder='Amount Num.',
-                            debounce=True),
-                        html.Label(
-                            htmlFor='amount_col',
-                            children=' → Amount'),
-                        html.Div('required'),
-                        dcc.Input(
-                            id='date_col',
-                            size='10',
-                            value='year',
-                            placeholder='Date',
-                            debounce=True),
-                        html.Label(
-                            htmlFor='date_col',
-                            children=' → Date'),
-                        html.Div('required.  parsable date, or YYYY.'),
-                        dcc.Input(
-                            id='desc_col',
-                            size='10',
-                            value='entity',
-                            placeholder='Description',
-                            debounce=True),
-                        html.Label(
-                            htmlFor='desc_col',
-                            children=' → Description'),
-                        html.Div('Label for each individual transaction (if importing Gnucash, Notes and Memo added automatically)'),  # NOQA
-                        dcc.Input(
-                            id='full_account_name_col',
-                            size='10',
-                            value='entity',
-                            placeholder=FAN_COL,
-                            debounce=True),
-                        html.Label(
-                            htmlFor='full_account_name_col',
-                            children=' → Full Account Name'),
-                        html.Div(['Used to determine account tree.  Full path of account, e.g., Assets:Tools:Wheelbarrow.  Custom delimiter:',  # NOQA
-                                  dcc.Input(
-                                      id='ds_delimiter',
-                                      value='',
-                                      size='1',
-                                      placeholder=':',
-                                      debounce=True)]),
-                        dcc.Input(
-                            id='parent_col',
-                            size='10',
-                            value='entity',
-                            placeholder=PARENT_COL,
-                            debounce=True),
-                        html.Label(
-                            htmlFor='parent_col',
-                            children=' → Parent Account'),
-                        html.Div('Alternative method for account tree'),
-                        dcc.Input(
-                            id='ds_unit',
-                            size='2',
-                            value='mt·CO₂⁄year',
-                            placeholder='unit',
-                            debounce=True),
-                        html.Label(
-                            htmlFor='ds_unit',
-                            children='Unit'),
-                        html.Div('For data not in dollars.  E.g., in $000s, or another unit altogether.'),
-                        html.Div(
-                            className='three_col',
-                            children="Account tree is derived from tree source file if present, or transaction source if not.  Within doc, FAN_COL is used if present, otherwise 'parent', otherwise no tree."),  # NOQA
-                        html.Button(
-                            className='three_col',
-                            children='Apply settings',
-                            id='fields_reload_button'),
-                    ]),
+                html.Div(
+                    id='trans_meta',
+                    className='code',
+                    children=['Loaded: none'])
             ]),
-        html.Div(id='meta_data_box',
-                 children=[
-                     html.H4("Files"),
-                     html.Div(
-                         id='meta_data',
-                         children=['none']),
-                 ]),
-        html.Div(id='account_tree_box',
-                 children=[
-                     html.H4("Account Tree"),
-                     html.Pre(
-                         id='account_tree',
-                         className='code',
-                         children=['none'])
-                 ]),
-        html.Div(id='records_box',
-                 children=[
-                     html.H4("Transactions"),
-                     html.Div(
-                         id='records',
-                         className='code',
-                         children=['none']),
-                 ]),
+        html.Div(
+            className='flex_down',
+            children=[
+                html.H3('Account Tree'),
+                html.Div(
+                    className="flex_down",
+                    children=[
+                        html.Fieldset(
+                            className='flex_down',
+                            children=[
+                                dcc.Upload(
+                                    id='tree_file',
+                                    className='upload_target',
+                                    children=html.Div([
+                                        'Drop or ',
+                                        html.A('Select')])),
+                                html.Div(
+                                    className='flex_down some_space',
+                                    children=[
+                                        dcc.Input(
+                                            id='tree_url',
+                                            type='url',
+                                            value='http://localhost/le_account_tree.csv',
+                                            placeholder='https://your/custom/account_tree.csv'),
+                                        html.Label(
+                                            id='tree_url_label',
+                                            htmlFor='tree_url',
+                                            children='Account Tree source URL (optional)'),
+                                    ]),
+                            ]),
+                    ]),
+                html.Pre(
+                    id='atree_meta',
+                    className='code',
+                    children=['Loaded: none']),
+            ]),
+        html.Div(
+            className='flex_down',
+            children=[
+                html.H3('Custom Reporting Periods'),
+                html.Div(
+                    className="flex_down",
+                    children=[
+                        html.Fieldset(
+                            className='flex_down',
+                            children=[
+                                dcc.Upload(
+                                    id='eras_file',
+                                    className='upload_target',
+                                    children=html.Div([
+                                        'Drop or ',
+                                        html.A('Select')])),
+                                html.Div(
+                                    className='flex_down some_space',
+                                    children=[
+                                        dcc.Input(
+                                            id='eras_url',
+                                            type='url',
+                                            value='http://localhost/le_eras.csv',
+                                            placeholder='URL for eras csv file'),
+                                        html.Label(
+                                            id='eras_url_label',
+                                            htmlFor='eras_url',
+                                            children='Eras source URL (optional)')
+                                    ]),
+                                html.Button('Reload URLs', id='url_load_button'),
+                            ]),
+                    ]),
+                html.Div(
+                    id='eras_meta',
+                    className='code',
+                    children=['Loaded: none']),
+            ]),
+        html.Div(
+            className='three_col',
+            children=[
+                html.Button('Reload Data', id='data_load_button'),
+            ]),
     ])
 
 
 @app.callback(
-    [Output('filter_store', 'children')],
-    [Input('account_name_col', 'value'),
-     Input('amount_col', 'value'),
-     Input('date_col', 'value'),
-     Input('desc_col', 'value'),
-     Input('full_account_name_col', 'value')])
-def store_filter(account_n: str, amount_n: str, date_n: str, desc_n: str, fullname_n: str) -> Iterable:
-    """ Store any column name mapping inputs in a data store for use on import """
-
-    response_set = [(str(account_n), ACCOUNT_COL),
-                    (str(amount_n), 'amount'),
-                    (str(date_n), 'date'),
-                    (str(desc_n), 'description'),
-                    (str(fullname_n), FAN_COL)]
-    return [json.dumps(response_set)]
-
-
-@app.callback(
-    [Output('url_store', 'children')],
-    [Input('data_load_button', 'n_clicks')],
+    [Output('url_store', 'children'),
+     Output('trans_url_label', 'children'),
+     Output('tree_url_label', 'children'),
+     Output('eras_url_label', 'children')],
+    [Input('url_load_button', 'n_clicks')],
     state=[State('transactions_url', 'value'),
            State('tree_url', 'value'),
            State('eras_url', 'value')])
 def load_urls(n_clicks: int, transactions_url: str, tree_url: str, eras_url: str) -> Iterable:
     """ When the Load from URL button is clicked, load the designated files
     and update the data store"""
-
-    if not n_clicks or n_clicks == 0 or not transactions_url:
+    if not transactions_url:
         raise PreventUpdate
 
     try:
         trans_data: pd.DataFrame = pd.read_csv(transactions_url, thousands=',', low_memory=False)
+        trans_text: str = f'{transactions_url} loaded, {len(trans_data)} records.'
     except urllib.error.HTTPError:
         # except error.URLError as E:
         #    return [None, f'Error loading transactions: {E}', None, None]
@@ -371,19 +278,23 @@ def load_urls(n_clicks: int, transactions_url: str, tree_url: str, eras_url: str
 
     try:
         tree_data: pd.DataFrame = pd.read_csv(tree_url)
+        tree_text: str = f'{tree_url} loaded, {len(tree_data)} records.'
     except urllib.error.HTTPError:
         tree_data = pd.DataFrame()
+        tree_text = None
 
     try:
         eras_data: pd.DataFrame = pd.read_csv(eras_url, thousands=',', low_memory=False)
+        eras_text: str = f'File {eras_url} loaded, {len(eras_data)} records.'
     except urllib.error.HTTPError:
         eras_data: pd.DataFrame = pd.DataFrame()
+        eras_text = None
 
     data = dict(trans=trans_data.to_json(orient='split', date_format='%Y%m%d'),
                 tree=tree_data.to_json(orient='split'),
                 eras=eras_data.to_json(orient='split', date_format='%Y%m%d'))
 
-    return [json.dumps(data)]
+    return [json.dumps(data), trans_text, tree_text, eras_text]
 
 
 @app.callback(
@@ -451,19 +362,17 @@ def load_era_files(eras_file, filename: str) -> Iterable:
 
 @app.callback(
     [Output('data_store', 'children')],
-    [Input('url_store', 'children'),
+    [Input('data_load_button', 'n_clicks'),
+     Input('url_store', 'children'),
      Input('trans_file_store', 'children'),
      Input('tree_file_store', 'children'),
      Input('eras_file_store', 'children'),
-     Input('fields_reload_button', 'n_clicks'),
-     Input('ds_delimiter', 'value'),
-     Input('ds_unit', 'value')],
-    state=[State('filter_store', 'children')])
-def transform_load(url_store, trans_file_store, tree_file_store, eras_file_store, n_clicks, ds_delimiter: str, ds_unit: str, filter_store):  # NOQA
+     Input('control_store', 'children')])
+def transform_load(n_clicks: int, url_store: str, trans_file_store, tree_file_store, eras_file_store, control_store):  # NOQA
     """ Go through all of the data input controls (uploads and URLs),
     clean up all the raw data, and put it into the data_store for the
     tab pages to use.  Business logic in this function is only at the
-    file level, not lower.
+    file level; subfunctions can work at the field level.
 
     """
     if not url_store and not trans_file_store:
@@ -496,48 +405,65 @@ def transform_load(url_store, trans_file_store, tree_file_store, eras_file_store
         if eras_from_url:
             raw_eras = pd.read_json(eras_from_url, orient='split')
 
-    if filter_store:
-        labels = json.loads(filter_store)
+    if control_store:
+        controls = json.loads(control_store)
+        labels = controls.get('labels', [])
+        delim = controls.get('delimiter', DELIM)
     else:
-        labels = []
+        labels = LABELS
+        delim = DELIM
 
     try:
-        data = convert_raw_info(raw_trans, raw_tree, raw_eras, labels, ds_delimiter)
+        data = convert_raw_info(raw_trans, raw_tree, raw_eras, labels, delim)
     except LoadError as LE:
         data = {'error': LE.message}
-
-    if ds_delimiter:
-        data['delimiter'] = ds_delimiter
-
-    if ds_unit:
-        data['unit'] = ds_unit
 
     return [json.dumps(data)]
 
 
 @app.callback(
-    [Output('meta_data', 'children'),
-     Output('account_tree', 'children'),
-     Output('records', 'children')],
-    [Input('data_store', 'children')])
-def load_metadata(data_store) -> Iterable:
+    [Output('trans_meta', 'children'),
+     Output('atree_meta', 'children'),
+     Output('eras_meta', 'children')],
+    [Input('data_store', 'children')],
+    state=[State('control_store', 'children')])
+def update_metadata(data_store, control_store) -> Iterable:
     """ When data store changes, refresh all of the data meta-information
     and display """
+    if not data_store or data_store == '':
+        raise PreventUpdate
 
     data_error: str = json.loads(data_store).get('error', None)
     if data_error:
         return [data_error, data_error, data_error]
-    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
-    meta_info: list = [f'Data loaded: {len(trans)} records between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}',  # NOQA
-                       f'Account Tree loaded: {len(account_tree)}',
-                       f'Eras loaded: {len(eras)}',
-                       f'Unit: {unit}']
-    meta_html: list = [html.Div(children=x) for x in meta_info]
+
+    dd = data_from_json_store(data_store)
+    trans = dd.get('trans')
+    eras = dd.get('eras')
+    account_tree = dd.get('account_tree')
+    earliest_trans = dd.get('earliest_trans')
+    latest_trans = dd.get('latest_trans')
+
+    trans_list: list = [f'Data loaded: {len(trans)} records between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}']  # NOQA
+
+    atree_list = [f'Account Tree loaded: {len(account_tree)}, {account_tree.depth()} levels deep']
+    eras_list: list = [f'Eras loaded: {len(eras)}']
 
     records: list = ['first 5 records'] + trans.head(n=5).values.tolist() + \
         [''] + ['last 5 records'] + trans.tail(n=5).values.tolist()
-    records_html: List[str] = [html.Div(children=x, className='code_row') for x in records]
+    trans_list = trans_list + records
 
-    account_tree_pre = f'Account tree: {len(account_tree)} records, {account_tree.depth()} levels deep'
+    trans_html: list = [html.Div(children=x) for x in trans_list]
+    atree_html: list = [html.Div(children=x) for x in atree_list]
+    eras_html: list = [html.Div(children=x) for x in eras_list]
 
-    return [meta_html, account_tree_pre, records_html]
+    return [trans_html, atree_html, eras_html]
+
+
+# @app.callback([Output('ex_tab', 'label'),
+#                Output('bs_tab', 'label'),
+#                Output('ds_tab', 'label')],
+#               [Input('control_store', 'children')])
+# def relabel_tab(control_data: str):
+#     if not control_data:
+#         raise PreventUpdate

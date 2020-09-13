@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import balance_sheet, cash_flow, data_source, explorer
+from apps import balance_sheet, data_source, explorer, settings
 
 
 app.layout = html.Div(
@@ -13,14 +13,17 @@ app.layout = html.Div(
     className='page_content',
     children=[
         html.Div(id='data_store',
-                 style={'display': 'none'}),
+                 children='',
+                 className='hidden'),
+        html.Div(id='control_store',
+                 className='hidden'),
         dcc.Tabs(id='tabs',
                  value='ds',
                  className='custom-tabs-container',
                  children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
-                           dcc.Tab(label='Explorer', id='ex_tab', value='ex'),
-                           dcc.Tab(label='Cash Flow', id='cf_tab', value='cf'),
-                           dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs')]
+                           dcc.Tab(label='Flow', id='ex_tab', value='ex'),
+                           dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs'),
+                           dcc.Tab(label='Settings', id='se_tab', value='se')]
                  ),
         html.Div(id='tab-content'),
     ])
@@ -31,10 +34,10 @@ app.layout = html.Div(
 def change_tab(selected_tab: str):
     if selected_tab == 'bs':
         layout = balance_sheet.layout
-    elif selected_tab == 'cf':
-        layout = cash_flow.layout
     elif selected_tab == 'ex':
         layout = explorer.layout
+    elif selected_tab == 'se':
+        layout = settings.layout
     else:
         layout = data_source.layout
 

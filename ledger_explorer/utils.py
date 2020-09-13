@@ -1,9 +1,12 @@
+import calendar
 import json
 import logging
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 from treelib import Tree
 from treelib import exceptions as tle
+from typing import Dict, Tuple
 
 from dash.exceptions import PreventUpdate
 import dash_table
@@ -17,6 +20,8 @@ pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the
 PARENT_COL = 'parent account'
 ACCOUNT_COL = 'account'
 FAN_COL = 'full account name'
+DELIM = ':'
+LABELS = [('amount num.',  'amount'), ('account name', 'account')]  # defaults for loading gnucash files
 
 
 class LError(Exception):
@@ -48,6 +53,11 @@ class ATree(Tree):
     #     return obj
 
     def dict_of_paths(self) -> dict:
+        """Return full paths as primary internal representation of account
+         tree. Note that ':' here is an internal detail, and so not
+         affected by DELIM constant or user input
+
+        """
         res = []
         for leaf in self.all_nodes():
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
@@ -401,7 +411,7 @@ TIME_SPAN_LOOKUP: dict = {
     False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
-def data_from_json_store(data_store: str, filter: list = []) -> tuple:
+def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     """Parse data stored in Dash JSON component, in order to move data
     between different callbacks in Dash.  Returns the transaction
     list, account tree, and eras.  If provided with a filter, returns
@@ -452,7 +462,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> tuple:
 
     unit = data.get('unit', '$')
 
-    return trans, eras, account_tree, unit, earliest_trans, latest_trans
+    return {'trans': trans, 'eras': eras, 'account_tree': account_tree, 'earliest_trans': earliest_trans, 'latest_trans': latest_trans, 'unit': unit}  # NOQA
 
 
 def get_descendents(account_id: str, account_tree: Tree) -> list:
@@ -512,7 +522,6 @@ def make_bar(trans: pd.DataFrame,
     except IndexError:
         # don't ever run out of colors
         marker_color = 'var(--Cyan)'
-
     if trace_type == 'periodic':
         resample_keyword = tr['resample_keyword']
         bin_amounts = tba.resample(resample_keyword).\
@@ -641,7 +650,8 @@ def make_sunburst(
         date_start: np.datetime64 = None,
         date_end: np.datetime64 = None,
         SUBTOTAL_SUFFIX: str = None,
-        time_span: int = 1):
+        time_span: int = 1,
+        colormap: Dict = {}):
     """
     Using a tree of accounts and a DataFrame of transactions,
     generate a figure for a sunburst, where each node is an account
@@ -826,16 +836,20 @@ def make_sunburst(
                                x.data['total']) for x in _sun_tree.all_nodes()],
                              columns=['id', 'name', 'parent', 'value'])
 
+    sun_frame['color'] = sun_frame['id'].map(colormap)
+
     figure = px.sunburst(sun_frame,
                          ids='id',
                          names='name',
                          parents='parent',
                          values='value',
                          height=600,
-                         branchvalues='total')
+                         color='id',
+                         branchvalues='total',
+                         color_discrete_map=colormap)
 
+#        go.Sunburst({'marker': {'colorscale': 'Aggrnyl'}}),
     figure.update_traces(
-        go.Sunburst({'marker': {'colorscale': 'Aggrnyl'}}),
         insidetextorientation='horizontal',
         maxdepth=3,
         hovertemplate='%{label}<br>%{value}',
@@ -927,9 +941,8 @@ def load_transactions(data: pd.DataFrame):
         data['notes'] = data['notes'].fillna(method='ffill').astype(str)
         data['notes'] = data['notes']
         data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
-    except Exception as E:
+    except Exception as E:  # NOQA
         # TODO: handle this better, so it runs only when gnucash is indicated
-        logging.debug(f'Error with gnucash columns {E}')
         pass
 
     #######################################################################
@@ -939,3 +952,137 @@ def load_transactions(data: pd.DataFrame):
 
     trans = data[['date', 'description', 'amount', ACCOUNT_COL, FAN_COL]]
     return trans
+
+
+def date_range_from_period(tr_label: str,
+                           ts_label: str,
+                           period: str,
+                           eras: pd.DataFrame) -> Tuple[np.datetime64, np.datetime64]:
+
+    # Convert period label to tuple of start and end dates, based on tr_label
+
+    def _month_end(date: np.datetime64) -> np.datetime64:
+        # return the date of the last day of the month of the input date
+        year = date.year
+        month = date.month
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = np.datetime64(datetime(year=year,
+                                          month=month,
+                                          day=last_day))
+        return end_date
+
+    if tr_label == 'Era':
+        era = eras.loc[(eras['date_start'] < period) & (eras['date_end'] > period)]
+        period_start = era['date_start'][0]
+        period_end = era['date_end'][0]
+    if tr_label == 'Decade':
+        period_start = datetime(int(date.year/10)*10, 1, 1)
+        period_end = datetime(int(((date.year/10)+1)*10)-1, 12, 31)
+    elif tr_label == 'Year':
+        period_start = datetime(int(period), 1, 1)
+        period_end = datetime(int(period), 12, 31)
+    elif tr_label == 'Quarter':
+        try:
+            year: int = int(period[0:4])
+        except ValueError:
+            raise PreventUpdate
+        try:
+            Q: int = int(period[6:7])
+        except ValueError:
+            raise PreventUpdate
+        start_month: int = ((Q * 3) - 2)
+        period_start = datetime(year, start_month, 1)
+        period_end = _month_end(period_start + timedelta(days=63))
+    elif tr_label == 'Month':
+        period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
+        period_end = _month_end(period_start)
+    else:
+        raise PreventUpdate
+    return (np.datetime64(period_start), np.datetime64(period_end))
+
+
+def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans, unit) -> tuple:
+    """ Apply filtering to data store and return a sunburst and associated labels
+    TODO: This should be reworked until it's not so completely entangled with page displays
+
+    """
+    min_period_start: np.datetime64 = None
+    max_period_end: np.datetime64 = None
+    sel_accounts = []
+    filtered_trans = pd.DataFrame()
+    desc_account_count = 0
+    tr_label = TIME_RES_LOOKUP[time_resolution]['label']
+    ts_label = TIME_SPAN_LOOKUP[time_span]['label']
+
+    if len(trans) == 0:
+        raise PreventUpdate
+
+    colormap = {}
+    for trace in figure.get('data'):
+        account = trace.get('name')
+        points = trace.get('selectedpoints')
+        colormap[account] = trace.get('marker').get('color')
+        if not points:
+            continue
+        sel_accounts.append(account)
+        for point in points:
+            point_x = trace['x'][point]
+            period_start, period_end = date_range_from_period(tr_label, ts_label, point_x, eras)
+            if min_period_start is None:
+                min_period_start = period_start
+            else:
+                min_period_start = min(min_period_start, period_start)
+            if max_period_end is None:
+                max_period_end = period_end
+            else:
+                max_period_end = max(max_period_end, period_end)
+            desc_accounts = get_descendents(account, account_tree)
+            desc_account_count = desc_account_count + len(desc_accounts)
+            subtree_accounts = [account] + desc_accounts
+            new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
+                loc[trans['date'] >= period_start].\
+                loc[trans['date'] <= period_end]
+
+            if len(filtered_trans) > 0:
+                filtered_trans = filtered_trans.append(new_trans)
+            else:
+                filtered_trans = new_trans
+
+    # If no transactions are ultimately selected, show all accounts
+    filtered_count = len(filtered_trans)
+    if filtered_count > 0:
+        # TODO: desc_account_count is still wrong.
+        sel_accounts_content = pretty_account_label(sel_accounts, desc_account_count,
+                                                    min_period_start,
+                                                    max_period_end,
+                                                    filtered_count)
+    else:
+        # If no trans are selected, show everything.  Note that we
+        # could logically get here even if valid accounts are
+        # seleceted, in which case it would be confusing to get back
+        # all trans instead of none, but this should never happen haha
+        # because any clickable bar must have $$, and so, trans
+        sel_accounts_content = f'Click a bar in the graph to filter from {len(trans):,d} records'
+        filtered_trans = trans
+
+    # min_period_start =
+    # latest_trans = dd.get('latest_trans')
+    # max_period_end = latest_trans
+
+    time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
+    title = f'Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
+    sun_fig = make_sunburst(filtered_trans, min_period_start, max_period_end,
+                            SUBTOTAL_SUFFIX, time_span, colormap)
+
+    return (sel_accounts_content, time_series_selection_info, sun_fig, title)
+
+
+def pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
+    """ Make label for sunburst """
+    if desc_account_count > 0:
+        desc_text = f'and {desc_account_count:,d} subaccounts'
+    else:
+        desc_text = ''
+    date_range_content = f'between {pretty_date(start)} {pretty_date(end)}'
+    result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
+    return result

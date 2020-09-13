@@ -1,23 +1,20 @@
-import calendar
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
-from datetime import datetime, timedelta
 import logging
 import pandas as pd
 import numpy as np
-from typing import Tuple
 
 import plotly.graph_objects as go
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
-from utils import chart_fig_layout, trans_table, data_from_json_store, pretty_date
+from utils import chart_fig_layout, trans_table, data_from_json_store
 from utils import get_children, get_descendents
-from utils import make_bar, make_sunburst
+from utils import make_bar
 from utils import ex_trans_table
-
+from utils import trans_to_burst
 from app import app
 
 
@@ -100,6 +97,9 @@ layout = html.Div(
      Input('ex_time_series_span', 'value')],
     state=[State('data_store', 'children')])
 def make_time_series(time_resolution: int, time_span: bool, data_store: str):
+    if not data_store or len(data_store) == 0:
+        raise PreventUpdate
+
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -110,7 +110,13 @@ def make_time_series(time_resolution: int, time_span: bool, data_store: str):
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         raise PreventUpdate
-    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
+    dd = data_from_json_store(data_store)
+
+    trans = dd.get('trans')
+    eras = dd.get('eras')
+    account_tree = dd.get('account_tree')
+    unit = dd.get('unit')
+
     chart_fig = go.Figure(layout=chart_fig_layout)
     root_account_id = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
@@ -151,126 +157,16 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     triggering.
 
     """
-
-    if not figure or not data_store:  # prevent from crashing when triggered from other pages
+    if not selectedData or not figure or not data_store:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
-    def _pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
-        if desc_account_count > 0:
-            desc_text = f'and {desc_account_count:,d} subaccounts'
-        else:
-            desc_text = ''
-        date_range_content = f'between {pretty_date(start)} {pretty_date(end)}'
-        result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
-        return result
+    dd = data_from_json_store(data_store)
+    trans = dd.get('trans')
+    eras = dd.get('eras')
+    account_tree = dd.get('account_tree')
+    unit = dd.get('unit')
 
-    min_period_start: np.datetime64 = None
-    max_period_end: np.datetime64 = None
-    sel_accounts = []
-    filtered_trans = pd.DataFrame()
-    desc_account_count = 0
-    ex_time_series_selection_info = None
-    tr_label = TIME_RES_LOOKUP[time_resolution]['label']
-    ts_label = TIME_SPAN_LOOKUP[time_span]['label']
-
-    def _month_end(date: np.datetime64) -> np.datetime64:
-        # return the date of the last day of the month of the input date
-        year = date.year
-        month = date.month
-        last_day = calendar.monthrange(year, month)[1]
-        end_date = np.datetime64(datetime(year=year,
-                                          month=month,
-                                          day=last_day))
-        return end_date
-
-    def _date_range_from_period(tr_label: str, period: str) -> Tuple[np.datetime64, np.datetime64]:
-        # Convert period label to tuple of start and end dates, based on tr_label
-        if tr_label == 'Era':
-            era = eras.loc[(eras['date_start'] < period) & (eras['date_end'] > period)]
-            period_start = era['date_start'][0]
-            period_end = era['date_end'][0]
-        elif tr_label == 'Year':
-            period_start = datetime(int(period), 1, 1)
-            period_end = datetime(int(period), 12, 31)
-        elif tr_label == 'Quarter':
-            try:
-                year: int = int(period[0:4])
-            except ValueError:
-                raise PreventUpdate
-            try:
-                Q: int = int(period[6:7])
-            except ValueError:
-                raise PreventUpdate
-            start_month: int = ((Q * 3) - 2)
-            period_start = datetime(year, start_month, 1)
-            period_end = _month_end(period_start + timedelta(days=63))
-        elif tr_label == 'Month':
-            period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
-            period_end = _month_end(period_start)
-        else:
-            raise PreventUpdate
-        return (np.datetime64(period_start), np.datetime64(period_end))
-
-    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
-
-    if len(trans) == 0:
-        raise PreventUpdate
-
-    for trace in figure.get('data'):
-        account = trace.get('name')
-        points = trace.get('selectedpoints')
-        if not points:
-            continue
-        sel_accounts.append(account)
-        for point in points:
-            point_x = trace['x'][point]
-            period_start, period_end = _date_range_from_period(tr_label, point_x)
-            if min_period_start is None:
-                min_period_start = period_start
-            else:
-                min_period_start = min(min_period_start, period_start)
-            if max_period_end is None:
-                max_period_end = period_end
-            else:
-                max_period_end = max(max_period_end, period_end)
-            desc_accounts = get_descendents(account, account_tree)
-            desc_account_count = desc_account_count + len(desc_accounts)
-            subtree_accounts = [account] + desc_accounts
-            new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
-                loc[trans['date'] >= period_start].\
-                loc[trans['date'] <= period_end]
-
-            if len(filtered_trans) > 0:
-                filtered_trans = filtered_trans.append(new_trans)
-            else:
-                filtered_trans = new_trans
-
-    # If no transactions are ultimately selected, show all accounts
-    filtered_count = len(filtered_trans)
-    if filtered_count > 0:
-        # TODO: desc_account_count is still wrong.
-        sel_accounts_content = _pretty_account_label(sel_accounts, desc_account_count,
-                                                     min_period_start,
-                                                     max_period_end,
-                                                     filtered_count)
-    else:
-        # If no trans are selected, show everything.  Note that we
-        # could logically get here even if valid accounts are
-        # seleceted, in which case it would be confusing to get back
-        # all trans instead of none, but this should never happen haha
-        # because any clickable bar must have $$, and so, trans
-        sel_accounts_content = f'Click a bar in the graph to filter from {len(trans):,d} records'
-        filtered_trans = trans
-        min_period_start = earliest_trans
-        max_period_end = latest_trans
-
-    sun_fig = make_sunburst(filtered_trans, min_period_start, max_period_end,
-                            SUBTOTAL_SUFFIX,
-                            time_span)
-    ex_time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
-
-    title = f'Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
-    return [sel_accounts_content, ex_time_series_selection_info, sun_fig, title]
+    return trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans, unit)
 
 
 @app.callback(
@@ -290,7 +186,11 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     if not burst_clickData:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
-    trans, eras, account_tree, unit, earliest_trans, latest_trans = data_from_json_store(data_store)
+    dd = data_from_json_store(data_store)
+    trans = dd.get('trans')
+    account_tree = dd.get('account_tree')
+    earliest_trans = dd.get('earliest_trans')
+    latest_trans = dd.get('latest_trans')
 
     date_start: np.datetime64 = pd.to_datetime(time_series_info.get('start', earliest_trans))
     date_end: np.datetime64 = pd.to_datetime(time_series_info.get('end', latest_trans))
