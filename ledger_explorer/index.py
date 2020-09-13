@@ -1,8 +1,10 @@
 import logging
+import json
 
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
 
 from app import app
 from apps import balance_sheet, data_source, explorer, settings
@@ -42,6 +44,23 @@ def change_tab(selected_tab: str):
         layout = data_source.layout
 
     return layout
+
+
+@app.callback([Output('ex_tab', 'label'),
+               Output('bs_tab', 'label'),
+               Output('ds_tab', 'label')],
+              [Input('control_store', 'children')])
+def relabel_tab(control_data: str):
+    """ Update tab labels from settings"""
+    if not control_data:
+        raise PreventUpdate
+
+    cd = json.loads(control_data)
+    ex_label = cd.get('ex_label', None)
+    bs_label = cd.get('bs_label', None)
+    ds_label = cd.get('ds_label', None)
+
+    return [ex_label, bs_label, ds_label]
 
 
 if __name__ == '__main__':

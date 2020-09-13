@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import logging
 from typing import Iterable, List, Dict
 import urllib
 from treelib import Tree
@@ -458,12 +459,3 @@ def update_metadata(data_store, control_store) -> Iterable:
     eras_html: list = [html.Div(children=x) for x in eras_list]
 
     return [trans_html, atree_html, eras_html]
-
-
-# @app.callback([Output('ex_tab', 'label'),
-#                Output('bs_tab', 'label'),
-#                Output('ds_tab', 'label')],
-#               [Input('control_store', 'children')])
-# def relabel_tab(control_data: str):
-#     if not control_data:
-#         raise PreventUpdate
