@@ -1,0 +1,40 @@
+server {
+
+        server_name ledge.uprightconsulting.com www.ledge.uprightconsulting.com;
+
+        location /s/ {
+                 root /var/www/ledge/html/;
+        }
+
+        location / {
+                 include proxy_params;
+                 proxy_pass http://unix:/home/s/ledger-explorer/ledger_explorer/ledge.sock;
+        }
+
+        
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/ledge.uprightconsulting.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/ledge.uprightconsulting.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+server {
+    if ($host = www.ledge.uprightconsulting.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = ledge.uprightconsulting.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+        listen 80;
+        listen [::]:80;
+
+        server_name ledge.uprightconsulting.com www.ledge.uprightconsulting.com;
+    return 404; # managed by Certbot
+}

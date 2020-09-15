@@ -5,10 +5,19 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
+from dash import Dash  # production only
+
 
 from app import app
+# production only: from app_prod import app
 from apps import balance_sheet, data_source, explorer, settings
 
+# production only:
+# external_stylesheets = ['https://ledge.uprightconsulting.com/dash_layout.css']
+# app = Dash(__name__, external_stylesheets=external_stylesheets)
+# server = app.server
+
+app.title = 'Ledger Explorer'
 
 app.layout = html.Div(
     id='page-content',
@@ -20,14 +29,15 @@ app.layout = html.Div(
         html.Div(id='control_store',
                  className='hidden'),
         dcc.Tabs(id='tabs',
-                 value='ds',
+                 value='ex',
                  className='custom-tabs-container',
-                 children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
-                           dcc.Tab(label='Flow', id='ex_tab', value='ex'),
+                 children=[dcc.Tab(label='Cash Flow', id='ex_tab', value='ex'),
                            dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs'),
+                           dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
                            dcc.Tab(label='Settings', id='se_tab', value='se')]
                  ),
         html.Div(id='tab-content'),
+        html.Div(id='tab-debugging')
     ])
 
 
@@ -59,7 +69,6 @@ def relabel_tab(control_data: str):
     ex_label = cd.get('ex_label', None)
     bs_label = cd.get('bs_label', None)
     ds_label = cd.get('ds_label', None)
-
     return [ex_label, bs_label, ds_label]
 
 
@@ -68,4 +77,4 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S %z')
-    app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(debug=False, host='0.0.0.0')

@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve ledger explorer
+After=network.target
+
+[Service]
+User=s
+Group=www-data
+
+WorkingDirectory=/home/s/ledger-explorer/ledger_explorer
+Environment="PATH=/home/s/.venv_le/bin/"
+ExecStart=/home/s/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
+
+[Install]
+WantedBy=multi-user.target

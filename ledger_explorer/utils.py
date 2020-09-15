@@ -34,24 +34,6 @@ class ATree(Tree):
     ROOT_TAG = '[Total]'
     ROOT_ID = 'root'
 
-    # def __init__(self):
-    #    super().__init__()
-
-    # def __repr__(self):
-    #     """ For debugging.  Includes redirect_stdout, which has global impact. """
-    #     f = io.StringIO()
-    #     with redirect_stdout(f):
-    #         self.show()
-    #     return f.getvalue()
-
-    # @classmethod
-    # def __new__(cls):
-    #     """ Create and return a new ATree, which is a treelib.Tree with extra methods"""
-    #     breakpoint()
-    #     logging.debug(f'cls {cls}')
-    #     obj = super(ATree, cls).__new__()
-    #     return obj
-
     def dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
          tree. Note that ':' here is an internal detail, and so not
@@ -63,23 +45,29 @@ class ATree(Tree):
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
         return {x[-1]: ':'.join(x) for x in res}
 
-    # def trim_excess_root(self) -> Tree:
-    #     """ Remove any nodes from the root that have only 1 child.
-    #     I.e, replace A → B → (C, D) with B → (C, D)
-    #     It feels like this should be an instance method, but when that was tried,
-    #     ran into problems with subtleties of subclassing and scope:
-    #       AttributeError: 'Tree' object has no attribute 'trim_excess_root'
-    #     Method was in inspect and dir() but not __dir__.  :(
-    #     """
+    @classmethod
+    def cast(cls, tree: Tree):
+        """ Cast a Tree into an ATree """
+        tree.__class__ = cls
+        return tree
 
-    #     root_id = self.root
-    #     branches = self.children(root_id)
-    #     if len(branches) == 1:
-    #         self.update_node(branches[0].identifier, parent=None, bpointer=None)
-    #         new_tree = self.subtree(branches[0].identifier)
-    #         return new_tree.trim_excess_root()
-    #     else:
-    #         return self
+    def trim_excess_root(self):
+        """ Remove any nodes from the root that have only 1 child.
+        I.e, replace A → B → (C, D) with B → (C, D)
+        It feels like this should be an instance method, but when that was tried,
+        ran into problems with subtleties of subclassing and scope:
+          AttributeError: 'Tree' object has no attribute 'trim_excess_root'
+        Method was in inspect and dir() but not __dir__.  :(
+        """
+        root_id = self.root
+        branches = self.children(root_id)
+        if len(branches) == 1:
+            self.update_node(branches[0].identifier, parent=None, bpointer=None)
+            new_tree = self.subtree(branches[0].identifier)
+            new_atree = ATree.cast(new_tree)
+            return new_atree.trim_excess_root()
+        else:
+            return self
 
     @classmethod
     def from_names(cls, full_names: list, delim: str = ':') -> Tree:
@@ -976,8 +964,8 @@ def date_range_from_period(tr_label: str,
         period_start = era['date_start'][0]
         period_end = era['date_end'][0]
     if tr_label == 'Decade':
-        period_start = datetime(int(date.year/10)*10, 1, 1)
-        period_end = datetime(int(((date.year/10)+1)*10)-1, 12, 31)
+        period_start = datetime(int(period.year/10)*10, 1, 1)
+        period_end = datetime(int(((period.year/10)+1)*10)-1, 12, 31)
     elif tr_label == 'Year':
         period_start = datetime(int(period), 1, 1)
         period_end = datetime(int(period), 12, 31)
