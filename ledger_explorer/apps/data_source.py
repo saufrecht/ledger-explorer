@@ -159,7 +159,7 @@ layout = html.Div(
                                             id='transactions_url',
                                             type='url',
                                             # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
-                                            value='http://localhost/le_data.csv',
+                                            value='https://ledge.uprightconsulting.com/s/sample_transaction',
                                             placeholder='URL for transaction csv file'),
                                         html.Label(
                                             id='trans_url_label',

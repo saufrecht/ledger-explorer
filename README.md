@@ -3,6 +3,10 @@ Navigate a hierarchical ledger graphically, all the way down to individual trans
 
 ![Screenshot](https://raw.githubusercontent.com/saufrecht/ledger-explorer/master/docs/montage.jpg?s=820x838)
 
+# Installation
+
+See [docs/INSTALL.md](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
+
 # Usage
 
 ## Data Source tab

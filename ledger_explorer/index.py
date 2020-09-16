@@ -8,14 +8,11 @@ from dash.exceptions import PreventUpdate
 from dash import Dash  # production only
 
 
-from app import app
-# production only: from app_prod import app
 from apps import balance_sheet, data_source, explorer, settings
 
-# production only:
-# external_stylesheets = ['https://ledge.uprightconsulting.com/dash_layout.css']
-# app = Dash(__name__, external_stylesheets=external_stylesheets)
-# server = app.server
+external_stylesheets = ['https://ledge.uprightconsulting.com/s/dash_layout.css']
+app = Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 
 app.title = 'Ledger Explorer'
 
