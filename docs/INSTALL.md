@@ -55,11 +55,115 @@ You will need to activate the virtual environment every time you open a new shel
 1. Anyone on your local network, for example anyone on the same wifi, may be able to access this site.
 
 
-# Production Server (Linux)
-A production-ready setup, using Nginx and GUnicorn.  As above for development server, except:
+# Production Server (Linux) ROUGH DRAFT, UNVERIFIED
+A production-ready setup, using Nginx and GUnicorn.
 
-## Install server software
+## How it works
 
-1. `pip install gunicorn flask`
+1. systemd manages an automatic service named **ledge**, which is always running
+2. **ledge** calls on gunicorn, which runs the **ledger_explorer** code
+2.1. **ledger_explorer** is now accessible on a local unix socket
+3. nginx takes HTTPS web requests to the public url and passes them to the unix socket, and then returns the response
+
+## Prepare a production server
+
+1. Create a new, non-root user for ledger explorer, let's call it **ledge**.
+1.1 `sudo adduser ledge`
+2. Install nginx
+2.1 `sudo apt install nginx`
+3. Set up HTTPS 
+1.1. `sudo apt install certbot python3-certbot-nginx`
+1.2 `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
+
+## get the code
+* Same as for development server (above).  Do this and all future steps as the new user, **ledge**, unless otherwise noted.
+
+## Confirm Python version 3.8 or higher
+* Same as for development server (above)
+
+## Make and activate a virtual environment
+* Same as for development server (above).
+
+### Install prerequisite Python modules
+
+1. `pip install -r docs/requirements.txt`
+2. `pip install -r docs/requirements-prod-only.txt`
+
+## Set Up Ledger Explorer to be run from Gunicorn
+1. Test by running gunicorn -b 127.0.0.1:8081 index:server
+1.1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
+2. Create a new systemd service file to control ledge:
+2.1 `sudo emacs /etc/systemd/system/ledge.service`
+3. `sudo systemctl enable ledge.service`
+4. `sudo systemctl start ledge.service`
+5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should results look like)
+
+### Contents of ledge.service
+
+```
+[Unit]
+Description=Gunicorn instance to serve Ledger Explorer
+After=network.target
+
+[Service]
+User=s
+Group=www-data
+
+WorkingDirectory=/home/ledge/ledger-explorer/ledger_explorer
+Environment="PATH=/home/ledge/.venv_le/bin/"
+ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
+
+[Install]
+WantedBy=multi-user.target
+```
 
 
+## Configure Nginx as a proxy server for Gunicorn
+1. Edit the nginx site configuration file for ledge (this file should already exist from initial setup and certbot)
+1.1 `sudo emacs /etc/nginx/sites-available/ledge`
+1.2 Verify that the config file has no errors: `sudo service nginx configtest`
+2. `sudo service nginx restart`
+3. Check: `service nginx status`
+
+```
+server {
+
+        server_name your.server.name www.your.server.name;
+
+        location /s/ {
+                 root /var/www/ledge/html/;
+        }
+
+        location / {
+                 include proxy_params;
+                 proxy_pass http://unix:/home/ledge/ledger-explorer/ledger_explorer/ledge.sock;
+        }
+
+        
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/your.server.name/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/your.server.name/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+server {
+    if ($host = www.your.server.name) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = your.server.name) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+        listen 80;
+        listen [::]:80;
+
+        server_name your.server.name www.your.server.name;
+    return 404; # managed by Certbot
+}
+```
