@@ -62,18 +62,18 @@ A production-ready setup, using Nginx and GUnicorn.
 
 1. systemd manages an automatic service named **ledge**, which is always running
 2. **ledge** calls on gunicorn, which runs the **ledger_explorer** code
-2.1. **ledger_explorer** is now accessible on a local unix socket
+  1. **ledger_explorer** is now accessible on a local unix socket
 3. nginx takes HTTPS web requests to the public url and passes them to the unix socket, and then returns the response
 
 ## Prepare a production server
 
 1. Create a new, non-root user for ledger explorer, let's call it **ledge**.
-1.1 `sudo adduser ledge`
+  1 `sudo adduser ledge`
 2. Install nginx
-2.1 `sudo apt install nginx`
+  2 `sudo apt install nginx`
 3. Set up HTTPS 
-1.1. `sudo apt install certbot python3-certbot-nginx`
-1.2 `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
+  1. `sudo apt install certbot python3-certbot-nginx`
+  1 `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
 
 ## get the code
 * Same as for development server (above).  Do this and all future steps as the new user, **ledge**, unless otherwise noted.
@@ -91,9 +91,9 @@ A production-ready setup, using Nginx and GUnicorn.
 
 ## Set Up Ledger Explorer to be run from Gunicorn
 1. Test by running `gunicorn -b 127.0.0.1:8081 index:server`
-  1.1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
+  1 Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
 2. Create a new systemd service file to control ledge:
-  2.1 `sudo emacs /etc/systemd/system/ledge.service`
+  1. `sudo emacs /etc/systemd/system/ledge.service`
 3. `sudo systemctl enable ledge.service`
 4. `sudo systemctl start ledge.service`
 5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should results look like)
