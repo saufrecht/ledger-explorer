@@ -21,8 +21,8 @@ app.layout = html.Div(
         html.Div(id='data_store',
                  children='',
                  className='hidden'),
-        html.Div(id='control_store'),
-#                 className='hidden'),
+        html.Div(id='control_store',
+                 className='hidden'),
         dcc.Tabs(id='tabs',
                  value='ds',
                  className='custom-tabs-container',
@@ -71,7 +71,8 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S %z')
-    app.run_server(debug=False, host='0.0.0.0', port='8081')
+    app.config['suppress_callback_exceptions'] = True
+    app.run_server(debug=True, host='0.0.0.0', port='8081')
 
 
 if __name__ != '__main__':
@@ -80,5 +81,4 @@ if __name__ != '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    # external_stylesheets = ['https://ledge.uprightconsulting.com/s/dash_layout.css']
-    external_stylesheets = ['https://localhost:edge.uprightconsulting.com/s/dash_layout.css']
+    external_stylesheets = ['https://ledge.uprightconsulting.com/s/dash_layout.css']

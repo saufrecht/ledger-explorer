@@ -1,7 +1,6 @@
 import base64
 import io
 import json
-import inspect  # DEBUG
 from typing import Iterable, List, Dict
 import urllib
 from treelib import Tree
@@ -230,7 +229,6 @@ layout = html.Div(
 def load_urls(n_clicks: int, transactions_url: str, tree_url: str, eras_url: str) -> Iterable:
     """ When the Load from URL button is clicked, load the designated files
     and update the data store"""
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not transactions_url:
         raise PreventUpdate
 
@@ -270,7 +268,6 @@ def load_urls(n_clicks: int, transactions_url: str, tree_url: str, eras_url: str
 def load_trans_files(trans_file, filename: str) -> Iterable:
     """ When the contents of the load box for transactions changes, reload transactions
     and update the data store"""
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not trans_file:
         raise PreventUpdate
 
@@ -291,7 +288,6 @@ def load_trans_files(trans_file, filename: str) -> Iterable:
 def load_tree_files(tree_file, filename: str) -> Iterable:
     """ When the contents of the load box for tree changes, reload tree
     and update the data store"""
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not tree_file:
         raise PreventUpdate
 
@@ -313,7 +309,6 @@ def load_tree_files(tree_file, filename: str) -> Iterable:
 def load_era_files(eras_file, filename: str) -> Iterable:
     """ When the contents of the load box for eras changes, reload eras
     and update the data store"""
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not eras_file:
         raise PreventUpdate
 
@@ -343,7 +338,6 @@ def transform_load(n_clicks: int, url_store: str, trans_file_store, tree_file_st
     file level; subfunctions can work at the field level.
 
     """
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not url_store and not trans_file_store:
         raise PreventUpdate
 
@@ -399,7 +393,6 @@ def transform_load(n_clicks: int, url_store: str, trans_file_store, tree_file_st
 def update_metadata(data_store, control_store) -> Iterable:
     """ When data store changes, refresh all of the data meta-information
     and display """
-    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not data_store or data_store == '':
         raise PreventUpdate
 
