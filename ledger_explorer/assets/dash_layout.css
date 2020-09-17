@@ -119,9 +119,9 @@ h4 {
 }
 
 .layout_box > div {
-    margin: 0.5rem;
-    padding: 0.5rem;
-    box-shadow: var(--body-shadow)!important;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  box-shadow: var(--body-shadow)!important;
 }
 
 .control_bar {
@@ -142,6 +142,12 @@ h4 {
 
 }
 
+.ds_column {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(10rem);
+  grid-row-gap: 3rem;
+}
 
 .field_grid {
   display: grid;
@@ -224,106 +230,106 @@ h4 {
 /* } */
 
 .tab {
-    background-color: var(--bg-more)!important;
-    border: none!important;
-    padding: 0!important;
-    height: 1.7rem;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 1.3rem;
-    margin-bottom: 0.2rem!important;
+  background-color: var(--bg-more)!important;
+  border: none!important;
+  padding: 0!important;
+  height: 1.7rem;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1.3rem;
+  margin-bottom: 0.2rem!important;
 }
 
 .tab--selected {
-    color: var(--fg-more)!important;
-    background-color: var(--bg)!important;
-    border-top: 2px solid var(--accent)!important
+  color: var(--fg-more)!important;
+  background-color: var(--bg)!important;
+  border-top: 2px solid var(--accent)!important
 }
 
 
 fieldset {
-    border: none;
-    background-color: var(--bg)!important;
-    margin: 0.5rem;
+  border: none;
+  background-color: var(--bg)!important;
+  margin: 0.5rem;
 }
 
 .some_space {
-    margin: 0.5rem;
+  margin: 0.5rem;
 }
 
 input {
-    font-size: 0.8rem;
-    color: var(--fg-less);
-    border: none;
-    box-shadow: var(--box-shadow)!important;
-    font-family: var(--mono);
-    height: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--fg-less);
+  border: none;
+  box-shadow: var(--box-shadow)!important;
+  font-family: var(--mono);
+  height: 1.2rem;
 }
 
 label {
-    padding-right: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--fg-less);
+  padding-right: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--fg-less);
 }
 
 .code {
-    font-family: var(--mono);
-    font-size: 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
 }
 
 div.code_row + div.code_row {
-    margin-top: 1rem;
+  margin-top: 1rem;
 }
 
 button {
-    color: var(--fg-more);
-    background-color: var(--bg-more);
-    border-color: var(--fg-more);
+  color: var(--fg-more);
+  background-color: var(--bg-more);
+  border-color: var(--fg-more);
 }
 
 
 *[data-dash-is-loading="true"]{
-    visibility: hidden;
+  visibility: hidden;
 }
 
 *[data-dash-is-loading="true"]::before{
-    content: "Loading...";
-    display: inline;
-    color: var(--fg);
-    font-size: 1rem;
-    visibility: visible;
+  content: "Loading...";
+  display: inline;
+  color: var(--fg);
+  font-size: 1rem;
+  visibility: visible;
 }
 
 #selected_trans_display {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .dash-cell {
-    height: 2rem;
+  height: 2rem;
 }
 
 .dash-cell-value {
-    font-size: 1rem;
-    font-family: var(--mono);
+  font-size: 1rem;
+  font-family: var(--mono);
 }
 
 .dash-spreadsheet-inner input {
-    font-size: 0.8rem;
-    background-color: var(--bg-more)!important;
-    color: var(--fg-less)!important;
+  font-size: 0.8rem;
+  background-color: var(--bg-more)!important;
+  color: var(--fg-less)!important;
 }
 
 .upload_target {
-    border: 2px dotted var(--accent);
-    border-radius: var(--small-corner);
-    background-color: var(--bg-more);
-    padding: 0.7rem;
-    text-align: center;
-    margin: 0.5rem;
+  border: 2px dotted var(--accent);
+  border-radius: var(--small-corner);
+  background-color: var(--bg-more);
+  padding: 0.7rem;
+  text-align: center;
+  margin: 0.5rem;
 }
 
 .upload_target a {
-    color: var(--violet)!important;
-    text-decoration: underline;
-    cursor: pointer;
+  color: var(--violet)!important;
+  text-decoration: underline;
+  cursor: pointer;
 }

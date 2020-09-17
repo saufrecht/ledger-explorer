@@ -104,6 +104,7 @@ layout = html.Div(
     state=[State('data_store', 'children')])
 def apply_time_series_resolution(time_resolution: int, time_span: bool, data_store: str):
     """ Handle the display controls """
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
@@ -162,7 +163,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     TODO: maybe check for input safety?
 
     """
-
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not figure or not data_store:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
@@ -302,7 +303,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     TODO: maybe check for input safety?
     """
-
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     if not burst_clickData:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 

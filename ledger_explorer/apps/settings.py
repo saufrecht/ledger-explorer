@@ -1,3 +1,4 @@
+import inspect # DEBUG
 import json
 import dash_core_components as dcc
 import dash_html_components as html
@@ -200,7 +201,7 @@ def apply_settings(account_n: str,
                    ex_label: str) -> str:
 
     """ Store all manually input setting information into the control store for use during load """
-
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     labels = [(str(account_n), ACCOUNT_COL),
               (str(amount_n), 'amount'),
               (str(date_n), 'date'),

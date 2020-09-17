@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from more_itertools import intersperse
 import pandas as pd
+import inspect
 
 import plotly.graph_objects as go
 import dash
@@ -94,6 +95,9 @@ layout: html = html.Div(
     state=[State('data_store', 'children')])
 def bs_set_period(period_value, data_store):
     """ When the balance sheet period selector changes, update the time series """
+
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
+
     try:
         period = TIME_RES_LOOKUP[period_value]
     except IndexError:
@@ -139,6 +143,7 @@ def apply_selection_from_bs_time_series(bsa_master_time_series,
     selecting a point or points in the time series updates the transaction table to show
     all transactions up to that point
     """
+    app.logger.info(f'DEBUG CALLBACK {inspect.currentframe().f_code.co_name}')
     ctx = dash.callback_context
     click = ctx.triggered[0]['prop_id'].split('.')[0]
     if not data_store or len(click) == 0:
