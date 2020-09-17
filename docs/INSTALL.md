@@ -62,18 +62,18 @@ A production-ready setup, using Nginx and GUnicorn.
 
 1. systemd manages an automatic service named **ledge**, which is always running
 2. **ledge** calls on gunicorn, which runs the **ledger_explorer** code
-  1. **ledger_explorer** is now accessible on a local unix socket
+    1. **ledger_explorer** is now accessible on a local unix socket
 3. nginx takes HTTPS web requests to the public url and passes them to the unix socket, and then returns the response
 
 ## Prepare a production server
 
 1. Create a new, non-root user for ledger explorer, let's call it **ledge**.
-  1 `sudo adduser ledge`
+    1. `sudo adduser ledge`
 2. Install nginx
-  2 `sudo apt install nginx`
+    2. `sudo apt install nginx`
 3. Set up HTTPS 
-  1. `sudo apt install certbot python3-certbot-nginx`
-  1 `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
+   1. `sudo apt install certbot python3-certbot-nginx`
+  1. `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
 
 ## get the code
 * Same as for development server (above).  Do this and all future steps as the new user, **ledge**, unless otherwise noted.
@@ -120,8 +120,8 @@ WantedBy=multi-user.target
 
 ## Configure Nginx as a proxy server for Gunicorn
 1. Edit the nginx site configuration file for ledge (this file should already exist from initial setup and certbot)
-1.1 `sudo emacs /etc/nginx/sites-available/ledge`
-1.2 Verify that the config file has no errors: `sudo service nginx configtest`
+    1. `sudo emacs /etc/nginx/sites-available/ledge`
+    1. Verify that the config file has no errors: `sudo service nginx configtest`
 2. `sudo service nginx restart`
 3. Check: `service nginx status`
 
