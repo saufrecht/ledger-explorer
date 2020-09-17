@@ -1,3 +1,18 @@
+- [Local Development Server](#local-development-server)
+  * [get the code](#get-the-code)
+  * [Confirm Python version 3.8 or higher](#confirm-python-version-38-or-higher)
+  * [Make and activate a virtual environment](#make-and-activate-a-virtual-environment)
+  * [Prepare data](#prepare-data)
+  * [Run program](#run-program)
+- [Production Server (Linux) ROUGH DRAFT, UNVERIFIED](#production-server--linux--rough-draft--unverified)
+  * [How it works (when it works)](#how-it-works--when-it-works-)
+  * [Prepare a production server](#prepare-a-production-server)
+  * [get the code](#get-the-code-1)
+  * [Confirm Python version 3.8 or higher](#confirm-python-version-38-or-higher-1)
+  * [Make and activate a virtual environment](#make-and-activate-a-virtual-environment-1)
+  * [Set Up Ledger Explorer to be run from Gunicorn](#set-up-ledger-explorer-to-be-run-from-gunicorn)
+  * [Configure Nginx as a proxy server for Gunicorn](#configure-nginx-as-a-proxy-server-for-gunicorn)
+
 # Local Development Server
 
 ## get the code
@@ -58,12 +73,13 @@ You will need to activate the virtual environment every time you open a new shel
 # Production Server (Linux) ROUGH DRAFT, UNVERIFIED
 A production-ready setup, using Nginx and GUnicorn.
 
-## How it works
+## How it works (when it works)
 
-1. systemd manages an automatic service named **ledge**, which is always running
+1. systemd manages an automatic service named **ledge**.  (**ledge** is an example name, which can be replaced with anything else)
 2. **ledge** calls on gunicorn, which runs the **ledger_explorer** code
-    1. **ledger_explorer** is now accessible on a local unix socket
+    1. **Ledger Explorer** is now accessible on a local unix socket
 3. nginx takes HTTPS web requests to the public url and passes them to the unix socket, and then returns the response
+    1. **Ledger Explorer** is now accessible at the web address of the server
 
 ## Prepare a production server
 
@@ -76,16 +92,16 @@ A production-ready setup, using Nginx and GUnicorn.
    1. `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
 
 ## get the code
-* Same as for development server (above).  Do this and all future steps as the new user, **ledge**, unless otherwise noted.
+1. *Same as for development server (above).*
+1. Do this and all future steps as the new user, **ledge**, unless otherwise noted.
 
 ## Confirm Python version 3.8 or higher
-* Same as for development server (above)
+1. *Same as for development server (above).*
 
 ## Make and activate a virtual environment
-* Same as for development server (above).
+1. *Same as for development server (above).*
 
 ### Install prerequisite Python modules
-
 1. `pip install -r docs/requirements.txt`
 2. `pip install -r docs/requirements-prod-only.txt`
 
@@ -96,7 +112,7 @@ A production-ready setup, using Nginx and GUnicorn.
    1. `sudo emacs /etc/systemd/system/ledge.service`
 3. `sudo systemctl enable ledge.service`
 4. `sudo systemctl start ledge.service`
-5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should results look like)
+5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should good and bad results look like?)
 
 ### Contents of ledge.service
 
@@ -167,3 +183,6 @@ server {
     return 404; # managed by Certbot
 }
 ```
+
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
