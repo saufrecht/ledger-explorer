@@ -162,7 +162,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     TODO: maybe check for input safety?
 
     """
-
     if not figure or not data_store:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 
@@ -302,7 +301,6 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     TODO: maybe check for input safety?
     """
-
     if not burst_clickData:  # prevent from crashing when triggered from other pages
         raise PreventUpdate
 

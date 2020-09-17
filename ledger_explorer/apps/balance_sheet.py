@@ -94,6 +94,8 @@ layout: html = html.Div(
     state=[State('data_store', 'children')])
 def bs_set_period(period_value, data_store):
     """ When the balance sheet period selector changes, update the time series """
+
+
     try:
         period = TIME_RES_LOOKUP[period_value]
     except IndexError:

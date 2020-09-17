@@ -408,6 +408,8 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     convenience.
 
     """
+    if (not data_store) or (len(data_store) == 0):
+        return {}
 
     data = json.loads(data_store)
     data_error = data.get('error', None)
@@ -457,7 +459,8 @@ def get_descendents(account_id: str, account_tree: Tree) -> list:
     """
     Return a list of tags of all descendent accounts of the input account.
     """
-
+    if (not account_id) or (not account_tree) or (len(account_id) == 0) or (account_tree.size() == 0):
+        return []
     try:
         subtree_nodes = account_tree.subtree(account_id).all_nodes()
         descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]

@@ -1,21 +1,16 @@
-import logging
 import json
+import logging
 
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
-from dash import Dash  # production only
 
 
 from app import app
-# production only: from app_prod import app
 from apps import balance_sheet, data_source, explorer, settings
 
-# production only:
-# external_stylesheets = ['https://ledge.uprightconsulting.com/dash_layout.css']
-# app = Dash(__name__, external_stylesheets=external_stylesheets)
-# server = app.server
+server = app.server
 
 app.title = 'Ledger Explorer'
 
@@ -29,11 +24,11 @@ app.layout = html.Div(
         html.Div(id='control_store',
                  className='hidden'),
         dcc.Tabs(id='tabs',
-                 value='ex',
+                 value='ds',
                  className='custom-tabs-container',
-                 children=[dcc.Tab(label='Cash Flow', id='ex_tab', value='ex'),
+                 children=[dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
+                           dcc.Tab(label='Cash Flow', id='ex_tab', value='ex'),
                            dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs'),
-                           dcc.Tab(label='Data Source', id='ds_tab', value='ds'),
                            dcc.Tab(label='Settings', id='se_tab', value='se')]
                  ),
         html.Div(id='tab-content'),
@@ -45,15 +40,14 @@ app.layout = html.Div(
               [Input('tabs', 'value')])
 def change_tab(selected_tab: str):
     if selected_tab == 'bs':
-        layout = balance_sheet.layout
+        new_layout = balance_sheet.layout
     elif selected_tab == 'ex':
-        layout = explorer.layout
+        new_layout = explorer.layout
     elif selected_tab == 'se':
-        layout = settings.layout
+        new_layout = settings.layout
     else:
-        layout = data_source.layout
-
-    return layout
+        new_layout = data_source.layout
+    return new_layout
 
 
 @app.callback([Output('ex_tab', 'label'),
@@ -77,4 +71,14 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S %z')
-    app.run_server(debug=False, host='0.0.0.0')
+    app.config['suppress_callback_exceptions'] = True
+    app.run_server(debug=True, host='0.0.0.0', port='8081')
+
+
+if __name__ != '__main__':
+    # Get logging to flow all the way to gunicorn.
+    # from https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+    external_stylesheets = ['https://ledge.uprightconsulting.com/s/dash_layout.css']

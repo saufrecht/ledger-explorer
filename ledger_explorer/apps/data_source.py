@@ -1,7 +1,6 @@
 import base64
 import io
 import json
-import logging
 from typing import Iterable, List, Dict
 import urllib
 from treelib import Tree
@@ -137,110 +136,73 @@ layout = html.Div(
             id='url_store',
             className='hidden'),
         html.Div(
-            className='flex_down',
+            className='ds_column',
             children=[
                 html.H3('Data Source'),
-                html.Div(
-                    className="flex_down",
-                    children=[
-                        html.Fieldset(
-                            className='flex_down',
-                            children=[
-                                dcc.Upload(
-                                    id='transactions_file',
-                                    className='upload_target',
-                                    children=html.Div([
-                                        'Drop here, or ',
-                                        html.A('Select File')])),
-                                html.Div(
-                                    className='flex_down some_space',
-                                    children=[
-                                        dcc.Input(
-                                            id='transactions_url',
-                                            type='url',
-                                            # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
-                                            value='http://localhost/le_data.csv',
-                                            placeholder='URL for transaction csv file'),
-                                        html.Label(
-                                            id='trans_url_label',
-                                            htmlFor='transactions_url',
-                                            children='Transaction Source URL'),
-                                    ]),
-                            ]),
-                    ]),
+                dcc.Upload(
+                    id='transactions_file',
+                    className='upload_target',
+                    children=html.Div([
+                        'Drop here, or ',
+                        html.A('Select File')])),
+                dcc.Input(
+                    id='transactions_url',
+                    type='url',
+                    # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
+                    value='https://ledge.uprightconsulting.com/s/sample_transaction_data.csv',
+                    placeholder='URL for transaction csv file'),
+                html.Label(
+                    id='trans_url_label',
+                    htmlFor='transactions_url',
+                    children='Transaction Source URL'),
                 html.Div(
                     id='trans_meta',
                     className='code',
-                    children=['Loaded: none'])
+                    children=['Loaded: none']),
             ]),
         html.Div(
-            className='flex_down',
+            className="ds_column",
             children=[
                 html.H3('Account Tree'),
-                html.Div(
-                    className="flex_down",
-                    children=[
-                        html.Fieldset(
-                            className='flex_down',
-                            children=[
-                                dcc.Upload(
-                                    id='tree_file',
-                                    className='upload_target',
-                                    children=html.Div([
-                                        'Drop or ',
-                                        html.A('Select')])),
-                                html.Div(
-                                    className='flex_down some_space',
-                                    children=[
-                                        dcc.Input(
-                                            id='tree_url',
-                                            type='url',
-                                            value='http://localhost/le_account_tree.csv',
-                                            placeholder='https://your/custom/account_tree.csv'),
-                                        html.Label(
-                                            id='tree_url_label',
-                                            htmlFor='tree_url',
-                                            children='Account Tree source URL (optional)'),
-                                    ]),
-                            ]),
-                    ]),
+                dcc.Upload(
+                    id='tree_file',
+                    className='upload_target',
+                    children=html.Div([
+                        'Drop or ',
+                        html.A('Select')])),
+                dcc.Input(
+                    id='tree_url',
+                    type='url',
+                    value='http://localhost/le_account_tree.csv',
+                    placeholder='https://your/custom/account_tree.csv'),
+                html.Label(
+                    id='tree_url_label',
+                    htmlFor='tree_url',
+                    children='Account Tree source URL (optional)'),
                 html.Pre(
                     id='atree_meta',
                     className='code',
                     children=['Loaded: none']),
             ]),
         html.Div(
-            className='flex_down',
+            className='ds_column',
             children=[
                 html.H3('Custom Reporting Periods'),
-                html.Div(
-                    className="flex_down",
-                    children=[
-                        html.Fieldset(
-                            className='flex_down',
-                            children=[
-                                dcc.Upload(
-                                    id='eras_file',
-                                    className='upload_target',
-                                    children=html.Div([
-                                        'Drop or ',
-                                        html.A('Select')])),
-                                html.Div(
-                                    className='flex_down some_space',
-                                    children=[
-                                        dcc.Input(
-                                            id='eras_url',
-                                            type='url',
-                                            value='http://localhost/le_eras.csv',
-                                            placeholder='URL for eras csv file'),
-                                        html.Label(
-                                            id='eras_url_label',
-                                            htmlFor='eras_url',
-                                            children='Eras source URL (optional)')
-                                    ]),
-                                html.Button('Reload URLs', id='url_load_button'),
-                            ]),
-                    ]),
+                dcc.Upload(
+                    id='eras_file',
+                    className='upload_target',
+                    children=html.Div([
+                        'Drop or ',
+                        html.A('Select')])),
+                dcc.Input(
+                    id='eras_url',
+                    type='url',
+                    value='http://localhost/le_eras.csv',
+                    placeholder='URL for eras csv file'),
+                html.Label(
+                    id='eras_url_label',
+                    htmlFor='eras_url',
+                    children='Eras source URL (optional)'),
                 html.Div(
                     id='eras_meta',
                     className='code',
@@ -249,6 +211,7 @@ layout = html.Div(
         html.Div(
             className='three_col',
             children=[
+                html.Button('Reload URLs', id='url_load_button'),
                 html.Button('Reload Data', id='data_load_button'),
             ]),
     ])
@@ -346,7 +309,6 @@ def load_tree_files(tree_file, filename: str) -> Iterable:
 def load_era_files(eras_file, filename: str) -> Iterable:
     """ When the contents of the load box for eras changes, reload eras
     and update the data store"""
-
     if not eras_file:
         raise PreventUpdate
 

@@ -200,7 +200,6 @@ def apply_settings(account_n: str,
                    ex_label: str) -> str:
 
     """ Store all manually input setting information into the control store for use during load """
-
     labels = [(str(account_n), ACCOUNT_COL),
               (str(amount_n), 'amount'),
               (str(date_n), 'date'),
