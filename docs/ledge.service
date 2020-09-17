@@ -6,9 +6,9 @@ After=network.target
 User=s
 Group=www-data
 
-WorkingDirectory=/home/s/ledger-explorer/ledger_explorer
+WorkingDirectory=/home/ledge/ledger-explorer/ledger_explorer
 Environment="PATH=/home/s/.venv_le/bin/"
-ExecStart=/home/s/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
+ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
 
 [Install]
 WantedBy=multi-user.target

@@ -90,10 +90,10 @@ A production-ready setup, using Nginx and GUnicorn.
 2. `pip install -r docs/requirements-prod-only.txt`
 
 ## Set Up Ledger Explorer to be run from Gunicorn
-1. Test by running gunicorn -b 127.0.0.1:8081 index:server
-1.1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
+1. Test by running `gunicorn -b 127.0.0.1:8081 index:server`
+  1.1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
 2. Create a new systemd service file to control ledge:
-2.1 `sudo emacs /etc/systemd/system/ledge.service`
+  2.1 `sudo emacs /etc/systemd/system/ledge.service`
 3. `sudo systemctl enable ledge.service`
 4. `sudo systemctl start ledge.service`
 5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should results look like)
