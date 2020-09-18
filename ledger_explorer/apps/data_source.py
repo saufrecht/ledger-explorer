@@ -11,11 +11,9 @@ import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
 
-from dash import no_update
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import load_eras, load_transactions, get_descendents, pretty_date
-from utils import data_from_json_store
+from utils import load_eras, load_transactions, get_descendents, data_from_json_store, pretty_date, pretty_records
 from utils import ROOT_ACCOUNTS
 from utils import LError, ATree
 from utils import PARENT_COL, ACCOUNT_COL, FAN_COL, DELIM, LABELS
@@ -101,7 +99,8 @@ def convert_raw_info(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
 
 
 def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
-    """ Take the input to the upload control and return a dataframe"""
+    """ Take the input to the upload control, assuming it's a csv,
+    and return a dataframe"""
     content_type, content_string = content.split(',')
 
     decoded = base64.b64decode(content_string + '===')  # prevent padding errors
@@ -124,260 +123,243 @@ layout = html.Div(
     className="layout_box col3",
     children=[
         html.Div(
-            id='trans_file_store',
-            className='hidden'),
-        html.Div(
-            id='eras_file_store',
-            className='hidden'),
-        html.Div(
-            id='tree_file_store',
-            className='hidden'),
-        html.Div(
-            id='url_store',
-            className='hidden'),
-        html.Div(
             className='ds_column',
             children=[
-                html.H3('Data Source'),
+                html.H3('Transactions', id='trans_heading'),
+                html.Div(
+                    id='trans_meta'),
                 dcc.Upload(
-                    id='transactions_file',
+                    id='trans_file',
                     className='upload_target',
                     children=html.Div([
                         'Drop here, or ',
                         html.A('Select File')])),
-                dcc.Input(
-                    id='transactions_url',
-                    type='url',
-                    # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
-                    value='https://ledge.uprightconsulting.com/s/sample_transaction_data.csv',
-                    placeholder='URL for transaction csv file'),
-                html.Label(
-                    id='trans_url_label',
-                    htmlFor='transactions_url',
-                    children='Transaction Source URL'),
                 html.Div(
-                    id='trans_meta',
-                    className='code',
-                    children=['Loaded: none']),
-            ]),
-        html.Div(
-            className="ds_column",
-            children=[
-                html.H3('Account Tree'),
-                dcc.Upload(
-                    id='tree_file',
-                    className='upload_target',
-                    children=html.Div([
-                        'Drop or ',
-                        html.A('Select')])),
-                dcc.Input(
-                    id='tree_url',
-                    type='url',
-                    value='http://localhost/le_account_tree.csv',
-                    placeholder='https://your/custom/account_tree.csv'),
-                html.Label(
-                    id='tree_url_label',
-                    htmlFor='tree_url',
-                    children='Account Tree source URL (optional)'),
-                html.Pre(
-                    id='atree_meta',
-                    className='code',
-                    children=['Loaded: none']),
+                    className='flex_forward',
+                    children=[
+                        dcc.Input(
+                            className='url_input',
+                            id='trans_url',
+                            persistence=True,
+                            persistence_type='memory',
+                            type='url',
+                            # value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv",  # NOQA
+                            value='https://ledge.uprightconsulting.com/s/sample_transaction_data.csv',
+                            placeholder='URL for transaction csv file'),
+                        html.Button('Load URL', id='trans_url_load_button'),
+                    ]),
             ]),
         html.Div(
             className='ds_column',
             children=[
-                html.H3('Custom Reporting Periods'),
+                html.H4('Custom Account Tree', id='atree_heading'),
+                html.Div(
+                    id='atree_meta',
+                    children=['None Loaded']),
+                dcc.Upload(
+                    id='atree_file',
+                    className='upload_target',
+                    children=html.Div([
+                        'Drop here, or ',
+                        html.A('Select File')])),
+                html.Div(
+                    className='flex_forward',
+                    children=[
+                        dcc.Input(
+                            className='url_input',
+                            id='atree_url',
+                            persistence=True,
+                            persistence_type='memory',
+                            type='url',
+                            value='',
+                            placeholder='URL for atreeaction csv file'),
+                        html.Button('Load URL', id='atree_url_load_button'),
+                    ]),
+            ]),
+        html.Div(
+            className='ds_column',
+            children=[
+                html.H4('Custom Reporting Periods', id='eras_heading'),
+                html.Div(
+                    id='eras_meta',
+                    children=['None Loaded']),
                 dcc.Upload(
                     id='eras_file',
                     className='upload_target',
                     children=html.Div([
-                        'Drop or ',
-                        html.A('Select')])),
-                dcc.Input(
-                    id='eras_url',
-                    type='url',
-                    value='http://localhost/le_eras.csv',
-                    placeholder='URL for eras csv file'),
-                html.Label(
-                    id='eras_url_label',
-                    htmlFor='eras_url',
-                    children='Eras source URL (optional)'),
+                        'Drop here, or ',
+                        html.A('Select File')])),
                 html.Div(
-                    id='eras_meta',
-                    className='code',
-                    children=['Loaded: none']),
+                    className='flex_forward',
+                    children=[
+                        dcc.Input(
+                            className='url_input',
+                            id='eras_url',
+                            type='url',
+                            persistence=True,
+                            persistence_type='memory',
+                            value='',
+                            placeholder='URL for custom reporting eras csv file'),
+                        html.Button('Load URL', id='eras_url_load_button'),
+                    ]),
             ]),
         html.Div(
             className='three_col',
             children=[
-                html.Button('Reload URLs', id='url_load_button'),
+
                 html.Button('Reload Data', id='data_load_button'),
             ]),
     ])
 
 
 @app.callback(
-    [Output('url_store', 'children'),
-     Output('trans_url_label', 'children'),
-     Output('tree_url_label', 'children'),
-     Output('eras_url_label', 'children')],
-    [Input('url_load_button', 'n_clicks')],
-    state=[State('transactions_url', 'value'),
-           State('tree_url', 'value'),
-           State('eras_url', 'value')])
-def load_urls(n_clicks: int, transactions_url: str, tree_url: str, eras_url: str) -> Iterable:
-    """ When the Load from URL button is clicked, load the designated files
-    and update the data store"""
-    if not transactions_url:
-        raise PreventUpdate
+    [Output('trans_raw_store', 'children'),
+     Output('trans_meta', 'children')],
+    [Input('trans_url_load_button', 'n_clicks'),
+     Input('trans_file', 'contents')],
+    state=[State('trans_url', 'value'),
+           State('trans_file', 'filename')])
+def get_raw_trans(n_clicks: int, input_file, url: str, filename: str) -> Iterable:
+    """ When a file is loaded, or the Load URL button is clicked, populate the raw data store for this file."""
+    app.logger.info(f'get_raw_trans fired with url {url} and filename {filename} and n_clicks {n_clicks}.')
+    raw_data: pd.DataFrame() = pd.DataFrame()
+    if n_clicks:
+        if url:
+            try:
+                raw_data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
+                raw_text: str = f'{url} loaded, {len(raw_data)} records.'
+            except urllib.error.URLError as E:
+                raw_text = f'Error loading {url}: {E}'
+        else:
+            raise PreventUpdate
+    else:
+        if input_file:
+            try:
+                raw_data: pd.DataFrame = parse_base64_file(input_file, filename)
+                raw_text: str = f'File {filename} loaded, {len(raw_data)} records.'
+            except urllib.error.HTTPError as E:
+                raw_text = f'Error loading {filename}: {E}'
+        else:
+            raise PreventUpdate
 
-    try:
-        trans_data: pd.DataFrame = pd.read_csv(transactions_url, thousands=',', low_memory=False)
-        trans_text: str = f'{transactions_url} loaded, {len(trans_data)} records.'
-    except urllib.error.HTTPError:
-        # except error.URLError as E:
-        #    return [None, f'Error loading transactions: {E}', None, None]
-        raise PreventUpdate
-
-    try:
-        tree_data: pd.DataFrame = pd.read_csv(tree_url)
-        tree_text: str = f'{tree_url} loaded, {len(tree_data)} records.'
-    except urllib.error.HTTPError:
-        tree_data = pd.DataFrame()
-        tree_text = None
-
-    try:
-        eras_data: pd.DataFrame = pd.read_csv(eras_url, thousands=',', low_memory=False)
-        eras_text: str = f'File {eras_url} loaded, {len(eras_data)} records.'
-    except urllib.error.HTTPError:
-        eras_data: pd.DataFrame = pd.DataFrame()
-        eras_text = None
-
-    data = dict(trans=trans_data.to_json(orient='split', date_format='%Y%m%d'),
-                tree=tree_data.to_json(orient='split'),
-                eras=eras_data.to_json(orient='split', date_format='%Y%m%d'))
-
-    return [json.dumps(data), trans_text, tree_text, eras_text]
+    data = raw_data.to_json()
+    app.logger.info(f'  Meanwhile, trans_raw_store is {len(data)} big')
+    return [data, raw_text]
 
 
 @app.callback(
-    [Output('trans_file_store', 'children')],
-    [Input('transactions_file', 'contents')],
-    state=[State('transactions_file', 'filename')])
-def load_trans_files(trans_file, filename: str) -> Iterable:
-    """ When the contents of the load box for transactions changes, reload transactions
-    and update the data store"""
-    if not trans_file:
-        raise PreventUpdate
+    [Output('atree_raw_store', 'children'),
+     Output('atree_meta', 'children')],
+    [Input('atree_url_load_button', 'n_clicks'),
+     Input('atree_file', 'contents')],
+    state=[State('atree_url', 'value'),
+           State('atree_file', 'filename')])
+def get_raw_atree(n_clicks: int, input_file, url: str, filename: str) -> Iterable:
+    """ When a file is loaded, or the Load URL button is clicked, populate the raw data store for this file."""
 
-    try:
-        trans_data: pd.DataFrame = parse_base64_file(trans_file, filename)
-    except urllib.error.HTTPError:
-        raise PreventUpdate
+    if n_clicks:
+        if url:
+            try:
+                raw_data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
+                raw_text: str = f'{url} loaded, {len(raw_data)} records.'
+            except urllib.error.URLError as E:
+                return [None, f'Error loading {url}: {E}']
+        else:
+            raise PreventUpdate
+    else:
+        if input_file:
+            try:
+                raw_data: pd.DataFrame = parse_base64_file(input_file, filename)
+                raw_text: str = f'File {filename} loaded, {len(raw_data)} records.'
+            except urllib.error.HTTPError:
+                raise PreventUpdate
 
-    data = trans_data.to_json(orient='split', date_format='%Y%m%d')
+        else:
+            raise PreventUpdate
 
-    return data
-
-
-@app.callback(
-    [Output('tree_file_store', 'children')],
-    [Input('tree_file', 'contents')],
-    state=[State('tree_file', 'filename')])
-def load_tree_files(tree_file, filename: str) -> Iterable:
-    """ When the contents of the load box for tree changes, reload tree
-    and update the data store"""
-    if not tree_file:
-        raise PreventUpdate
-
-    tree_data: pd.DataFrame = pd.DataFrame()
-    try:
-        tree_data: pd.DataFrame = parse_base64_file(tree_file, filename)
-    except FileNotFoundError:
-        pass
-
-    data = tree_data.to_json(orient='split')
-
-    return data
+    data = raw_data.to_json()
+    return [data, raw_text]
 
 
 @app.callback(
-    [Output('eras_file_store', 'children')],
-    [Input('eras_file', 'contents')],
-    state=[State('eras_file', 'filename')])
-def load_era_files(eras_file, filename: str) -> Iterable:
-    """ When the contents of the load box for eras changes, reload eras
-    and update the data store"""
-    if not eras_file:
-        raise PreventUpdate
+    [Output('eras_raw_store', 'children'),
+     Output('eras_meta', 'children')],
+    [Input('eras_url_load_button', 'n_clicks'),
+     Input('eras_file', 'contents')],
+    state=[State('eras_url', 'value'),
+           State('eras_file', 'filename')])
+def get_raw_eras(n_clicks: int, input_file, url: str, filename: str) -> Iterable:
+    """ When a file is loaded, or the Load URL button is clicked, populate the raw data store for this file."""
 
-    eras_data: pd.DataFrame = pd.DataFrame()
-    try:
-        eras_data: pd.DataFrame = parse_base64_file(eras_file, filename)
-    except FileNotFoundError as E:
-        return no_update, f'Could not import the eras because: {E}'
+    if n_clicks:
+        if url:
+            try:
+                raw_data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
+                raw_text: str = f'{url} loaded, {len(raw_data)} records.'
+            except urllib.error.URLError as E:
+                return [None, f'Error loading {url}: {E}']
+        else:
+            raise PreventUpdate
+    else:
+        if input_file:
+            try:
+                raw_data: pd.DataFrame = parse_base64_file(input_file, filename)
+                raw_text: str = f'File {filename} loaded, {len(raw_data)} records.'
+            except urllib.error.HTTPError:
+                raise PreventUpdate
 
-    data = eras_data.to_json(orient='split', date_format='%Y%m%d')
+        else:
+            raise PreventUpdate
 
-    return data
+    data = raw_data.to_json()
+    return [data, raw_text]
 
 
 @app.callback(
     [Output('data_store', 'children')],
-    [Input('data_load_button', 'n_clicks'),
-     Input('url_store', 'children'),
-     Input('trans_file_store', 'children'),
-     Input('tree_file_store', 'children'),
-     Input('eras_file_store', 'children'),
-     Input('control_store', 'children')])
-def transform_load(n_clicks: int, url_store: str, trans_file_store, tree_file_store, eras_file_store, control_store):  # NOQA
+    [Input('data_load_button', 'n_clicks')],
+    state=[State('trans_raw_store', 'children'),
+           State('atree_raw_store', 'children'),
+           State('eras_raw_store', 'children'),
+           State('control_store', 'children')])
+def load_and_transform(n_clicks: int, trans_raw_store: str, atree_raw_store: str, eras_raw_store: str, control_store: str):  # NOQA
+    if trans_raw_store:
+        app.logger.info(f'load_and_transform fired with trans_raw_store {len(trans_raw_store)}')
+    else:
+        app.logger.info(f'load_and_transform fired with 0 trans_raw_store')
     """ Go through all of the data input controls (uploads and URLs),
     clean up all the raw data, and put it into the data_store for the
     tab pages to use.  Business logic in this function is only at the
     file level; subfunctions can work at the field level.
 
     """
-    if not url_store and not trans_file_store:
+    if not n_clicks or n_clicks == 0 or not trans_raw_store:
         raise PreventUpdate
 
     try:
-        if trans_file_store:
-            raw_trans = json.loads(trans_file_store)
-        elif url_store:
-            trans_from_url = json.loads(url_store).get('trans', None)
-            if trans_from_url:
-                raw_trans = pd.read_json(trans_from_url, orient='split')
-    except LoadError as LE:
-        data = {'error': LE.message}
-        return [json.dumps(data)]
+        raw_trans = pd.read_json(trans_raw_store)
 
-    raw_tree = pd.DataFrame()
-    if tree_file_store:
-        raw_tree = json.loads(tree_file_store)
-    elif url_store:
-        tree_from_url = json.loads(url_store).get('tree', None)
-        if tree_from_url:
-            raw_tree = pd.read_json(tree_from_url, orient='split')
+        raw_tree = pd.DataFrame()
+        if atree_raw_store:
+            raw_tree = pd.read_json(atree_raw_store)
 
-    raw_eras = pd.DataFrame()
-    if eras_file_store:
-        raw_eras = json.loads(eras_file_store)
-    elif url_store:
-        eras_from_url = json.loads(url_store).get('eras', None)
-        if eras_from_url:
-            raw_eras = pd.read_json(eras_from_url, orient='split')
+        raw_eras = pd.DataFrame()
+        if eras_raw_store:
+            raw_eras = pd.read_json(eras_raw_store)
 
-    if control_store:
-        controls = json.loads(control_store)
-        labels = controls.get('labels', [])
-        delim = controls.get('delimiter', DELIM)
-    else:
-        labels = LABELS
-        delim = DELIM
+        if control_store:
+            controls = json.loads(control_store)
+            labels = controls.get('labels', [])
+            delim = controls.get('delimiter', DELIM)
+        else:
+            labels = LABELS
+            delim = DELIM
 
-    try:
-        data = convert_raw_info(raw_trans, raw_tree, raw_eras, labels, delim)
+        try:
+            data = convert_raw_info(raw_trans, raw_tree, raw_eras, labels, delim)
+        except LoadError as LE:
+            data = {'error': LE.message}
+
     except LoadError as LE:
         data = {'error': LE.message}
 
@@ -385,14 +367,16 @@ def transform_load(n_clicks: int, url_store: str, trans_file_store, tree_file_st
 
 
 @app.callback(
-    [Output('trans_meta', 'children'),
-     Output('atree_meta', 'children'),
-     Output('eras_meta', 'children')],
+    [Output('trans_parsed_meta', 'children'),
+     Output('atree_parsed_meta', 'children'),
+     Output('eras_parsed_meta', 'children')],
     [Input('data_store', 'children')],
     state=[State('control_store', 'children')])
 def update_metadata(data_store, control_store) -> Iterable:
     """ When data store changes, refresh all of the data meta-information
     and display """
+    app.logger.info(f'update_metadata fired')
+
     if not data_store or data_store == '':
         raise PreventUpdate
 
@@ -412,8 +396,10 @@ def update_metadata(data_store, control_store) -> Iterable:
     atree_list = [f'Account Tree loaded: {len(account_tree)}, {account_tree.depth()} levels deep']
     eras_list: list = [f'Eras loaded: {len(eras)}']
 
-    records: list = ['first 5 records'] + trans.head(n=5).values.tolist() + \
-        [''] + ['last 5 records'] + trans.tail(n=5).values.tolist()
+    first_rec = pretty_records(trans.head(3))
+    last_rec = pretty_records(trans.tail(3))
+
+    records: list = ['==================='] + ['first and last 3 records'] + first_rec + ['==================='] + last_rec  # NOQA
     trans_list = trans_list + records
 
     trans_html: list = [html.Div(children=x) for x in trans_list]

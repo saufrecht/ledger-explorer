@@ -873,8 +873,24 @@ def positize(trans):
     return trans
 
 
+def pretty_records(trans: pd.DataFrame) -> list:
+    """ Make a nice list of records """
+    if len(trans) == 0:
+        return []
+    else:
+        output = []
+
+    list = trans.to_dict(orient='records')
+    for row in list:
+        output = output + ['————————————']
+        for key in row.keys():
+            output = output + [f'{key}={row[key]}']
+
+    return output
+
+
 def pretty_date(date: np.datetime64) -> str:
-    # convert Numpy datetime64 to 'YYYY-MMM-DD'
+    """ convert Numpy datetime64 to 'YYYY-MMM-DD' """
     return pd.to_datetime(str(date)).strftime("%Y-%m-%d")
 
 

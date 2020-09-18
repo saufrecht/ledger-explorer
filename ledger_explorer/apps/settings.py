@@ -219,3 +219,6 @@ def apply_settings(account_n: str,
                         'ds_label': ds_label,
                         'bs_label': bs_label,
                         'ex_label': ex_label})]
+
+
+# https://ledge.uprightconsulting.com/s/sample_transaction_data.csv',
