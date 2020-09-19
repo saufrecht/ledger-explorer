@@ -22,11 +22,12 @@ Quick navigation through a graphical view of aggregate data in a pie chart or ba
 
 * [To load your own data, click "Files"](/?tab=ds)
 
-### Privacy
-No.  
+### Disclaimers, Privacy, and such
+Ledger Explorer is a Free Software product, built on Plotly Dash and other free/open source software.  This site is provided free of cost, with no warranty.  This product contains no tracking or sponsorship.  Web traffic data, such as your IP address and the time and address of the pages you access on this site, are retained permanently.  No other information is collected or retained.  Reloading your browser should remove all data from your browser and this site's server.  Data that you upload to the site is probably not completely insecure, and nobody looks at it.  But there's really nothing stopping the site host, or any competent intruder, from viewing your data.  So please don't upload anything sensitive.  If you really want to use this software with sensitive data, you may have more privacy if you downloading and install it on your own computer.
 
+  © 2020 Joel Aufrecht.
 ## More information
-* [Get your own copy](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
+* [Run it yourself](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
 * [Instructions](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/USAGE.md)
 * [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)
 

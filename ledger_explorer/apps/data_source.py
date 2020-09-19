@@ -234,7 +234,7 @@ layout = html.Div(
     [Input('trans_file', 'filename'),
      Input('trans_file', 'contents'),
      Input('trans_url', 'n_submit')],
-    state=State('trans_url', 'value'))
+    state=[State('trans_url', 'value')])
 def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new transaction source is provided (uploaded file, or new URL),
     upload it and provide visual feedback.
