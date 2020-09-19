@@ -110,9 +110,10 @@ h4 {
 
 .layout_box {
   background-color: var(--bg);
+  width: 100%;
   display: grid;
   grid-gap: 6px;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(300px, 1fr);
 }
 
 .shadow {
@@ -120,7 +121,7 @@ h4 {
 }
 
 .col3 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(300px, 1fr);
 }
 
 .layout_box > div {
@@ -184,12 +185,9 @@ h4 {
   display: none;
 }
 
-.url_input {
-  width: 15rem;
-  margin-bottom: 1rem;
+.col_heading {
+  text-align: center;
 }
-
-
 /*———————————————————————————————————————————————————————————*/
 /* Individual page layouts                                   */
 /*———————————————————————————————————————————————————————————*/
@@ -258,11 +256,19 @@ h4 {
 
 /* } */
 
+.filename {
+  margin-bottom: 1rem;
+}
+
+.tab_content {
+    width: 100%;
+}
+
 .tab {
   background-color: var(--bg-more)!important;
   border: none!important;
   padding: 0!important;
-  height: 1.7rem;
+  height: 4.5rem;
   font-family: var(--sans);
   font-weight: 600;
   font-size: 1.3rem;
@@ -270,10 +276,18 @@ h4 {
   align-self: end;
 }
 
+.tab-container--vert {
+  width: 100%!important;
+}
+
+.tab {
+  width: 100%!important;
+}
+
 .tab--selected {
   color: var(--fg-more)!important;
   background-color: var(--bg)!important;
-  border-top: 2px solid var(--accent)!important
+  border-top: 2px solid var(--accent)!important;
 }
 
 fieldset {
@@ -284,6 +298,10 @@ fieldset {
 
 .some_space {
   margin: 0.5rem;
+}
+
+.presentation {
+  padding: 2rem;
 }
 
 input {

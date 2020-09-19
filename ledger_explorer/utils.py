@@ -20,8 +20,11 @@ pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the
 PARENT_COL = 'parent account'
 ACCOUNT_COL = 'account'
 FAN_COL = 'full account name'
+DATE_COL = 'date'
+DESC_COL = 'description'
+AMOUNT_COL = 'amount'
 DELIM = ':'
-LABELS = [('amount num.',  'amount'), ('account name', 'account')]  # defaults for loading gnucash files
+GC_COL_LABELS = [('amount num.',  'amount'), ('account name', 'account')]  # defaults for loading gnucash files
 
 
 class LError(Exception):
@@ -33,6 +36,30 @@ class ATree(Tree):
 
     ROOT_TAG = '[Total]'
     ROOT_ID = 'root'
+
+    def show_to_string(self):
+        """ Alternative to the class method, which outputs to stdout. """
+        if len(self) == 0:
+            return
+
+        self._reader = ""
+
+        def write(line):
+            self._reader += line.decode('utf-8') + "\n"
+
+        try:
+            self._Tree__print_backend()
+        except tle.NodeIDAbsentError:
+            print('Tree is empty')
+
+        return self._reader
+
+    def to_json(self, with_data=False, sort=True, reverse=False):
+        """Override Tree.to_json with a version that doesn't error if tree is empty """
+        if len(self) > 0:
+            return json.dumps(self.to_dict(with_data=with_data, sort=sort, reverse=reverse))
+        else:
+            return ''
 
     def dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
@@ -70,7 +97,7 @@ class ATree(Tree):
             return self
 
     @classmethod
-    def from_names(cls, full_names: list, delim: str = ':') -> Tree:
+    def from_names(cls, full_names: list, delim: str = DELIM) -> Tree:
         """extract all accounts from a list of Gnucash-like account paths
 
         Assumes each account name is a full path, delimiter is :.
@@ -420,7 +447,6 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
         raise PreventUpdate
 
     trans = pd.read_json(data['trans'],
-                         orient='split',
                          dtype={'date': 'datetime64[ms]',
                                 'description': 'object',
                                 'amount': 'int64',
@@ -927,6 +953,8 @@ def load_transactions(data: pd.DataFrame):
     Load a json_encoded dataframe matching the transaction export format from Gnucash.
     Uses columns ACCOUNT_COL, 'Description', 'Memo', Notes', FAN_COL, 'Date', 'Amount Num.'
     """
+    if len(data) == 0:
+        raise LError('No data in file')
 
     # try to parse date.  TODO: Maybe move this to a function so it can be re-used in era parsing
     try:

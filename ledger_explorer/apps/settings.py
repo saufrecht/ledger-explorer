@@ -3,8 +3,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from dash.dependencies import Input, Output
-from utils import PARENT_COL, ACCOUNT_COL, FAN_COL, DELIM
-
+from utils import PARENT_COL, ACCOUNT_COL, FAN_COL, AMOUNT_COL, DATE_COL, DESC_COL, DELIM
+from dash.exceptions import PreventUpdate
 
 from app import app
 
@@ -28,6 +28,8 @@ layout = html.Div(
                         dcc.Input(
                             id='account_name_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Account',
                             debounce=True
                         ),
@@ -38,6 +40,8 @@ layout = html.Div(
                         dcc.Input(
                             id='amount_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Amount Num.',
                             debounce=True),
                         html.Label(
@@ -47,6 +51,8 @@ layout = html.Div(
                         dcc.Input(
                             id='date_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Date',
                             debounce=True),
                         html.Label(
@@ -56,6 +62,8 @@ layout = html.Div(
                         dcc.Input(
                             id='desc_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Description',
                             debounce=True),
                         html.Label(
@@ -65,6 +73,8 @@ layout = html.Div(
                         dcc.Input(
                             id='full_account_name_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder=FAN_COL,
                             debounce=True),
                         html.Label(
@@ -74,6 +84,8 @@ layout = html.Div(
                         dcc.Input(
                             id='parent_col',
                             size='10',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder=PARENT_COL,
                             debounce=True),
                         html.Label(
@@ -94,6 +106,8 @@ layout = html.Div(
                     children=[
                         dcc.Input(
                             id='ds_delimiter',
+                            persistence=True,
+                            persistence_type='memory',
                             size='1',
                             placeholder=DELIM,
                             debounce=True),
@@ -104,6 +118,8 @@ layout = html.Div(
                         dcc.Input(
                             id='ds_unit',
                             size='2',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='unit',
                             debounce=True),
                         html.Label(
@@ -113,7 +129,8 @@ layout = html.Div(
                         dcc.Input(
                             id='data_title',
                             size='10',
-                            value='Ledger',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Title',
                             debounce=True),
                         html.Label(
@@ -123,7 +140,8 @@ layout = html.Div(
                         dcc.Input(
                             id='ds_label',
                             size='10',
-                            value='No Data Loaded',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Data Store',
                             debounce=True),
                         html.Label(
@@ -133,7 +151,8 @@ layout = html.Div(
                         dcc.Input(
                             id='bs_label',
                             size='10',
-                            value='Balance Sheet',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Cumulative View',
                             debounce=True),
                         html.Label(
@@ -143,7 +162,8 @@ layout = html.Div(
                         dcc.Input(
                             id='ex_label',
                             size='10',
-                            value='Cash Flow',
+                            persistence=True,
+                            persistence_type='memory',
                             placeholder='Explorer',
                             debounce=True),
                         html.Label(
@@ -161,15 +181,21 @@ layout = html.Div(
             className='hidden',
             children=[
                 html.Div(
-                    id='url_store'),
-                html.Div(
-                    id='trans_file_store'),
-                html.Div(
-                    id='tree_file_store'),
-                html.Div(
-                    id='eras_file_store'),
-                html.Div(
                     id='data_load_button'),
+                html.Div(
+                    id='trans_filename'),
+                html.Div(
+                    id='trans_parsed_meta'),
+                html.Div(
+                    id='atree_parsed_meta'),
+                html.Div(
+                    id='eras_parsed_meta'),
+                html.Div(
+                    id='trans_status'),
+                html.Div(
+                    id='atree_status'),
+                html.Div(
+                    id='eras_status'),
             ]),
     ])
 
@@ -200,25 +226,49 @@ def apply_settings(account_n: str,
                    ex_label: str) -> str:
 
     """ Store all manually input setting information into the control store for use during load """
-    labels = [(str(account_n), ACCOUNT_COL),
-              (str(amount_n), 'amount'),
-              (str(date_n), 'date'),
-              (str(desc_n), 'description'),
-              (str(fullname_n), FAN_COL)]
-    data_title = str(ds_data_title)
-    delimiter = str(ds_delimiter)
-    unit = str(ds_unit)
-    ds_label = str(ds_label)
-    bs_label = str(bs_label)
-    ex_label = str(ex_label)
 
-    return [json.dumps({'labels': labels,
-                        'data_title': data_title,
-                        'delimiter': delimiter,
-                        'unit': unit,
-                        'ds_label': ds_label,
-                        'bs_label': bs_label,
-                        'ex_label': ex_label})]
+    response = {}
+    col_labels = []
+    # TODO: look up best practices for sanitizing user input
+    if account_n and isinstance(account_n, str) and len(account_n) > 0:
+        col_labels = col_labels + (account_n, ACCOUNT_COL)
 
+    if amount_n and isinstance(amount_n, str) and len(amount_n) > 0:
+        col_labels = col_labels + (amount_n, AMOUNT_COL)
+
+    if date_n and isinstance(date_n, str) and len(date_n) > 0:
+        col_labels = col_labels + (date_n, DATE_COL)
+
+    if desc_n and isinstance(desc_n, str) and len(desc_n) > 0:
+        col_labels = col_labels + (desc_n, DESC_COL)
+
+    if fullname_n and isinstance(fullname_n, str) and len(fullname_n) > 0:
+        col_labels = col_labels + (fullname_n, FAN_COL)
+
+    if len(col_labels) > 0:
+        response['col_labels'] = col_labels
+
+    if ds_data_title and isinstance(ds_data_title, str) and len(ds_data_title) > 0:
+        response['data_title'] = ds_data_title
+
+    if ds_delimiter and isinstance(ds_delimiter, str) and len(ds_delimiter) > 0:
+        response['delimiter'] = ds_delimiter
+
+    if ds_unit and isinstance(ds_unit, str) and len(ds_unit) > 0:
+        response['unit'] = ds_unit
+
+    if ds_label and isinstance(ds_label, str) and len(ds_label) > 0:
+        response['ds_label'] = ds_label
+
+    if bs_label and isinstance(bs_label, str) and len(bs_label) > 0:
+        response['bs_label'] = bs_label
+
+    if ex_label and isinstance(ex_label, str) and len(ex_label) > 0:
+        response['ex_label'] = ex_label
+
+    if len(response) > 0:
+        return [json.dumps(response)]
+    else:
+        raise PreventUpdate
 
 # https://ledge.uprightconsulting.com/s/sample_transaction_data.csv',

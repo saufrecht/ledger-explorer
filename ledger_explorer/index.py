@@ -8,11 +8,25 @@ from dash.exceptions import PreventUpdate
 
 
 from app import app
-from apps import balance_sheet, data_source, explorer, settings
+from apps import balance_sheet, data_source, explorer, settings, hometab
 
 server = app.server
 
 app.title = 'Ledger Explorer'
+
+dummy_layout = html.Div(children=[
+    html.Div(id='trans_parsed_meta'),
+    html.Div(id='atree_parsed_meta'),
+    html.Div(id='eras_parsed_meta'),
+    html.Div(id='trans_status'),
+    html.Div(id='atree_status'),
+    html.Div(id='eras_status'),
+    html.Div(id='trans_filename'),
+])
+
+EX_LABEL = 'Cash Flow'
+BS_LABEL = 'Balance Sheet'
+DS_LABEL = 'Files'
 
 app.layout = html.Div(
     id='page-content',
@@ -23,49 +37,45 @@ app.layout = html.Div(
                  className='hidden'),
         html.Div(id='control_store',
                  className='hidden'),
-        html.Div(id='trans_raw_store',
+        html.Div(id='trans_file_store',
                  className='hidden'),
-        html.Div(id='eras_raw_store',
+        html.Div(id='atree_file_store',
                  className='hidden'),
-        html.Div(id='atree_raw_store',
+        html.Div(id='eras_file_store',
                  className='hidden'),
+        html.Div(id='loading_workaround',
+                 className='hidden',
+                 children=dummy_layout),
         html.Div(className='custom_tabbar_container',
                  children=[
-                     html.H1(className='page_title',
-                             children='Ledger Explorer'),
                      dcc.Tabs(id='tabs',
-                              value='ds',
+                              value='le',
                               vertical=True,
-                              children=[dcc.Tab(label='Cash Flow', id='ex_tab', value='ex'),
-                                        dcc.Tab(label='Balance Sheet', id='bs_tab', value='bs'),
+                              children=[dcc.Tab(label='Home', id='le_tab', value='le'),
+                                        dcc.Tab(label=EX_LABEL, id='ex_tab', value='ex'),
+                                        dcc.Tab(label=BS_LABEL, id='bs_tab', value='bs'),
                                         dcc.Tab(label='Settings', id='se_tab', value='se'),
-                                        dcc.Tab(label='Files', id='ds_tab', value='ds')]),
-                     html.Div(id='trans_parsed_meta',
-                              className='shadow',
-                              children=['No transactions']),
-                     html.Div(id='atree_parsed_meta',
-                              className='shadow',
-                              children=['No accounts']),
-                     html.Div(id='eras_parsed_meta',
-                              className='shadow',
-                              children=['None Loaded'])]),
-        html.Div(id='tab-content'),
-        html.Div(id='tab-debugging')
+                                        dcc.Tab(label=DS_LABEL, id='ds_tab', value='ds')]),
+                     html.Div(id='files_status',
+                              children=[])]),
+        html.Div(id='tab-content',
+                 className='tab_content'),
     ])
 
 
-@app.callback(Output('tab-content', 'children'),
+@app.callback([Output('tab-content', 'children')],
               [Input('tabs', 'value')])
 def change_tab(selected_tab: str):
     if selected_tab == 'bs':
-        new_layout = balance_sheet.layout
+        return [balance_sheet.layout]
     elif selected_tab == 'ex':
-        new_layout = explorer.layout
+        return [explorer.layout]
     elif selected_tab == 'se':
-        new_layout = settings.layout
+        return [settings.layout]
+    elif selected_tab == 'ds':
+        return [data_source.layout]
     else:
-        new_layout = data_source.layout
-    return new_layout
+        return [hometab.layout]
 
 
 @app.callback([Output('ex_tab', 'label'),
@@ -81,14 +91,22 @@ def relabel_tab(control_data: str):
     ex_label = cd.get('ex_label', None)
     bs_label = cd.get('bs_label', None)
     ds_label = cd.get('ds_label', None)
+
+    if not ex_label:
+        ex_label = EX_LABEL
+    if not ds_label:
+        ds_label = DS_LABEL
+    if not bs_label:
+        bs_label = BS_LABEL
+
     return [ex_label, bs_label, ds_label]
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S %z')
+    # logging.basicConfig(
+    #     level=logging.DEBUG,
+    #     format='%(asctime)s %(levelname)-8s %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S %z')
     app.config['suppress_callback_exceptions'] = True
     app.run_server(debug=True, host='0.0.0.0', port='8081')
 
