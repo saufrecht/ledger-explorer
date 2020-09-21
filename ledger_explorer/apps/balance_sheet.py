@@ -56,33 +56,6 @@ layout: html = html.Div(
                 ),
                 bs_trans_table
             ]),
-        html.Div(
-            id='kludge to eliminate "nonexistent object" errors',
-            className='hidden',
-            children=[
-                html.Div(
-                    id='account_burst'),
-                html.Div(
-                    id='burst_title'),
-                html.Div(
-                    id='master_time_series'),
-                html.Div(
-                    id='selected_trans_display'),
-                html.Div(
-                    id='selected_account_text'),
-                html.Div(
-                    id='time_series_resolution'),
-                html.Div(
-                    id='time_series_selection_info'),
-                html.Div(
-                    id='time_series_span'),
-                html.Div(
-                    id='trans_table'),
-                html.Div(
-                    id='trans_table_text'),
-                html.Div(
-                    id='transaction_time_series'),
-            ]),
     ])
 
 
@@ -94,7 +67,6 @@ layout: html = html.Div(
     state=[State('data_store', 'children')])
 def bs_set_period(period_value, data_store):
     """ When the balance sheet period selector changes, update the time series """
-
 
     try:
         period = TIME_RES_LOOKUP[period_value]

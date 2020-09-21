@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from treelib import Tree
 from treelib import exceptions as tle
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Iterable
 
 from dash.exceptions import PreventUpdate
 import dash_table
@@ -37,18 +37,20 @@ class ATree(Tree):
     ROOT_TAG = '[Total]'
     ROOT_ID = 'root'
 
-    def show_to_string(self):
-        """ Alternative to the class method, which outputs to stdout. """
+    def show_to_string(self) -> str:
+        """ Alternative to the parent method show(), which outputs to stdout.
+        Work in progress, still prints to stdout."""
+
         if len(self) == 0:
             return
 
-        self._reader = ""
+        self._reader = ''
 
         def write(line):
             self._reader += line.decode('utf-8') + "\n"
 
         try:
-            self._Tree__print_backend()
+            self._Tree__print_backend(func=write)
         except tle.NodeIDAbsentError:
             print('Tree is empty')
 
@@ -946,6 +948,30 @@ def load_eras(data, earliest_date, latest_date):
         data.iloc[-1].date_start = earliest_date
 
     return data
+
+
+def load_input_file(input_file, url: str, filename: str) -> Iterable:
+    """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
+
+    data: pd.DataFrame() = pd.DataFrame()
+    raw_text: str = None
+    new_filename: str = None
+    if input_file:
+        try:
+            data: pd.DataFrame = parse_base64_file(input_file, filename)
+            raw_text: str = f'File {filename} loaded, {len(data)} records.'
+            new_filename = filename
+        except urllib.error.HTTPError as E:
+            raw_text = f'Error loading {filename}: {E}'
+    elif url:
+        try:
+            data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
+            raw_text: str = f'{url} loaded, {len(data)} records.'
+            new_filename = url
+        except (urllib.error.URLError, FileNotFoundError) as E:
+            raw_text = f'Error loading {url}: {E}'
+
+    return [new_filename, data, raw_text]
 
 
 def load_transactions(data: pd.DataFrame):

@@ -2,6 +2,7 @@ import base64
 import io
 import json
 from typing import Iterable, List
+from urllib.parse import parse_qs
 import urllib
 from treelib import Tree
 
@@ -75,7 +76,8 @@ def rename_columns(data: pd.DataFrame, col_labels: List):
 def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, col_labels: List, delim: str) -> Iterable:  # NOQA
     """ Try and convert the provided data into usable transaction, tree,
     and era data.  Includes column renaming, and field-level business logic.
-    Return dataframes of transactions and eras (and account_tree embedded in transaction data).
+    Return dataframe of transactions, tree object of atree, and
+    dataframe of eras.
 
     """
     if not isinstance(raw_trans, pd.DataFrame) or len(raw_trans) == 0:
@@ -96,15 +98,17 @@ def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
         elif set([PARENT_COL, ACCOUNT_COL]).issubset(raw_tree.columns):
             atree = ATree.from_parents(raw_tree[[ACCOUNT_COL, PARENT_COL]])
 
-    # look for account tree in trans parent column
-    if len(atree) == 0\
-       and 'full_account name' not in trans.columns\
-       and set([PARENT_COL, 'account name']).issubset(trans.columns):
-        atree = ATree.from_parents(trans[ACCOUNT_COL, PARENT_COL])
+    # if we don't have a viable atree from an external file,
+    # try to get it from the trans file.
+    if len(atree) == 0:
+        if 'full account name' in trans.columns:
+            atree = ATree.from_names(trans[FAN_COL], delim)
+        elif set([PARENT_COL, 'account name']).issubset(trans.columns):
+            atree = ATree.from_parents(trans[[ACCOUNT_COL, PARENT_COL]])
 
     # Because treelib can't be restored from JSON, store it denormalized in
-    # trans[FAN_COL] if it isn't already there.
-    if len(atree) > 0 and 'full_account name' not in trans.columns:
+    # trans[FAN_COL] (for simplicity, overwrite if it's already there)
+    if len(atree) > 0:
         trans = ATree.stuff_tree_into_trans(trans, atree)
 
     # Special case for Gnucash and other ledger data.  TODO: generalize
@@ -123,7 +127,7 @@ def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
     else:
         eras = pd.DataFrame()
 
-    return (trans, atree.show_to_string(), eras)
+    return (trans, atree, eras)
 
 
 def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
@@ -226,15 +230,30 @@ layout = html.Div(
     ])
 
 
-@app.callback(
-    [Output('trans_filename', 'children'),
-     Output('trans_file_store', 'children'),
-     Output('trans_loaded_meta', 'children'),
-     Output('trans_select', 'children')],
-    [Input('trans_file', 'filename'),
-     Input('trans_file', 'contents'),
-     Input('trans_url', 'n_submit')],
-    state=[State('trans_url', 'value')])
+@app.callback([Output('trans_url', 'value'),
+               Output('trans_url', 'n_submit')],
+              # Output('atree_url', 'value'),
+              # Output('eras_url', 'value')],
+              [Input('url_reader', 'search')])
+def parse_url_search(search: str):
+    if search and isinstance(search, str) and len(search) > 0:
+        search = search.lstrip('?')
+        inputs = parse_qs(search)
+        transu = inputs.get('transu')[0]
+        if isinstance(transu, str):
+            return [transu, 1]
+
+    raise PreventUpdate
+
+
+@app.callback([Output('trans_filename', 'children'),
+               Output('trans_file_store', 'children'),
+               Output('trans_loaded_meta', 'children'),
+               Output('trans_select', 'children')],
+              [Input('trans_file', 'filename'),
+               Input('trans_file', 'contents'),
+               Input('trans_url', 'n_submit')],
+              state=[State('trans_url', 'value')])
 def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new transaction source is provided (uploaded file, or new URL),
     upload it and provide visual feedback.
@@ -259,7 +278,7 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     [Input('atree_file', 'filename'),
      Input('atree_file', 'contents'),
      Input('atree_url', 'n_submit')],
-    state=State('atree_url', 'value'))
+    state=[State('atree_url', 'value')])
 def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new atree source is provided (uploaded file, or new URL),
     upload it and provide visual feedback. """
@@ -281,7 +300,7 @@ def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
     [Input('eras_file', 'filename'),
      Input('eras_file', 'contents'),
      Input('eras_url', 'n_submit')],
-    state=State('eras_url', 'value'))
+    state=[State('eras_url', 'value')])
 def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new transaction source is provided (uploaded file, or new URL),
     upload it and provide visual feedback.
@@ -315,6 +334,7 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
 def load_and_transform(trans_file_store: str, atree_file_store: str, eras_file_store: str, control_store: str, trans_filename: str):  # NOQA
 
     """ When any of the input files changes in interim storage, reload all the data. """
+
     if not trans_file_store or len(trans_file_store) == 0:
         raise PreventUpdate
 

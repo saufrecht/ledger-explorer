@@ -176,27 +176,6 @@ layout = html.Div(
                             id='fields_reload_button'),
                     ])
             ]),
-        html.Div(
-            id='kludge to eliminate "nonexistent object" errors',
-            className='hidden',
-            children=[
-                html.Div(
-                    id='data_load_button'),
-                html.Div(
-                    id='trans_filename'),
-                html.Div(
-                    id='trans_parsed_meta'),
-                html.Div(
-                    id='atree_parsed_meta'),
-                html.Div(
-                    id='eras_parsed_meta'),
-                html.Div(
-                    id='trans_status'),
-                html.Div(
-                    id='atree_status'),
-                html.Div(
-                    id='eras_status'),
-            ]),
     ])
 
 

@@ -265,22 +265,21 @@ h4 {
 }
 
 .tab {
+  align-self: end;
   background-color: var(--bg-more)!important;
   border: none!important;
+  border-bottom: 1px solid var(--fg-less);
   padding: 0!important;
   height: 4.5rem;
   font-family: var(--sans);
   font-weight: 600;
   font-size: 1.3rem;
   margin-bottom: 0.2rem!important;
-  align-self: end;
+  width: 100%!important;
+
 }
 
 .tab-container--vert {
-  width: 100%!important;
-}
-
-.tab {
   width: 100%!important;
 }
 
@@ -302,6 +301,7 @@ fieldset {
 
 .presentation {
   padding: 2rem;
+  margin-right: 1rem;
 }
 
 input {

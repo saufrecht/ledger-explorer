@@ -6,13 +6,13 @@ layout = html.Div(
     children=[
         dcc.Markdown('''
 
-# Ledger Explorer
+# Ledger Explorer (ALPHA RELEASE)
 
-Quick navigation through a graphical view of aggregate data in a pie chart or bar chart, representing tens of thousands of records, to a list of specific transactions. 
+Quickly navigate through flow and balance charts as line charts, drill down into account rollups, and get from annual totals to individual records in a register all on one page.  Import CSV from files or URLs, match the columns, handling tens of thousands of records quickly.  Chart any data that comprises individual transactions, each with a time, amount, and category/account.  
 
 ## Try an example
 
-* [Personal accounting sample data (Gnucash format)](/?tab=ex&trans=/s/sample_transaction_data.csv)
+* [Personal accounting sample data (Gnucash format)](/?tab=ex&trans=/s/sample_transaction_data.csv) (these links don't work yet)
 
   * ![Screenshot](/assets/cash_flow_1.jpg)
 

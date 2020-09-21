@@ -1,6 +1,7 @@
 import json
 import logging
 
+
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -14,16 +15,6 @@ server = app.server
 
 app.title = 'Ledger Explorer'
 
-dummy_layout = html.Div(children=[
-    html.Div(id='trans_parsed_meta'),
-    html.Div(id='atree_parsed_meta'),
-    html.Div(id='eras_parsed_meta'),
-    html.Div(id='trans_status'),
-    html.Div(id='atree_status'),
-    html.Div(id='eras_status'),
-    html.Div(id='trans_filename'),
-])
-
 EX_LABEL = 'Cash Flow'
 BS_LABEL = 'Balance Sheet'
 DS_LABEL = 'Files'
@@ -32,10 +23,14 @@ app.layout = html.Div(
     id='page-content',
     className='tabs_container',
     children=[
+        dcc.Location(id='url_reader',
+                     refresh=False),
         html.Div(id='data_store',
                  children='',
                  className='hidden'),
         html.Div(id='control_store',
+                 className='hidden'),
+        html.Div(id='trans_urlurl',
                  className='hidden'),
         html.Div(id='trans_file_store',
                  className='hidden'),
@@ -43,9 +38,6 @@ app.layout = html.Div(
                  className='hidden'),
         html.Div(id='eras_file_store',
                  className='hidden'),
-        html.Div(id='loading_workaround',
-                 className='hidden',
-                 children=dummy_layout),
         html.Div(className='custom_tabbar_container',
                  children=[
                      dcc.Tabs(id='tabs',
@@ -61,6 +53,28 @@ app.layout = html.Div(
         html.Div(id='tab-content',
                  className='tab_content'),
     ])
+
+
+app.validation_layout = html.Div(children=[
+    app.layout,
+    balance_sheet.layout,
+    data_source.layout,
+    explorer.layout,
+    hometab.layout,
+    settings.layout,
+])
+
+
+@app.callback([Output('tabs', 'value')],
+              [Input('url_reader', 'pathname')])
+def parse_url_path(path: str):
+    """ Update settings from URL input """
+
+    if isinstance(path, str):
+        tab = path.strip('/')
+        return [tab]
+    else:
+        raise PreventUpdate
 
 
 @app.callback([Output('tab-content', 'children')],
@@ -112,8 +126,8 @@ if __name__ == '__main__':
 
 
 if __name__ != '__main__':
-    # Get logging to flow all the way to gunicorn.
-    # from https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
+    # Logging flows all the way to gunicorn.
+    # (from https://trstringer.com/logging-flask-gunicorn-the-manageable-way/)
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
