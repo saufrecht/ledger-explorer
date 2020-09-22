@@ -219,8 +219,6 @@ def load_and_transform(trans_file_node: str,
         trigger_id = None
         app.logger.info('load_and_transform triggered for ???')
 
-    # TODO: accept control_node and control_urlnode input
-
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
@@ -288,6 +286,8 @@ def load_and_transform(trans_file_node: str,
 
     data = json.dumps({'trans': trans.to_json(),
                        'eras': eras.to_json()})
+
+    # TODO: this is probably the right place to change the Group By options if eras is missing
 
     # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
     status = f'{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras.'

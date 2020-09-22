@@ -14,6 +14,7 @@ from utils import get_children, get_descendents
 from utils import make_bar
 from utils import ex_trans_table
 from utils import trans_to_burst
+from loading import Controls
 from app import app
 
 
@@ -42,7 +43,6 @@ layout = html.Div(
                                 dcc.RadioItems(
                                     id='ex_time_series_resolution',
                                     options=TIME_RES_OPTIONS,
-                                    value=2,
                                     style={'height': '1.2rem',
                                            'color': 'var(--fg)',
                                            'backgroundColor': 'var(--bg-more)'}
@@ -56,7 +56,6 @@ layout = html.Div(
                                 ),
                                 daq.ToggleSwitch(
                                     id='ex_time_series_span',
-                                    value=False,
                                 ),
                                 html.Span(
                                     children='Annualized',
@@ -95,26 +94,36 @@ layout = html.Div(
     [Input('ex_time_series_resolution', 'value'),
      Input('ex_time_series_span', 'value'),
      Input('tab_draw_trigger', 'children')],
-    state=[State('data_store', 'children')])
-def make_time_series(time_resolution: int, time_span: bool, trigger, data_store: str):
-    app.logger.info('starting make_time_series')
+    state=[State('data_store', 'children'),
+           State('control_store', 'children')])
+def make_time_series(time_resolution: int, time_span: bool, trigger, data_store: str, control_store: str):
+    app.logger.info('starting ex make_time_series')
     if not data_store:
         raise PreventUpdate
+    controls = Controls.from_json(control_store)
+
+    if not time_resolution:
+        time_resolution = controls.init_time_res
+
+    if not time_span:
+        time_span = controls.init_time_span
 
     try:
         tr = TIME_RES_LOOKUP[time_resolution]
         ts = TIME_SPAN_LOOKUP[time_span]
         ts_label = ts.get('label')      # e.g., 'Annual' or 'Monthly'
         tr_label = tr.get('label')          # e.g., 'by Era'
-    except KeyError:
-        raise PreventUpdate
-    except IndexError:
+    except KeyError as E:
+        app.logger.debug(f'TIME_SPAN_LOOKUP error was {E}')  # TODO: narrow down exceptions
         app.logger.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         raise PreventUpdate
-    dd = data_from_json_store(data_store)
+
+    dd = data_from_json_store(data_store, controls.ex_account_filter)
 
     trans = dd.get('trans')
     eras = dd.get('eras')
+    if time_resolution == 1 and len(eras) == 0:
+        raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
     account_tree = dd.get('account_tree')
     unit = dd.get('unit')
 
@@ -144,8 +153,9 @@ def make_time_series(time_resolution: int, time_span: bool, trigger, data_store:
      Input('ex_master_time_series', 'selectedData'),
      Input('data_store', 'children')],
     state=[State('ex_time_series_resolution', 'value'),
-           State('ex_time_series_span', 'value')])
-def apply_selection_from_time_series(figure, selectedData, data_store, time_resolution, time_span):
+           State('ex_time_series_span', 'value'),
+           State('control_store', 'value')])
+def apply_selection_from_time_series(figure, selectedData, data_store, time_resolution, time_span, control_store):
     """
     Selecting specific points from the time series chart updates the
     account burst and the detail labels.
@@ -159,6 +169,11 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
 
     """
     app.logger.debug('triggered apply_selection_from_time_series')
+    controls = Controls.from_json(control_store)
+    if not time_resolution:
+        time_resolution = controls.init_time_res
+    if not time_span:
+        time_span = controls.init_time_span
 
     dd = data_from_json_store(data_store)
     if not dd:
@@ -185,7 +200,6 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     TODO: maybe check for input safety?
     """
-
     dd = data_from_json_store(data_store)
     trans = dd.get('trans')
     account_tree = dd.get('account_tree')

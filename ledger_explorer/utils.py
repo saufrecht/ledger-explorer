@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
 
 
+# TODO: should all CONSTANTS be default values in Controls class?
 CONSTANTS = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
              'account_col': 'account',
              'fan_col': 'full account name',
@@ -36,6 +37,28 @@ CONSTANTS = {'parent_col': 'parent account',  # TODO: move the column names into
                                {'id': 'Income', 'flip_negative': True},
                                {'id': 'Liabilities', 'flip_negative': True}],
              }
+
+
+LEAF_SUFFIX: str = ' [Leaf]'
+OTHER_PREFIX: str = 'Other '
+MAX_SLICES: int = 7  # TODO: expose this in a control
+
+SUBTOTAL_SUFFIX: str = ' [Subtotal]'
+TIME_RES_LOOKUP: dict = {  # TODO: since index values are now exposed in URL, use label as index
+    1: {'label': 'Era', 'abbrev': 'era'},
+    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
+    5: {'label': 'Decade', 'abbrev': '10Y', 'resample_keyword': '10A', 'months': 120, 'format': '%Y'},
+    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
+    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
+TIME_RES_OPTIONS: list = [
+    {'value': 1, 'label': 'Era'},
+    {'value': 5, 'label': 'Decade'},
+    {'value': 2, 'label': 'Year'},
+    {'value': 3, 'label': 'Quarter'},
+    {'value': 4, 'label': 'Month'}]
+TIME_SPAN_LOOKUP: dict = {  # TODO: move into constants and rename to something less confusing
+    True: {'label': 'Annualized', 'abbrev': ' ⁄y', 'months': 12},
+    False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
 class LError(Exception):
@@ -412,27 +435,6 @@ trans_table_format = dict(
     style_as_list_view=True,
     page_size=20)
 
-LEAF_SUFFIX: str = ' [Leaf]'
-OTHER_PREFIX: str = 'Other '
-MAX_SLICES: int = 7  # TODO: expose this in a control
-
-SUBTOTAL_SUFFIX: str = ' [Subtotal]'
-TIME_RES_LOOKUP: dict = {
-    1: {'label': 'Era', 'abbrev': 'era'},
-    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
-    5: {'label': 'Decade', 'abbrev': '10Y', 'resample_keyword': '10A', 'months': 120, 'format': '%Y'},
-    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
-    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
-TIME_RES_OPTIONS: list = [
-    {'value': 1, 'label': 'Era'},
-    {'value': 5, 'label': 'Decade'},
-    {'value': 2, 'label': 'Year'},
-    {'value': 3, 'label': 'Quarter'},
-    {'value': 4, 'label': 'Month'}]
-TIME_SPAN_LOOKUP: dict = {
-    True: {'label': 'Annualized', 'abbrev': ' ⁄y', 'months': 12},
-    False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
-
 
 def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     """Parse data stored in Dash JSON component, in order to move data
@@ -473,10 +475,15 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     # rebuild account tree from filtered trans
     account_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
 
-    eras = pd.read_json(data['eras'],
-                        orient='split',
-                        dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
-    # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
+    # TODO: should be much tougher parser
+    try:
+        eras = pd.read_json(data['eras'],
+                            dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
+        # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
+    except Exception as E:
+        app.logger.critical(f'Error parsing eras: {E}')
+        eras = pd.DataFrame()
+
     if len(eras) > 0:
         eras['date_start'] = eras['date_start'].astype('datetime64[ms]')
         eras['date_end'] = eras['date_end'].astype('datetime64[ms]')
@@ -484,7 +491,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
 
-    unit = data.get('unit', '$')
+    unit = data.get('unit', '$')  # TODO: get rid of this; UNIT should come from controls
 
     return {'trans': trans, 'eras': eras, 'account_tree': account_tree, 'earliest_trans': earliest_trans, 'latest_trans': latest_trans, 'unit': unit}  # NOQA
 

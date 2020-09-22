@@ -2,12 +2,15 @@ import base64
 from dataclasses import dataclass
 import io
 import json
+from types import SimpleNamespace
 import numpy as np
 import pandas as pd
 from treelib import Tree
 from typing import Iterable
 import urllib
 
+
+from app import app
 
 from utils import ATree, CONSTANTS, LError, get_descendents
 
@@ -27,16 +30,28 @@ class Controls():
     date_label: str = 'Date'
     desc_label: str = 'Description'
     fullname_label: str = 'Full Account Name'
+    init_time_span: str = True
+    init_time_res: int = 3
     ds_data_title: str = 'Ledger'
     ds_delimiter: str = CONSTANTS['delim']
     ds_unit: str = CONSTANTS['unit']
     ds_label: str = CONSTANTS['ds_label']
     bs_label: str = CONSTANTS['bs_label']
     ex_label: str = CONSTANTS['ex_label']
+    ex_account_filter: list = ('Income', 'Expenses')
 
     def to_json(self):
         """ Convert controls to JSON via dict structure """
         return json.dumps(self, default=lambda x: x.__dict__)
+
+    @classmethod
+    def from_json(cls, json_data: str):
+        """ Convert controls to JSON via dict structure """
+        if json_data and isinstance(json_data, str) and len(json_data) > 0:
+            body = json.loads(json_data, object_hook=lambda d: SimpleNamespace(**d))
+            return body
+        else:
+            return Controls()
 
 
 def load_eras(data, earliest_date, latest_date):
@@ -44,11 +59,16 @@ def load_eras(data, earliest_date, latest_date):
     If era data file is available, use it to construct
     arbitrary bins
     """
+    try:
+        data = data.replace(r'^\s*$', np.nan, regex=True)
+        data['date_start'] = data['date_start'].astype({'date_start': 'datetime64'})
+        data['date_end'] = data['date_end'].astype({'date_end': 'datetime64'})
+        # TODO: filter out out-of-order rows
+    except Exception as E:
+        app.logger.critical(f'Error parsing eras file: {E}')
+        return pd.DataFrame()
 
-    data['date_start'] = data['date_start'].astype({'date_start': 'datetime64'})
-    data['date_end'] = data['date_end'].astype({'date_end': 'datetime64'})
-
-    data = data.sort_values(by=['date_start'], ascending=False)
+    data = data.sort_values(by=['date_start'], ascending=True)
     data = data.reset_index(drop=True).set_index('name')
 
     # if the first start or last end is missing, substitute earliest/lastest possible date
@@ -171,7 +191,6 @@ def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
     dataframe of eras.
 
     """
-
     if not isinstance(raw_trans, pd.DataFrame) or len(raw_trans) == 0:
         raise LoadError('Tried to load transaction data and failed')
     try:
