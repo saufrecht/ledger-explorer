@@ -12,16 +12,15 @@ Quickly navigate through flow and balance charts as line charts, drill down into
 
 ## Try an example
 
-* [Personal accounting sample data (Gnucash format)](https://ledge.uprightconsulting.com/ds/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv)  # NOQA
+* [Personal accounting sample data (Gnucash format)](https://ledge.uprightconsulting.com/ex/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&etreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_eras.csv&init_time_res=5)  # NOQA
+   * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
+   * ![Screenshot](/assets/cash_flow_1.jpg)
 
-SAMPLE_TRANS_URL = 
+* [Greenhouse Gas emissions by country over time](https://ledge.uprightconsulting.com/ex?transu=https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
+   * loads data directly from external source [Our World in Data](value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv)
+   * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
 
-
-  * ![Screenshot](/assets/cash_flow_1.jpg)
-
-* [Greenhouse Gas emissions by country over time](/?tab=ex&trans=/s/sample_transaction_data.csv)
-
-* [US Federal Budget Data](/?tab=ex&trans=/s/sample_transaction_data.csv)
+*[US Federal Budget Data FORTHCOMING
 
 * [To load your own data, click "Files"](/?tab=ds)
 
