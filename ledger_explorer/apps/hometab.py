@@ -12,7 +12,10 @@ Quickly navigate through flow and balance charts as line charts, drill down into
 
 ## Try an example
 
-* [Personal accounting sample data (Gnucash format)](/?tab=ex&trans=/s/sample_transaction_data.csv) (these links don't work yet)
+* [Personal accounting sample data (Gnucash format)](https://ledge.uprightconsulting.com/ds/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv)  # NOQA
+
+SAMPLE_TRANS_URL = 
+
 
   * ![Screenshot](/assets/cash_flow_1.jpg)
 
@@ -29,7 +32,6 @@ Ledger Explorer is a Free Software product, built on Plotly Dash and other free/
 ## More information
 * [Run it yourself](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
 * [Instructions](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/USAGE.md)
-* [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)
-
-'''
-    )])
+* [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)''')
+    ]
+)

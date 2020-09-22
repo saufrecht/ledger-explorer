@@ -113,7 +113,7 @@ h4 {
   width: 100%;
   display: grid;
   grid-gap: 6px;
-  grid-template-columns: minmax(300px, 1fr);
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
 }
 
 .shadow {

@@ -1,13 +1,14 @@
 import calendar
 import json
-import logging
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from treelib import Tree
 from treelib import exceptions as tle
-from typing import Dict, Tuple, Iterable
+from typing import Dict, Tuple
 
+
+from app import app
 from dash.exceptions import PreventUpdate
 import dash_table
 import plotly.express as px
@@ -17,14 +18,24 @@ import plotly.graph_objects as go
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
 
 
-PARENT_COL = 'parent account'
-ACCOUNT_COL = 'account'
-FAN_COL = 'full account name'
-DATE_COL = 'date'
-DESC_COL = 'description'
-AMOUNT_COL = 'amount'
-DELIM = ':'
-GC_COL_LABELS = [('amount num.',  'amount'), ('account name', 'account')]  # defaults for loading gnucash files
+CONSTANTS = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
+             'account_col': 'account',
+             'fan_col': 'full account name',
+             'date_col': 'date',
+             'desc_col': 'description',
+             'amount_col': 'amount',
+             'delim': ':',
+             'unit': '$',
+             'gc_col_labels': [('amount num.',  'amount'), ('account name', 'account')],  # defaults for gnucash
+             'ex_label': 'Cash Flow',
+             'bs_label': 'Balance Sheet',
+             'ds_label': 'Files',
+             'root_accounts': [{'id': 'Assets', 'flip_negative': False},
+                               {'id': 'Equity', 'flip_negative': True},
+                               {'id': 'Expenses', 'flip_negative': True},
+                               {'id': 'Income', 'flip_negative': True},
+                               {'id': 'Liabilities', 'flip_negative': True}],
+             }
 
 
 class LError(Exception):
@@ -99,7 +110,7 @@ class ATree(Tree):
             return self
 
     @classmethod
-    def from_names(cls, full_names: list, delim: str = DELIM) -> Tree:
+    def from_names(cls, full_names: list, delim: str = CONSTANTS['delim']) -> Tree:
         """extract all accounts from a list of Gnucash-like account paths
 
         Assumes each account name is a full path, delimiter is :.
@@ -131,7 +142,7 @@ class ATree(Tree):
                                              identifier=name,
                                              parent=parent)
             except tle.NodeIDAbsentError as E:
-                logging.info(f'Problem building account tree: {E}')
+                app.logger.info(f'Problem building account tree: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -146,7 +157,7 @@ class ATree(Tree):
         when needed, and then moved to the right place in a second pass.
 
         """
-        clean_list = parent_list[[ACCOUNT_COL, PARENT_COL]]
+        clean_list = parent_list[[CONSTANTS['account_col'], CONSTANTS['parent_col']]]
         tree = cls()
         tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
         for row in clean_list.itertuples(index=False):
@@ -162,7 +173,7 @@ class ATree(Tree):
                                      identifier=name,
                                      parent=parent)
             except tle.NodeIDAbsentError as E:
-                logging.info(f'Error creating parent list: {E}')
+                app.logger.info(f'Error creating parent list: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -174,7 +185,7 @@ class ATree(Tree):
                 parent = row[1]
                 tree.move_node(name, parent)
             except tle.NodeIDAbsentError as E:
-                logging.info(f'Error moving node: {E}')
+                app.logger.info(f'Error moving node: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -187,7 +198,7 @@ class ATree(Tree):
         full account field in trans accordingly.
         This should probably be a static method on TransFrame, once that Class exists."""
         paths = tree.dict_of_paths()
-        trans[FAN_COL] = trans[ACCOUNT_COL].map(paths)
+        trans[CONSTANTS['fan_col']] = trans[CONSTANTS['account_col']].map(paths)
         return trans
 
 
@@ -233,7 +244,7 @@ chart_fig_layout = dict(
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id=CONSTANTS['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
@@ -253,7 +264,7 @@ trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': ACCOUNT_COL},
+        {'if': {'column_id': CONSTANTS['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -275,7 +286,7 @@ trans_table = dash_table.DataTable(
 bs_trans_table = dash_table.DataTable(
     id='bs_trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id=CONSTANTS['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric'),
              dict(id='total', name='Total', type='numeric')],
@@ -296,7 +307,7 @@ bs_trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': ACCOUNT_COL},
+        {'if': {'column_id': CONSTANTS['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -320,7 +331,7 @@ bs_trans_table = dash_table.DataTable(
 ex_trans_table = dash_table.DataTable(
     id='ex_trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id=CONSTANTS['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
@@ -340,7 +351,7 @@ ex_trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': ACCOUNT_COL},
+        {'if': {'column_id': CONSTANTS['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -360,7 +371,7 @@ ex_trans_table = dash_table.DataTable(
 
 trans_table_format = dict(
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=ACCOUNT_COL, name='Account'),
+             dict(id=CONSTANTS['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric'),
              dict(id='total', name='Total', type='numeric')],
@@ -381,7 +392,7 @@ trans_table_format = dict(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': ACCOUNT_COL},
+        {'if': {'column_id': CONSTANTS['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -404,11 +415,6 @@ trans_table_format = dict(
 LEAF_SUFFIX: str = ' [Leaf]'
 OTHER_PREFIX: str = 'Other '
 MAX_SLICES: int = 7  # TODO: expose this in a control
-ROOT_ACCOUNTS = [{'id': 'Assets', 'flip_negative': False},
-                 {'id': 'Equity', 'flip_negative': True},
-                 {'id': 'Expenses', 'flip_negative': True},
-                 {'id': 'Income', 'flip_negative': True},
-                 {'id': 'Liabilities', 'flip_negative': True}]
 
 SUBTOTAL_SUFFIX: str = ' [Subtotal]'
 TIME_RES_LOOKUP: dict = {
@@ -443,29 +449,29 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     data = json.loads(data_store)
     data_error = data.get('error', None)
     if data_error:
-        raise PreventUpdate
+        raise PreventUpdate  # ibid
 
     if not data_store or len(data_store) == 0:
-        raise PreventUpdate
+        raise PreventUpdate  # ibid
 
     trans = pd.read_json(data['trans'],
                          dtype={'date': 'datetime64[ms]',
                                 'description': 'object',
                                 'amount': 'int64',
-                                ACCOUNT_COL: 'object',
-                                FAN_COL: 'object'})
+                                CONSTANTS['account_col']: 'object',
+                                CONSTANTS['fan_col']: 'object'})
 
-    orig_account_tree = ATree.from_names(trans[FAN_COL])
+    orig_account_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
     filter_accounts: list = []
 
     for account in filter:
         filter_accounts = filter_accounts + [account] + get_descendents(account, orig_account_tree)
 
     if filter_accounts:
-        trans = trans[trans[ACCOUNT_COL].isin(filter_accounts)]
+        trans = trans[trans[CONSTANTS['account_col']].isin(filter_accounts)]
 
     # rebuild account tree from filtered trans
-    account_tree = ATree.from_names(trans[FAN_COL])
+    account_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
 
     eras = pd.read_json(data['eras'],
                         orient='split',
@@ -486,6 +492,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
 def get_descendents(account_id: str, account_tree: Tree) -> list:
     """
     Return a list of tags of all descendent accounts of the input account.
+    # TODO make this a method of ATree
     """
     if (not account_id) or (not account_tree) or (len(account_id) == 0) or (account_tree.size() == 0):
         return []
@@ -510,9 +517,9 @@ def make_bar(trans: pd.DataFrame,
     the selected account.  If deep, include total for all descendent accounts. """
 
     if deep:
-        tba = trans[trans[ACCOUNT_COL].isin([account_id] + get_descendents(account_id, account_tree))]
+        tba = trans[trans[CONSTANTS['account_col']].isin([account_id] + get_descendents(account_id, account_tree))]
     else:
-        tba = trans[trans[ACCOUNT_COL] == account_id]
+        tba = trans[trans[CONSTANTS['account_col']] == account_id]
 
     tba = tba.set_index('date')
     tr: dict = TIME_RES_LOOKUP[time_resolution]
@@ -534,7 +541,7 @@ def make_bar(trans: pd.DataFrame,
     elif tr_label in ['Decade', 'Year', 'Quarter', 'Month']:
         format = tr_format
     else:
-        raise PreventUpdate
+        raise PreventUpdate  # ibid
 
     try:
         marker_color = disc_colors[color_num]
@@ -656,7 +663,7 @@ def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
         name=account_id,
         x=trans['date'],
         y=trans['amount'],
-        text=trans[ACCOUNT_COL],
+        text=trans[CONSTANTS['account_col']],
         ids=trans.index,
         mode='markers',
         marker=dict(
@@ -698,9 +705,9 @@ def make_sunburst(
         Calculate the subtotal for each node (direct subtotal only, no children) in
         the provided transaction tree and store it in the tree.
         """
-        trans = trans.reset_index(drop=True).set_index(ACCOUNT_COL)
-        sel_tree = ATree.from_names(trans[FAN_COL])
-        subtotals = trans.groupby(ACCOUNT_COL).sum()['amount']
+        trans = trans.reset_index(drop=True).set_index(CONSTANTS['account_col'])
+        sel_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
+        subtotals = trans.groupby(CONSTANTS['account_col']).sum()['amount']
         for node in sel_tree.all_nodes():
             try:
                 subtotal = subtotals.loc[node.tag]
@@ -929,92 +936,6 @@ def get_children(account_id, account_tree):
     return [x.tag for x in account_tree.children(account_id)]
 
 
-def load_eras(data, earliest_date, latest_date):
-    """
-    If era data file is available, use it to construct
-    arbitrary bins
-    """
-
-    data['date_start'] = data['date_start'].astype({'date_start': 'datetime64'})
-    data['date_end'] = data['date_end'].astype({'date_end': 'datetime64'})
-
-    data = data.sort_values(by=['date_start'], ascending=False)
-    data = data.reset_index(drop=True).set_index('name')
-
-    # if the first start or last end is missing, substitute earliest/lastest possible date
-    if pd.isnull(data.iloc[0].date_end):
-        data.iloc[0].date_end = latest_date
-    if pd.isnull(data.iloc[-1].date_start):
-        data.iloc[-1].date_start = earliest_date
-
-    return data
-
-
-def load_input_file(input_file, url: str, filename: str) -> Iterable:
-    """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
-
-    data: pd.DataFrame() = pd.DataFrame()
-    raw_text: str = None
-    new_filename: str = None
-    if input_file:
-        try:
-            data: pd.DataFrame = parse_base64_file(input_file, filename)
-            raw_text: str = f'File {filename} loaded, {len(data)} records.'
-            new_filename = filename
-        except urllib.error.HTTPError as E:
-            raw_text = f'Error loading {filename}: {E}'
-    elif url:
-        try:
-            data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
-            raw_text: str = f'{url} loaded, {len(data)} records.'
-            new_filename = url
-        except (urllib.error.URLError, FileNotFoundError) as E:
-            raw_text = f'Error loading {url}: {E}'
-
-    return [new_filename, data, raw_text]
-
-
-def load_transactions(data: pd.DataFrame):
-    """
-    Load a json_encoded dataframe matching the transaction export format from Gnucash.
-    Uses columns ACCOUNT_COL, 'Description', 'Memo', Notes', FAN_COL, 'Date', 'Amount Num.'
-    """
-    if len(data) == 0:
-        raise LError('No data in file')
-
-    # try to parse date.  TODO: Maybe move this to a function so it can be re-used in era parsing
-    try:
-        data['date'] = data['date'].astype({'date': 'datetime64'})
-    except ValueError:
-        # try to parse date a different way: accept YYYY
-        data['date'] = pd.to_datetime(data['date'], format='%Y').astype({'date': 'datetime64[ms]'})
-
-    data['amount'] = data['amount'].replace(to_replace=',', value='')
-    data['amount'] = data['amount'].fillna(value=0)
-    data['amount'] = data['amount'].astype(float, errors='ignore').round(decimals=0).astype(int, errors='ignore')
-
-    #######################################################################
-    # Gnucash-specific filter:
-    # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
-    try:
-        data['date'] = data['date'].fillna(method='ffill')
-        data['description'] = data['description'].fillna(method='ffill').astype(str)
-        data['notes'] = data['notes'].fillna(method='ffill').astype(str)
-        data['notes'] = data['notes']
-        data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
-    except Exception as E:  # NOQA
-        # TODO: handle this better, so it runs only when gnucash is indicated
-        pass
-
-    #######################################################################
-
-    data.fillna('', inplace=True)  # Any remaining fields with invalid numerical data should be text fields
-    data.where(data.notnull(), None)
-
-    trans = data[['date', 'description', 'amount', ACCOUNT_COL, FAN_COL]]
-    return trans
-
-
 def date_range_from_period(tr_label: str,
                            ts_label: str,
                            period: str,
@@ -1046,11 +967,11 @@ def date_range_from_period(tr_label: str,
         try:
             year: int = int(period[0:4])
         except ValueError:
-            raise PreventUpdate
+            raise PreventUpdate  # probably PreventUpdate should only be in the UI pages, so redo this
         try:
             Q: int = int(period[6:7])
         except ValueError:
-            raise PreventUpdate
+            raise PreventUpdate  # ibid
         start_month: int = ((Q * 3) - 2)
         period_start = datetime(year, start_month, 1)
         period_end = _month_end(period_start + timedelta(days=63))
@@ -1058,8 +979,19 @@ def date_range_from_period(tr_label: str,
         period_start = datetime.strptime(period + '-01', '%Y-%b-%d')
         period_end = _month_end(period_start)
     else:
-        raise PreventUpdate
+        raise PreventUpdate  # ibid
     return (np.datetime64(period_start), np.datetime64(period_end))
+
+
+def pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
+    """ Make label for sunburst """
+    if desc_account_count > 0:
+        desc_text = f'and {desc_account_count:,d} subaccounts'
+    else:
+        desc_text = ''
+    date_range_content = f'between {pretty_date(start)} {pretty_date(end)}'
+    result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
+    return result
 
 
 def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans, unit) -> tuple:
@@ -1076,38 +1008,39 @@ def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans
     ts_label = TIME_SPAN_LOOKUP[time_span]['label']
 
     if len(trans) == 0:
-        raise PreventUpdate
+        raise PreventUpdate  # TODO: don't raise this in functions; return an error and handle it upstairs
 
     colormap = {}
-    for trace in figure.get('data'):
-        account = trace.get('name')
-        points = trace.get('selectedpoints')
-        colormap[account] = trace.get('marker').get('color')
-        if not points:
-            continue
-        sel_accounts.append(account)
-        for point in points:
-            point_x = trace['x'][point]
-            period_start, period_end = date_range_from_period(tr_label, ts_label, point_x, eras)
-            if min_period_start is None:
-                min_period_start = period_start
-            else:
-                min_period_start = min(min_period_start, period_start)
-            if max_period_end is None:
-                max_period_end = period_end
-            else:
-                max_period_end = max(max_period_end, period_end)
-            desc_accounts = get_descendents(account, account_tree)
-            desc_account_count = desc_account_count + len(desc_accounts)
-            subtree_accounts = [account] + desc_accounts
-            new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
-                loc[trans['date'] >= period_start].\
-                loc[trans['date'] <= period_end]
+    if figure:
+        for trace in figure.get('data'):
+            account = trace.get('name')
+            points = trace.get('selectedpoints')
+            colormap[account] = trace.get('marker').get('color')
+            if not points:
+                continue
+            sel_accounts.append(account)
+            for point in points:
+                point_x = trace['x'][point]
+                period_start, period_end = date_range_from_period(tr_label, ts_label, point_x, eras)
+                if min_period_start is None:
+                    min_period_start = period_start
+                else:
+                    min_period_start = min(min_period_start, period_start)
+                if max_period_end is None:
+                    max_period_end = period_end
+                else:
+                    max_period_end = max(max_period_end, period_end)
+                desc_accounts = get_descendents(account, account_tree)
+                desc_account_count = desc_account_count + len(desc_accounts)
+                subtree_accounts = [account] + desc_accounts
+                new_trans = trans.loc[trans['account'].isin(subtree_accounts)].\
+                    loc[trans['date'] >= period_start].\
+                    loc[trans['date'] <= period_end]
 
-            if len(filtered_trans) > 0:
-                filtered_trans = filtered_trans.append(new_trans)
-            else:
-                filtered_trans = new_trans
+                if len(filtered_trans) > 0:
+                    filtered_trans = filtered_trans.append(new_trans)
+                else:
+                    filtered_trans = new_trans
 
     # If no transactions are ultimately selected, show all accounts
     filtered_count = len(filtered_trans)
@@ -1125,10 +1058,8 @@ def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans
         # because any clickable bar must have $$, and so, trans
         sel_accounts_content = f'Click a bar in the graph to filter from {len(trans):,d} records'
         filtered_trans = trans
-
-    # min_period_start =
-    # latest_trans = dd.get('latest_trans')
-    # max_period_end = latest_trans
+        min_period_start = trans['date'].min()
+        max_period_end = trans['date'].max()
 
     time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
     title = f'Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
@@ -1136,14 +1067,3 @@ def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans
                             SUBTOTAL_SUFFIX, time_span, colormap)
 
     return (sel_accounts_content, time_series_selection_info, sun_fig, title)
-
-
-def pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
-    """ Make label for sunburst """
-    if desc_account_count > 0:
-        desc_text = f'and {desc_account_count:,d} subaccounts'
-    else:
-        desc_text = ''
-    date_range_content = f'between {pretty_date(start)} {pretty_date(end)}'
-    result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
-    return result

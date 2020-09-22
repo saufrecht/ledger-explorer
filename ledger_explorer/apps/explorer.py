@@ -1,7 +1,6 @@
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
-import logging
 import pandas as pd
 import numpy as np
 
@@ -10,7 +9,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
-from utils import chart_fig_layout, trans_table, data_from_json_store
+from utils import chart_fig_layout, data_from_json_store
 from utils import get_children, get_descendents
 from utils import make_bar
 from utils import ex_trans_table
@@ -66,7 +65,7 @@ layout = html.Div(
                     ]),
             ]),
         html.Div(
-            className="ex_account_burst_box",
+            className="account_burst_box",
             children=[
                 html.Div([
                     html.H3(
@@ -80,7 +79,7 @@ layout = html.Div(
                     id='ex_account_burst'),
             ]),
         html.Div(
-            id='trans_table_box',
+            className='trans_table_box',
             children=[
                 html.Div(
                     id='ex_trans_table_text',
@@ -94,10 +93,12 @@ layout = html.Div(
 @app.callback(
     [Output('ex_master_time_series', 'figure')],
     [Input('ex_time_series_resolution', 'value'),
-     Input('ex_time_series_span', 'value')],
+     Input('ex_time_series_span', 'value'),
+     Input('tab_draw_trigger', 'children')],
     state=[State('data_store', 'children')])
-def make_time_series(time_resolution: int, time_span: bool, data_store: str):
-    if not data_store or len(data_store) == 0:
+def make_time_series(time_resolution: int, time_span: bool, trigger, data_store: str):
+    app.logger.info('starting make_time_series')
+    if not data_store:
         raise PreventUpdate
 
     try:
@@ -108,7 +109,7 @@ def make_time_series(time_resolution: int, time_span: bool, data_store: str):
     except KeyError:
         raise PreventUpdate
     except IndexError:
-        logging.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
+        app.logger.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
         raise PreventUpdate
     dd = data_from_json_store(data_store)
 
@@ -157,10 +158,12 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     triggering.
 
     """
-    if not selectedData or not figure or not data_store:  # prevent from crashing when triggered from other pages
-        raise PreventUpdate
+    app.logger.debug('triggered apply_selection_from_time_series')
 
     dd = data_from_json_store(data_store)
+    if not dd:
+        raise PreventUpdate
+
     trans = dd.get('trans')
     eras = dd.get('eras')
     account_tree = dd.get('account_tree')
@@ -182,9 +185,6 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     TODO: maybe check for input safety?
     """
-
-    if not burst_clickData:  # prevent from crashing when triggered from other pages
-        raise PreventUpdate
 
     dd = data_from_json_store(data_store)
     trans = dd.get('trans')
@@ -212,6 +212,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         revised_id = []
 
     # if any accounts are selected, get those transactions.  Otherwise, get all transactions.
+
     if revised_id:
         # Add any sub-accounts
         sub_accounts = get_descendents(revised_id, account_tree)
@@ -222,6 +223,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
         else:
             account_text = f'{revised_id} selected'
     else:
+
         sel_trans = trans
         account_text = f'Click a pie slice to filter from {max_trans_count} records'
 
