@@ -39,6 +39,7 @@ class Controls():
     bs_label: str = CONSTANTS['bs_label']
     ex_label: str = CONSTANTS['ex_label']
     ex_account_filter: list = ('Income', 'Expenses')
+    bs_account_filter: list = ('Debt', 'Equity', 'Liabilities')
 
     def to_json(self):
         """ Convert controls to JSON via dict structure """
@@ -103,7 +104,6 @@ def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
 
 def rename_columns(data: pd.DataFrame, parameters: Controls) -> pd.DataFrame:
     """ Make all column names lower-case. Renames any mapped columns. """
-
     data.columns = [x.lower() for x in data.columns]  # n.b. Changes in place
 
     # TODO: once trans is a class, then just iterate with vars(Trans()).items()
@@ -122,24 +122,24 @@ def load_input_file(input_file, url: str, filename: str) -> Iterable:
     """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
 
     data: pd.DataFrame() = pd.DataFrame()
-    raw_text: str = None
+    result_meta: str = None
     new_filename: str = None
     if input_file:
         try:
             data: pd.DataFrame = parse_base64_file(input_file, filename)
-            raw_text: str = f'File {filename} loaded, {len(data)} records.'
+            result_meta: str = f'File {filename} loaded, {len(data)} records.'
             new_filename = filename
         except urllib.error.HTTPError as E:
-            raw_text = f'Error loading {filename}: {E}'
+            result_meta = f'Error loading {filename}: {E}'
     elif url:
         try:
             data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
-            raw_text: str = f'{url} loaded, {len(data)} records.'
+            result_meta: str = f'{url} loaded, {len(data)} records.'
             new_filename = url
         except (urllib.error.URLError, FileNotFoundError) as E:
-            raw_text = f'Error loading {url}: {E}'
+            result_meta = f'Error loading {url}: {E}'
 
-    return [new_filename, data, raw_text]
+    return [new_filename, data, result_meta]
 
 
 def load_transactions(data: pd.DataFrame):

@@ -82,7 +82,6 @@ app.validation_layout = html.Div(children=[
 def parse_url_path(path: str):
     """ IF the URL path comprises a two-character string, set the tabs value,
     which will trigger a switching of tabs """
-    app.logger.info(f'parse_url_path with {path}')
     if isinstance(path, str):
         tab = path.strip('/')
         if len(tab) == 2:
@@ -95,7 +94,6 @@ def parse_url_path(path: str):
               [Input('tabs', 'value')])
 def change_tab(selected_tab: str):
     """ From a click on the tabbar, change the tab. """
-    app.logger.info(f'change_tab with {selected_tab}')
     if selected_tab == 'bs':
         return [balance_sheet.layout]
     elif selected_tab == 'ex':
@@ -155,11 +153,14 @@ def parse_url_search(search: str):
     raw_trans = None
     trans_input = inputs.get('transu', None)
     if trans_input:
-        transu = trans_input[0]
-        if isinstance(transu, str):
-            filename, t_data, text = load_input_file(None, transu, None)
-            if len(t_data) > 0:
-                raw_trans = t_data.to_json()
+        try:
+            transu = trans_input[0]
+            if isinstance(transu, str):
+                filename, t_data, text = load_input_file(None, transu, None)
+                if len(t_data) > 0:
+                    raw_trans = t_data.to_json()
+        except Exception as E:
+            app.logger.info(f'Failed to load {transu} because {E}')
 
     raw_atree = None
     atree_input = inputs.get('atreeu', None)
@@ -190,9 +191,9 @@ def parse_url_search(search: str):
                Input('eras_file_node', 'children'),
                Input('trans_urlfile_node', 'children'),
                Input('atree_urlfile_node', 'children'),
-               Input('eras_urlfile_node', 'children')],
-              state=[State('control_node', 'children'),
-                     State('control_urlnode', 'children')])
+               Input('eras_urlfile_node', 'children'),
+               Input('control_node', 'children')],
+              state=[State('control_urlnode', 'children')])
 def load_and_transform(trans_file_node: str,
                        atree_file_node: str,
                        eras_file_node: str,
@@ -210,19 +211,18 @@ def load_and_transform(trans_file_node: str,
     portion and a tab-name portion
 
     """
-
     ctx = dash.callback_context
     if ctx.triggered:
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        app.logger.info(f'load_and_transform triggered for {trigger_id}')
     else:
         trigger_id = None
-        app.logger.info('load_and_transform triggered for ???')
 
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
 
+    data = None
+    trigger = False
     if trigger_id == 'trans_file_node':
         t_source = trans_file_node
     elif trigger_id == 'trans_urlfile_node':
@@ -232,67 +232,61 @@ def load_and_transform(trans_file_node: str,
     elif trans_urlfile_node and len(trans_urlfile_node) > 0:
         t_source = trans_urlfile_node
     else:
-        error = 'No transaction data loaded.'
-        return [None, error, 'now']
+        status = 'No transaction data loaded.'
+        t_source = None
 
-    try:
-        trans_data = pd.read_json(t_source)
-    except LoadError as LE:
-        error = f'Error loading transaction data: {LE.message}'
-        return [None, error, 'now']
+    if t_source and len(t_source) > 0:
+        try:
+            trans_data = pd.read_json(t_source)
+            atree_data: pd.DataFrame = pd.DataFrame()
+            a_source = None
+            if trigger_id == 'atree_file_node':
+                a_source = atree_file_node
+            elif trigger_id == 'atree_urlfile_node':
+                a_source = atree_urlfile_node
+            elif atree_file_node and len(atree_file_node) > 0:
+                a_source = atree_file_node
+            elif atree_urlfile_node and len(atree_urlfile_node) > 0:
+                a_source = atree_urlfile_node
+            if a_source:
+                atree_data = pd.read_json(a_source)
 
-    atree_data: pd.DataFrame = pd.DataFrame()
-    a_source = None
-    if trigger_id == 'atree_file_node':
-        a_source = atree_file_node
-    elif trigger_id == 'atree_urlfile_node':
-        a_source = atree_urlfile_node
-    elif atree_file_node and len(atree_file_node) > 0:
-        a_source = atree_file_node
-    elif atree_urlfile_node and len(atree_urlfile_node) > 0:
-        a_source = atree_urlfile_node
-    if a_source:
-        atree_data = pd.read_json(a_source)
+            eras_data: pd.DataFrame = pd.DataFrame()
+            e_source = None
+            if trigger_id == 'eras_file_node':
+                e_source = eras_file_node
+            elif trigger_id == 'eras_urlfile_node':
+                e_source = eras_urlfile_node
+            elif eras_file_node and len(eras_file_node) > 0:
+                e_source = eras_file_node
+            elif eras_urlfile_node and len(eras_urlfile_node) > 0:
+                e_source = eras_urlfile_node
+            if e_source:
+                eras_data = pd.read_json(e_source)
 
-    eras_data: pd.DataFrame = pd.DataFrame()
-    e_source = None
-    if trigger_id == 'eras_file_node':
-        e_source = eras_file_node
-    elif trigger_id == 'eras_urlfile_node':
-        e_source = eras_urlfile_node
-    elif eras_file_node and len(eras_file_node) > 0:
-        e_source = eras_file_node
-    elif eras_urlfile_node and len(eras_urlfile_node) > 0:
-        e_source = eras_urlfile_node
-    if e_source:
-        eras_data = pd.read_json(e_source)
+            if control_node and len(control_node) > 0:
+                c_source = json.loads(control_node)
+            elif control_urlnode and len(control_urlnode) > 0:
+                c_source = json.loads(control_urlnode)
+            else:
+                c_source = None
 
-    if control_urlnode and len(control_urlnode) > 0:
-        c_source = json.loads(control_urlnode)
-    elif control_node and len(control_node) > 0:
-        c_source = json.loads(control_node)
-    else:
-        c_source = None
-    try:
-        controls = Controls(**c_source)
-    except Exception:
-        app.logger.critical('got an error loading controls class.  Figure it out and handle it better, please.')
+            controls = Controls(**c_source)
 
-    try:
-        trans, atree, eras = convert_raw_data(trans_data, atree_data, eras_data, controls)
-    except LoadError as LE:
-        error = f'Error parsing input data: {LE.message}'
-        return [None, error]
+            trans, atree, eras = convert_raw_data(trans_data, atree_data, eras_data, controls)
 
-    data = json.dumps({'trans': trans.to_json(),
-                       'eras': eras.to_json()})
+            data = json.dumps({'trans': trans.to_json(),
+                               'eras': eras.to_json()})
 
-    # TODO: this is probably the right place to change the Group By options if eras is missing
+            # TODO: this is probably the right place to change the Group By options if eras is missing
 
-    # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
-    status = f'{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras.'
-    app.logger.info('end of load_and_transform')
-    return [data, status, 'now']
+            # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
+            status = f'{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras.'
+            trigger = True
+        except LoadError as LE:
+            status = f'Error loading transaction data: {LE.message}'
+
+    return [data, status, trigger]
 
 
 if __name__ == '__main__':

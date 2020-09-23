@@ -97,7 +97,6 @@ layout = html.Div(
     state=[State('data_store', 'children'),
            State('control_store', 'children')])
 def make_time_series(time_resolution: int, time_span: bool, trigger, data_store: str, control_store: str):
-    app.logger.info('starting ex make_time_series')
     if not data_store:
         raise PreventUpdate
     controls = Controls.from_json(control_store)
@@ -114,8 +113,7 @@ def make_time_series(time_resolution: int, time_span: bool, trigger, data_store:
         ts_label = ts.get('label')      # e.g., 'Annual' or 'Monthly'
         tr_label = tr.get('label')          # e.g., 'by Era'
     except KeyError as E:
-        app.logger.debug(f'TIME_SPAN_LOOKUP error was {E}')  # TODO: narrow down exceptions
-        app.logger.critical(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}')
+        app.logger.info(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}. {E}')
         raise PreventUpdate
 
     dd = data_from_json_store(data_store, controls.ex_account_filter)
@@ -168,7 +166,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     triggering.
 
     """
-    app.logger.debug('triggered apply_selection_from_time_series')
     controls = Controls.from_json(control_store)
     if not time_resolution:
         time_resolution = controls.init_time_res
@@ -202,6 +199,8 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     """
     dd = data_from_json_store(data_store)
     trans = dd.get('trans')
+    if not isinstance(trans, pd.DataFrame) or len(trans) == 0:
+        raise PreventUpdate
     account_tree = dd.get('account_tree')
     earliest_trans = dd.get('earliest_trans')
     latest_trans = dd.get('latest_trans')

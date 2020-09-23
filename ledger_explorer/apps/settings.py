@@ -189,11 +189,11 @@ layout = html.Div(
                Input('ds_label', 'value'),
                Input('bs_label', 'value'),
                Input('ex_label', 'value')])
-def apply_settings(account_n: str,
-                   amount_n: str,
-                   date_n: str,
-                   desc_n: str,
-                   fullname_n: str,
+def apply_settings(account_label: str,
+                   amount_label: str,
+                   date_label: str,
+                   desc_label: str,
+                   fullname_label: str,
                    ds_data_title: str,
                    ds_delimiter: str,
                    ds_unit: str,
@@ -203,9 +203,5 @@ def apply_settings(account_n: str,
     """ Store all manually input setting information into the control node, which in turn will update
     the control store, for use during load """
 
-    response = Controls.parse(account_n, amount_n, date_n)
-
-    if len(response) > 0:
-        return [json.dumps(response)]
-    else:
-        raise PreventUpdate
+    controls: Controls = Controls(account_label, amount_label, date_label, desc_label, fullname_label, ds_data_title, ds_delimiter, ds_unit, ds_label, bs_label, ex_label)
+    return [controls.to_json()]

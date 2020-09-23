@@ -17,6 +17,7 @@ layout = html.Div(
             className='ds_column',
             children=[
                 html.H3('Transactions', className='col_heading', id='trans_heading'),
+                dcc.Markdown('Upload a Gnucash transaction CSV export, or any CSV file with matching columns.  See [Instructions](https://github.com/saufrecht/ledger-explorer/blob/master/docs/USAGE.md) for more information.'),  # NOQA
                 dcc.Upload(id='trans_file',
                            className='upload_target',
                            children=[
@@ -107,21 +108,21 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
         raise PreventUpdate
 
     new_filename, data, text = load_input_file(content, url, filename)
-    if len(data) == 0:
-        return [None, None, text, ' Select a file']
-    else:
+    if len(data) > 0:
+        text = text + f'Columns: {data.columns}'
         return [new_filename, data.to_json(), text, ' Select a different file', ]
+    else:
+        return [None, None, text, ' Select a file']
 
 
-@app.callback(
-    [Output('atree_filename', 'children'),
-     Output('atree_file_node', 'children'),
-     Output('atree_loaded_meta', 'children'),
-     Output('atree_select', 'children')],
-    [Input('atree_file', 'filename'),
-     Input('atree_file', 'contents'),
-     Input('atree_url', 'n_submit')],
-    state=[State('atree_url', 'value')])
+@app.callback([Output('atree_filename', 'children'),
+               Output('atree_file_node', 'children'),
+               Output('atree_loaded_meta', 'children'),
+               Output('atree_select', 'children')],
+              [Input('atree_file', 'filename'),
+               Input('atree_file', 'contents'),
+               Input('atree_url', 'n_submit')],
+              state=[State('atree_url', 'value')])
 def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new atree source is provided (uploaded file, or new URL),
     upload it and provide visual feedback. """
@@ -135,15 +136,14 @@ def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
         return [new_filename, data.to_json(), text, ' Select a different file', ]
 
 
-@app.callback(
-    [Output('eras_filename', 'children'),
-     Output('eras_file_node', 'children'),
-     Output('eras_loaded_meta', 'children'),
-     Output('eras_select', 'children')],
-    [Input('eras_file', 'filename'),
-     Input('eras_file', 'contents'),
-     Input('eras_url', 'n_submit')],
-    state=[State('eras_url', 'value')])
+@app.callback([Output('eras_filename', 'children'),
+               Output('eras_file_node', 'children'),
+               Output('eras_loaded_meta', 'children'),
+               Output('eras_select', 'children')],
+              [Input('eras_file', 'filename'),
+               Input('eras_file', 'contents'),
+               Input('eras_url', 'n_submit')],
+              state=[State('eras_url', 'value')])
 def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
     """ Whenever a new transaction source is provided (uploaded file, or new URL),
     upload it and provide visual feedback.
@@ -160,7 +160,6 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         return [new_filename, data.to_json(), text, ' Select a different file', ]
 
 
-# TODO: finish fixing this to run from only these 2 inputs.
 # @app.callback([Output('trans_status', 'children'),
 #                Output('atree_status', 'children'),
 #                Output('eras_status', 'children'),

@@ -19,6 +19,7 @@ pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the
 
 
 # TODO: should all CONSTANTS be default values in Controls class?
+# TODO: rename Controls to Params
 CONSTANTS = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
              'account_col': 'account',
              'fan_col': 'full account name',
@@ -169,7 +170,7 @@ class ATree(Tree):
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
-        # tree = tree.trim_excess_root()  waiting for trim_excess_root to get fixed
+        # tree = tree.trim_excess_root()  TODO waiting for trim_excess_root to get fixed
         return tree
 
     @classmethod
@@ -481,7 +482,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
                             dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
         # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
     except Exception as E:
-        app.logger.critical(f'Error parsing eras: {E}')
+        app.logger.info(f'Error parsing eras: {E}')
         eras = pd.DataFrame()
 
     if len(eras) > 0:

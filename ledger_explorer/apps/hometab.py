@@ -1,36 +1,39 @@
 import dash_core_components as dcc
 import dash_html_components as html
+from urllib.parse import quote
+
+
+owid_co2_url = quote('https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv')
+
 
 layout = html.Div(
     className="layout_box presentation",
     children=[
-        dcc.Markdown('''
+        dcc.Markdown(f'''# Ledger Explorer (ALPHA RELEASE)
 
-# Ledger Explorer (ALPHA RELEASE)
-
-Quickly navigate through flow and balance charts as line charts, drill down into account rollups, and get from annual totals to individual records in a register all on one page.  Import CSV from files or URLs, match the columns, handling tens of thousands of records quickly.  Chart any data that comprises individual transactions, each with a time, amount, and category/account.  
+Quickly navigate through flow and balance charts as line charts, drill down into account rollups, and get from annual totals to individual records in a register all on one page.  Import CSV from files or URLs, match the columns, handling tens of thousands of records quickly.  Chart any data that comprises individual transactions, each with a time, amount, and category/account.
 
 ## Try an example
 
-* [Personal accounting sample data (Gnucash format)](https://ledge.uprightconsulting.com/ex/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&etreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_eras.csv&init_time_res=5)  # NOQA
+* [Personal accounting sample data (Gnucash format)](/ex/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&etreeu=https://ledge.uprightconsulting.com/s/sample_transaction_eras.csv&init_time_res=5)
    * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
    * ![Screenshot](/assets/cash_flow_1.jpg)
 
-* [Greenhouse Gas emissions by country over time](https://ledge.uprightconsulting.com/ex?transu=https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
-   * loads data directly from external source [Our World in Data](value="https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv)
+* [Greenhouse Gas emissions by country over time](/ds/?transu={owid_co2_url}.csv&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity)
+   * loads data directly from external source [Our World in Data]({owid_co2_url})
    * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
+   * ![Screenshot](/assets/co2_1.jpg)
 
-*[US Federal Budget Data FORTHCOMING
+## Try it yourself
 
-* [To load your own data, click "Files"](/?tab=ds)
+* Try your own data: [click "Files"](/ds/)
+* [Instructions](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/USAGE.md)
+* [Install and run it yourself](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
 
-### Disclaimers, Privacy, and such
-Ledger Explorer is a Free Software product, built on Plotly Dash and other free/open source software.  This site is provided free of cost, with no warranty.  This product contains no tracking or sponsorship.  Web traffic data, such as your IP address and the time and address of the pages you access on this site, are retained permanently.  No other information is collected or retained.  Reloading your browser should remove all data from your browser and this site's server.  Data that you upload to the site is probably not completely insecure, and nobody looks at it.  But there's really nothing stopping the site host, or any competent intruder, from viewing your data.  So please don't upload anything sensitive.  If you really want to use this software with sensitive data, you may have more privacy if you downloading and install it on your own computer.
+### About, Privacy, and Security
+Ledger Explorer is a Free Software product and service, built with [Dash](https://plotly.com/dash/) and other free/open source software.  Ledger Explorer is provided free of cost, with no warranty.  It collects no personal data, uses no tracking technologies, and has no commercial relationships.  It retains normal web traffic logs, which include your [IP address](https://ssd.eff.org/en/glossary/ip-address) and the time and address of the pages you access on this site.  No other information is collected or retained.  Reloading your browser should remove all data from your browser and this site's server.  The data you provide to the site in order to use its features is not inspected or retained, but its privacy and security cannot be guaranteed, so please don't provide anything sensitive.
 
   © 2020 Joel Aufrecht.
 ## More information
-* [Run it yourself](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/INSTALL.md)
-* [Instructions](https://github.com/saufrecht/ledger-explorer/blob/gunicorn/docs/USAGE.md)
-* [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)''')
-    ]
-)
+* [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)
+* [Upright Consulting](https://uprightconsulting.com)''')])
