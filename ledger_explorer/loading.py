@@ -29,7 +29,7 @@ class Controls():
     amount_label: str = 'Amount Num.'
     date_label: str = 'Date'
     desc_label: str = 'Description'
-    fullname_label: str = 'Full Account Name'
+    fan_label: str = 'Full Account Name'
     init_time_span: str = True
     init_time_res: int = 3
     ds_data_title: str = 'Ledger'
@@ -38,8 +38,8 @@ class Controls():
     ds_label: str = CONSTANTS['ds_label']
     bs_label: str = CONSTANTS['bs_label']
     ex_label: str = CONSTANTS['ex_label']
-    ex_account_filter: list = ('Income', 'Expenses')
-    bs_account_filter: list = ('Debt', 'Equity', 'Liabilities')
+    ex_account_filter: Iterable = ()
+    bs_account_filter: Iterable = ()
 
     def to_json(self):
         """ Convert controls to JSON via dict structure """
@@ -109,7 +109,7 @@ def rename_columns(data: pd.DataFrame, parameters: Controls) -> pd.DataFrame:
     # TODO: once trans is a class, then just iterate with vars(Trans()).items()
 
     # take all of the input column names and rename them to the standard internal names
-    cols = [(parameters.account_label, 'account'), (parameters.amount_label, 'amount'), (parameters.desc_label, 'description'), (parameters.fullname_label, 'full account name'), (parameters.date_label, 'date')]  # NOQA
+    cols = [(parameters.account_label, 'account'), (parameters.amount_label, 'amount'), (parameters.desc_label, 'description'), (parameters.fan_label, 'full account name'), (parameters.date_label, 'date')]  # NOQA
 
     for col_a, col_b in cols:
         lcol_a = col_a.lower()

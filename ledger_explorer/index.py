@@ -146,7 +146,7 @@ def parse_url_search(search: str):
     for key, value in vars(Controls()).items():
         input_value = inputs.get(key, None)
         if input_value and len(input_value) > 0:
-            control_input_dict[key] = input_value
+            control_input_dict[key] = input_value[0]
 
     control = Controls(**control_input_dict).to_json()
 
@@ -184,6 +184,7 @@ def parse_url_search(search: str):
 
 
 @app.callback([Output('data_store', 'children'),
+               Output('control_store', 'children'),
                Output('files_status', 'children'),
                Output('tab_draw_trigger', 'children')],
               [Input('trans_file_node', 'children'),
@@ -216,13 +217,15 @@ def load_and_transform(trans_file_node: str,
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     else:
         trigger_id = None
-
+    app.logger.info(f'control_urlnode is {control_urlnode}')
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
 
     data = None
+    controls = None
     trigger = False
+    status = None
     if trigger_id == 'trans_file_node':
         t_source = trans_file_node
     elif trigger_id == 'trans_urlfile_node':
@@ -272,11 +275,12 @@ def load_and_transform(trans_file_node: str,
                 c_source = None
 
             controls = Controls(**c_source)
-
+            app.logger.info(f'controls are {controls}')
             trans, atree, eras = convert_raw_data(trans_data, atree_data, eras_data, controls)
 
             data = json.dumps({'trans': trans.to_json(),
                                'eras': eras.to_json()})
+            controls = controls.to_json()
 
             # TODO: this is probably the right place to change the Group By options if eras is missing
 
@@ -286,7 +290,7 @@ def load_and_transform(trans_file_node: str,
         except LoadError as LE:
             status = f'Error loading transaction data: {LE.message}'
 
-    return [data, status, trigger]
+    return [data, controls, status, trigger]
 
 
 if __name__ == '__main__':

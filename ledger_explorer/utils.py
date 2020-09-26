@@ -470,7 +470,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     for account in filter:
         filter_accounts = filter_accounts + [account] + get_descendents(account, orig_account_tree)
 
-    if filter_accounts:
+    if len(filter_accounts) > 0:
         trans = trans[trans[CONSTANTS['account_col']].isin(filter_accounts)]
 
     # rebuild account tree from filtered trans
