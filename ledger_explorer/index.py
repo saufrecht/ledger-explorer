@@ -13,7 +13,7 @@ from dash.exceptions import PreventUpdate
 from app import app
 from apps import balance_sheet, data_source, explorer, settings, hometab
 
-from utils import CONSTANTS
+from utils import CONST
 from loading import LoadError, convert_raw_data, load_input_file, Controls
 
 
@@ -56,10 +56,10 @@ app.layout = html.Div(
                               value='le',
                               vertical=True,
                               children=[dcc.Tab(label='Home', id='le_tab', value='le'),
-                                        dcc.Tab(label=CONSTANTS['ex_label'], id='ex_tab', value='ex'),
-                                        dcc.Tab(label=CONSTANTS['bs_label'], id='bs_tab', value='bs'),
+                                        dcc.Tab(label=CONST['ex_label'], id='ex_tab', value='ex'),
+                                        dcc.Tab(label=CONST['bs_label'], id='bs_tab', value='bs'),
                                         dcc.Tab(label='Settings', id='se_tab', value='se'),
-                                        dcc.Tab(label=CONSTANTS['ds_label'], id='ds_tab', value='ds')]),
+                                        dcc.Tab(label=CONST['ds_label'], id='ds_tab', value='ds')]),
                      html.Div(id='files_status',
                               children=[])]),
         html.Div(id='tab-content',
@@ -121,11 +121,11 @@ def relabel_tab(control_data: str):
     ds_label = cd.get('ds_label', None)
 
     if not ex_label:
-        ex_label = CONSTANTS['ex_label']
+        ex_label = CONST['ex_label']
     if not ds_label:
-        ds_label = CONSTANTS['ds_label']
+        ds_label = CONST['ds_label']
     if not bs_label:
-        bs_label = CONSTANTS['bs_label']
+        bs_label = CONST['bs_label']
 
     return [ex_label, bs_label, ds_label]
 
@@ -192,24 +192,24 @@ def parse_url_search(search: str):
                Input('eras_file_node', 'children'),
                Input('trans_urlfile_node', 'children'),
                Input('atree_urlfile_node', 'children'),
-               Input('eras_urlfile_node', 'children'),
-               Input('control_node', 'children')],
-              state=[State('control_urlnode', 'children')])
+               Input('eras_urlfile_node', 'children')],
+              state=[State('control_urlnode', 'children'),
+                     State('control_node', 'children')])
 def load_and_transform(trans_file_node: str,
                        atree_file_node: str,
                        eras_file_node: str,
                        trans_urlfile_node: str,
                        atree_urlfile_node: str,
                        eras_urlfile_node: str,
-                       control_node: str,
-                       control_urlnode: str):
+                       control_urlnode: str,
+                       control_node: str):
     """When any of the input files changes in interim storage, reload all
     the data.  Because control store is a state input, the control
     data has to be loaded before the files to have an effect; changing
     the control data after loading will not re-trigger this.  it is implemented this way
     because control data is already an Input for something else.  If that
     turns out to be annoying, split the control_store into a params
-    portion and a tab-name portion
+    portion and a tab-name portion?
 
     """
     ctx = dash.callback_context

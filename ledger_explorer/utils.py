@@ -18,9 +18,9 @@ import plotly.graph_objects as go
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
 
 
-# TODO: should all CONSTANTS be default values in Controls class?
+# TODO: should all CONST be default values in Controls class?
 # TODO: rename Controls to Params
-CONSTANTS = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
+CONST = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
              'account_col': 'account',
              'fan_col': 'full account name',
              'date_col': 'date',
@@ -134,7 +134,7 @@ class ATree(Tree):
             return self
 
     @classmethod
-    def from_names(cls, full_names: list, delim: str = CONSTANTS['delim']) -> Tree:
+    def from_names(cls, full_names: list, delim: str = CONST['delim']) -> Tree:
         """extract all accounts from a list of Gnucash-like account paths
 
         Assumes each account name is a full path, delimiter is :.
@@ -181,7 +181,7 @@ class ATree(Tree):
         when needed, and then moved to the right place in a second pass.
 
         """
-        clean_list = parent_list[[CONSTANTS['account_col'], CONSTANTS['parent_col']]]
+        clean_list = parent_list[[CONST['account_col'], CONST['parent_col']]]
         tree = cls()
         tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
         for row in clean_list.itertuples(index=False):
@@ -222,7 +222,7 @@ class ATree(Tree):
         full account field in trans accordingly.
         This should probably be a static method on TransFrame, once that Class exists."""
         paths = tree.dict_of_paths()
-        trans[CONSTANTS['fan_col']] = trans[CONSTANTS['account_col']].map(paths)
+        trans[CONST['fan_col']] = trans[CONST['account_col']].map(paths)
         return trans
 
 
@@ -268,7 +268,7 @@ chart_fig_layout = dict(
 trans_table = dash_table.DataTable(
     id='trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=CONSTANTS['account_col'], name='Account'),
+             dict(id=CONST['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
@@ -288,7 +288,7 @@ trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': CONSTANTS['account_col']},
+        {'if': {'column_id': CONST['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -310,7 +310,7 @@ trans_table = dash_table.DataTable(
 bs_trans_table = dash_table.DataTable(
     id='bs_trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=CONSTANTS['account_col'], name='Account'),
+             dict(id=CONST['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric'),
              dict(id='total', name='Total', type='numeric')],
@@ -331,7 +331,7 @@ bs_trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': CONSTANTS['account_col']},
+        {'if': {'column_id': CONST['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -355,7 +355,7 @@ bs_trans_table = dash_table.DataTable(
 ex_trans_table = dash_table.DataTable(
     id='ex_trans_table',
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=CONSTANTS['account_col'], name='Account'),
+             dict(id=CONST['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric')],
     style_header={'font-family': 'IBM Plex Sans, Verdana, sans',
@@ -375,7 +375,7 @@ ex_trans_table = dash_table.DataTable(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': CONSTANTS['account_col']},
+        {'if': {'column_id': CONST['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -395,7 +395,7 @@ ex_trans_table = dash_table.DataTable(
 
 trans_table_format = dict(
     columns=[dict(id='date', name='Date', type='datetime'),
-             dict(id=CONSTANTS['account_col'], name='Account'),
+             dict(id=CONST['account_col'], name='Account'),
              dict(id='description', name='Description'),
              dict(id='amount', name='Amount', type='numeric'),
              dict(id='total', name='Total', type='numeric')],
@@ -416,7 +416,7 @@ trans_table_format = dict(
          'textAlign': 'left',
          'padding': '0px 10px',
          'width': '20%'},
-        {'if': {'column_id': CONSTANTS['account_col']},
+        {'if': {'column_id': CONST['account_col']},
          'textAlign': 'left',
          'padding': '0px px',
          'width': '18%'},
@@ -461,20 +461,20 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
                          dtype={'date': 'datetime64[ms]',
                                 'description': 'object',
                                 'amount': 'int64',
-                                CONSTANTS['account_col']: 'object',
-                                CONSTANTS['fan_col']: 'object'})
+                                CONST['account_col']: 'object',
+                                CONST['fan_col']: 'object'})
 
-    orig_account_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
+    orig_account_tree = ATree.from_names(trans[CONST['fan_col']])
     filter_accounts: list = []
 
     for account in filter:
         filter_accounts = filter_accounts + [account] + get_descendents(account, orig_account_tree)
 
     if len(filter_accounts) > 0:
-        trans = trans[trans[CONSTANTS['account_col']].isin(filter_accounts)]
+        trans = trans[trans[CONST['account_col']].isin(filter_accounts)]
 
     # rebuild account tree from filtered trans
-    account_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
+    account_tree = ATree.from_names(trans[CONST['fan_col']])
 
     # TODO: should be much tougher parser
     try:
@@ -525,9 +525,9 @@ def make_bar(trans: pd.DataFrame,
     the selected account.  If deep, include total for all descendent accounts. """
 
     if deep:
-        tba = trans[trans[CONSTANTS['account_col']].isin([account_id] + get_descendents(account_id, account_tree))]
+        tba = trans[trans[CONST['account_col']].isin([account_id] + get_descendents(account_id, account_tree))]
     else:
-        tba = trans[trans[CONSTANTS['account_col']] == account_id]
+        tba = trans[trans[CONST['account_col']] == account_id]
 
     tba = tba.set_index('date')
     tr: dict = TIME_RES_LOOKUP[time_resolution]
@@ -671,7 +671,7 @@ def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
         name=account_id,
         x=trans['date'],
         y=trans['amount'],
-        text=trans[CONSTANTS['account_col']],
+        text=trans[CONST['account_col']],
         ids=trans.index,
         mode='markers',
         marker=dict(
@@ -713,9 +713,9 @@ def make_sunburst(
         Calculate the subtotal for each node (direct subtotal only, no children) in
         the provided transaction tree and store it in the tree.
         """
-        trans = trans.reset_index(drop=True).set_index(CONSTANTS['account_col'])
-        sel_tree = ATree.from_names(trans[CONSTANTS['fan_col']])
-        subtotals = trans.groupby(CONSTANTS['account_col']).sum()['amount']
+        trans = trans.reset_index(drop=True).set_index(CONST['account_col'])
+        sel_tree = ATree.from_names(trans[CONST['fan_col']])
+        subtotals = trans.groupby(CONST['account_col']).sum()['amount']
         for node in sel_tree.all_nodes():
             try:
                 subtotal = subtotals.loc[node.tag]

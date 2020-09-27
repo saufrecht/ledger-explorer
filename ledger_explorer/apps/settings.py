@@ -1,13 +1,11 @@
 import dash_core_components as dcc
 import dash_html_components as html
-import json
 
 from dash.dependencies import Input, Output
-from dash.exceptions import PreventUpdate
 
 from app import app
 
-from utils import CONSTANTS
+from utils import CONST
 from loading import Controls
 
 
@@ -77,7 +75,7 @@ layout = html.Div(
                             size='10',
                             persistence=True,
                             persistence_type='memory',
-                            placeholder=CONSTANTS['fan_col'],
+                            placeholder=CONST['fan_col'],
                             debounce=True),
                         html.Label(
                             htmlFor='full_account_name_col',
@@ -88,7 +86,7 @@ layout = html.Div(
                             size='10',
                             persistence=True,
                             persistence_type='memory',
-                            placeholder=CONSTANTS['parent_col'],
+                            placeholder=CONST['parent_col'],
                             debounce=True),
                         html.Label(
                             htmlFor='parent_col',
@@ -96,7 +94,7 @@ layout = html.Div(
                         html.Div('Alternative method for account tree'),
                         html.Div(
                             className='three_col',
-                            children=(f'Account tree is derived from tree source file if present, or transaction source if not.  Within each source, {CONSTANTS["fan_col"]} is preferred over "parent".')),  # NOQA
+                            children=(f'Account tree is derived from tree source file if present, or transaction source if not.  Within each source, {CONST["fan_col"]} is preferred over "parent".')),  # NOQA
                     ])
             ]),
         html.Div(
@@ -111,7 +109,7 @@ layout = html.Div(
                             persistence=True,
                             persistence_type='memory',
                             size='1',
-                            placeholder=CONSTANTS['delim'],
+                            placeholder=CONST['delim'],
                             debounce=True),
                         html.Label(
                             htmlFor='ds_delimiter',
@@ -203,5 +201,15 @@ def apply_settings(account_label: str,
     """ Store all manually input setting information into the control node, which in turn will update
     the control store, for use during load """
 
-    controls: Controls = Controls(account_label, amount_label, date_label, desc_label, fullname_label, ds_data_title, ds_delimiter, ds_unit, ds_label, bs_label, ex_label)
+    controls: Controls = Controls(account_label,
+                                  amount_label,
+                                  date_label,
+                                  desc_label,
+                                  fullname_label,
+                                  ds_data_title,
+                                  ds_delimiter,
+                                  ds_unit,
+                                  ds_label,
+                                  bs_label,
+                                  ex_label)
     return [controls.to_json()]

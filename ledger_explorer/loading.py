@@ -12,7 +12,7 @@ import urllib
 
 from app import app
 
-from utils import ATree, CONSTANTS, LError, get_descendents
+from utils import ATree, CONST, LError, get_descendents
 
 
 class LoadError(LError):
@@ -33,11 +33,11 @@ class Controls():
     init_time_span: str = True
     init_time_res: int = 3
     ds_data_title: str = 'Ledger'
-    ds_delimiter: str = CONSTANTS['delim']
-    ds_unit: str = CONSTANTS['unit']
-    ds_label: str = CONSTANTS['ds_label']
-    bs_label: str = CONSTANTS['bs_label']
-    ex_label: str = CONSTANTS['ex_label']
+    ds_delimiter: str = CONST['delim']
+    ds_unit: str = CONST['unit']
+    ds_label: str = CONST['ds_label']
+    bs_label: str = CONST['bs_label']
+    ex_label: str = CONST['ex_label']
     ex_account_filter: Iterable = ()
     bs_account_filter: Iterable = ()
 
@@ -145,8 +145,8 @@ def load_input_file(input_file, url: str, filename: str) -> Iterable:
 def load_transactions(data: pd.DataFrame):
     """
     Load a json_encoded dataframe matching the transaction export format from Gnucash.
-    Uses column names CONSTANTS['account_col'], 'Description', 'Memo', Notes',
-    CONSTANTS['fan_col'], 'Date', 'Amount Num.'
+    Uses column names CONST['account_col'], 'Description', 'Memo', Notes',
+    CONST['fan_col'], 'Date', 'Amount Num.'
     """
     if len(data) == 0:
         raise LError('No data in file')
@@ -180,7 +180,7 @@ def load_transactions(data: pd.DataFrame):
     data.fillna('', inplace=True)  # Any remaining fields with invalid numerical data should be text fields
     data.where(data.notnull(), None)
 
-    trans = data[['date', 'description', 'amount', CONSTANTS['account_col'], CONSTANTS['fan_col']]]
+    trans = data[['date', 'description', 'amount', CONST['account_col'], CONST['fan_col']]]
     return trans
 
 
@@ -203,29 +203,29 @@ def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
     # look for account tree in separate tree file.  Apply renaming, if any.
     if len(raw_tree) > 0:
         raw_tree = rename_columns(raw_tree, parameters)
-        if CONSTANTS['fan_col'] in raw_tree.columns:
-            atree = ATree.from_names(raw_tree[CONSTANTS['fan_col']], parameters.ds_delimiter)
-        elif set([CONSTANTS['parent_col'], CONSTANTS['account_col']]).issubset(raw_tree.columns):
-            atree = ATree.from_parents(raw_tree[[CONSTANTS['account_col'], CONSTANTS['parent_col']]])
+        if CONST['fan_col'] in raw_tree.columns:
+            atree = ATree.from_names(raw_tree[CONST['fan_col']], parameters.ds_delimiter)
+        elif set([CONST['parent_col'], CONST['account_col']]).issubset(raw_tree.columns):
+            atree = ATree.from_parents(raw_tree[[CONST['account_col'], CONST['parent_col']]])
 
     # if we don't have a viable atree from an external file,
     # try to get it from the trans file.
     if len(atree) == 0:
         if 'full account name' in trans.columns:
-            atree = ATree.from_names(trans[CONSTANTS['fan_col']], parameters.ds_delimiter)
-        elif set([CONSTANTS['parent_col'], 'account name']).issubset(trans.columns):
-            atree = ATree.from_parents(trans[[CONSTANTS['account_col'], CONSTANTS['parent_col']]])
+            atree = ATree.from_names(trans[CONST['fan_col']], parameters.ds_delimiter)
+        elif set([CONST['parent_col'], 'account name']).issubset(trans.columns):
+            atree = ATree.from_parents(trans[[CONST['account_col'], CONST['parent_col']]])
 
     # Because treelib can't be restored from JSON, store it denormalized in
-    # trans[CONSTANTS['fan_col']] (for simplicity, overwrite if it's already there)
+    # trans[CONST['fan_col']] (for simplicity, overwrite if it's already there)
     if len(atree) > 0:
         trans = ATree.stuff_tree_into_trans(trans, atree)
 
     # Special case for Gnucash and other ledger data.  TODO: generalize
     # mangle amounts signs for known account types, to make graphs least surprising
-    for account in [ra for ra in CONSTANTS['root_accounts'] if ra['flip_negative'] is True]:
+    for account in [ra for ra in CONST['root_accounts'] if ra['flip_negative'] is True]:
         if atree.get_node(account['id']):
-            trans['amount'] = np.where(trans[CONSTANTS['account_col']].isin(get_descendents(account['id'], atree)),
+            trans['amount'] = np.where(trans[CONST['account_col']].isin(get_descendents(account['id'], atree)),
                                        trans['amount'] * -1,
                                        trans['amount'])
 
