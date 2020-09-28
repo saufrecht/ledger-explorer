@@ -19,7 +19,7 @@ Quickly navigate through flow and balance charts as line charts, drill down into
    * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
    * ![Screenshot](/assets/cash_flow_1.jpg)
 
-* [Greenhouse Gas emissions by country over time](/ex/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual)  # NOQA
+* [Greenhouse Gas emissions by country over time](/ex/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual)
    * loads data directly from external source [Our World in Data]({owid_co2_url})
    * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
    * ![Screenshot](/assets/co2_1.jpg)
