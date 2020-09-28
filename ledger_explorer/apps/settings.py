@@ -5,8 +5,7 @@ from dash.dependencies import Input, Output
 
 from app import app
 
-from utils import CONST
-from loading import Controls
+from params import Params, CONST
 
 
 layout = html.Div(
@@ -201,15 +200,15 @@ def apply_settings(account_label: str,
     """ Store all manually input setting information into the control node, which in turn will update
     the control store, for use during load """
 
-    controls: Controls = Controls(account_label,
-                                  amount_label,
-                                  date_label,
-                                  desc_label,
-                                  fullname_label,
-                                  ds_data_title,
-                                  ds_delimiter,
-                                  ds_unit,
-                                  ds_label,
-                                  bs_label,
-                                  ex_label)
+    controls: Params = Params(account_label,
+                              amount_label,
+                              date_label,
+                              desc_label,
+                              fullname_label,
+                              ds_data_title,
+                              ds_delimiter,
+                              ds_unit,
+                              ds_label,
+                              bs_label,
+                              ex_label)
     return [controls.to_json()]

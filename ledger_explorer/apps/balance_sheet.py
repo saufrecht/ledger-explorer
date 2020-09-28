@@ -8,11 +8,10 @@ import plotly.graph_objects as go
 import dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import TIME_RES_LOOKUP, TIME_RES_OPTIONS
 from utils import chart_fig_layout, data_from_json_store, bs_trans_table
 from utils import get_descendents, pretty_date
 from utils import make_cum_area
-
+from params import CONST
 from app import app
 
 
@@ -33,7 +32,7 @@ layout: html = html.Div(
                         ),
                         dcc.RadioItems(
                             id='bs_period',
-                            options=[x for x in TIME_RES_OPTIONS if x['label'] != 'Era'],
+                            options=[x for x in CONST['time_res_options'] if x['label'] != 'Era'],
                             value=3,
                             style={'height': '1.2rem',
                                    'color': 'var(--fg)',
@@ -69,7 +68,7 @@ def bs_set_period(period_value, data_store):
     """ When the balance sheet period selector changes, update the time series """
 
     try:
-        period = TIME_RES_LOOKUP[period_value]
+        period = CONST['time_res_lookup'][period_value]
     except IndexError:
         logging.critical(f'Bad data from period selectors: time_resolution {period}')
         return

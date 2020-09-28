@@ -7,59 +7,16 @@ from treelib import Tree
 from treelib import exceptions as tle
 from typing import Dict, Tuple
 
-
-from app import app
 from dash.exceptions import PreventUpdate
 import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
 
+from app import app
+from params import CONST
+
 
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
-
-
-# TODO: should all CONST be default values in Controls class?
-# TODO: rename Controls to Params
-CONST = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
-             'account_col': 'account',
-             'fan_col': 'full account name',
-             'date_col': 'date',
-             'desc_col': 'description',
-             'amount_col': 'amount',
-             'delim': ':',
-             'unit': '$',
-             'gc_col_labels': [('amount num.',  'amount'), ('account name', 'account')],  # defaults for gnucash
-             'ex_label': 'Cash Flow',
-             'bs_label': 'Balance Sheet',
-             'ds_label': 'Files',
-             'root_accounts': [{'id': 'Assets', 'flip_negative': False},
-                               {'id': 'Equity', 'flip_negative': True},
-                               {'id': 'Expenses', 'flip_negative': True},
-                               {'id': 'Income', 'flip_negative': True},
-                               {'id': 'Liabilities', 'flip_negative': True}],
-             }
-
-
-LEAF_SUFFIX: str = ' [Leaf]'
-OTHER_PREFIX: str = 'Other '
-MAX_SLICES: int = 7  # TODO: expose this in a control
-
-SUBTOTAL_SUFFIX: str = ' [Subtotal]'
-TIME_RES_LOOKUP: dict = {  # TODO: since index values are now exposed in URL, use label as index
-    1: {'label': 'Era', 'abbrev': 'era'},
-    2: {'label': 'Year', 'abbrev': 'Y', 'resample_keyword': 'A', 'months': 12, 'format': '%Y'},
-    5: {'label': 'Decade', 'abbrev': '10Y', 'resample_keyword': '10A', 'months': 120, 'format': '%Y'},
-    3: {'label': 'Quarter', 'abbrev': 'Q', 'resample_keyword': 'Q', 'months': 3, 'format': '%Y-Q%q'},
-    4: {'label': 'Month', 'abbrev': 'Mo', 'resample_keyword': 'M', 'months': 1, 'format': '%Y-%b'}}
-TIME_RES_OPTIONS: list = [
-    {'value': 1, 'label': 'Era'},
-    {'value': 5, 'label': 'Decade'},
-    {'value': 2, 'label': 'Year'},
-    {'value': 3, 'label': 'Quarter'},
-    {'value': 4, 'label': 'Month'}]
-TIME_SPAN_LOOKUP: dict = {  # TODO: move into constants and rename to something less confusing
-    True: {'label': 'Annualized', 'abbrev': ' ⁄y', 'months': 12},
-    False: {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}
 
 
 class LError(Exception):
@@ -166,7 +123,7 @@ class ATree(Tree):
                                              identifier=name,
                                              parent=parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.info(f'Problem building account tree: {E}')
+                app.logger.warning(f'Problem building account tree: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -197,7 +154,7 @@ class ATree(Tree):
                                      identifier=name,
                                      parent=parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.info(f'Error creating parent list: {E}')
+                app.logger.warning(f'Error creating parent list: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -209,7 +166,7 @@ class ATree(Tree):
                 parent = row[1]
                 tree.move_node(name, parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.info(f'Error moving node: {E}')
+                app.logger.warning(f'Error moving node: {E}')
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -482,7 +439,7 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
                             dtype={'index': 'str', 'date_start': 'datetime64', 'date_end': 'datetime64'})
         # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
     except Exception as E:
-        app.logger.info(f'Error parsing eras: {E}')
+        app.logger.warning(f'Error parsing eras: {E}')
         eras = pd.DataFrame()
 
     if len(eras) > 0:
@@ -494,7 +451,12 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
 
     unit = data.get('unit', '$')  # TODO: get rid of this; UNIT should come from controls
 
-    return {'trans': trans, 'eras': eras, 'account_tree': account_tree, 'earliest_trans': earliest_trans, 'latest_trans': latest_trans, 'unit': unit}  # NOQA
+    return {'trans': trans,
+            'eras': eras,
+            'account_tree': account_tree,
+            'earliest_trans': earliest_trans,
+            'latest_trans': latest_trans,
+            'unit': unit}  # NOQA
 
 
 def get_descendents(account_id: str, account_tree: Tree) -> list:
@@ -515,28 +477,26 @@ def get_descendents(account_id: str, account_tree: Tree) -> list:
 
 def make_bar(trans: pd.DataFrame,
              account_tree: Tree,
-             eras: pd.DataFrame,
              account_id: str,
+             time_resolution: str,
+             time_span: str,
+             eras: pd.DataFrame,
              color_num: int = 0,
-             time_resolution: int = 0,
-             time_span: int = 1,
              deep: bool = False) -> go.Bar:
     """ returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts. """
-
     if deep:
         tba = trans[trans[CONST['account_col']].isin([account_id] + get_descendents(account_id, account_tree))]
     else:
         tba = trans[trans[CONST['account_col']] == account_id]
-
     tba = tba.set_index('date')
-    tr: dict = TIME_RES_LOOKUP[time_resolution]
+    tr: dict = CONST['time_res_lookup'][time_resolution]
     tr_hover: str = tr.get('abbrev', None)      # e.g., "Q"
     tr_label: str = tr.get('label', None)       # e.g., "Quarter"
     tr_months: int = tr.get('months', None)     # e.g., 3
     tr_format: str = tr.get('format', None)     # e.g., %Y-%m
 
-    ts = TIME_SPAN_LOOKUP[time_span]
+    ts = CONST['time_span_lookup'][time_span]
     ts_hover = ts.get('abbrev')      # NOQA  e.g., "y"
     ts_months = ts.get('months')     # e.g., 12
 
@@ -633,7 +593,7 @@ def make_cum_area(
     """ returns an object with cumulative total by time_resolution period for
     the selected account."""
 
-    tr = TIME_RES_LOOKUP[time_resolution]
+    tr = CONST['time_res_lookup'][time_resolution]
     resample_keyword = tr['resample_keyword']
     trans = trans.set_index('date')
 
@@ -679,13 +639,12 @@ def make_scatter(account_id: str, trans: pd.DataFrame, color_num: int = 0):
     return trace
 
 
-def make_sunburst(
-        trans: pd.DataFrame,
-        date_start: np.datetime64 = None,
-        date_end: np.datetime64 = None,
-        SUBTOTAL_SUFFIX: str = None,
-        time_span: int = 1,
-        colormap: Dict = {}):
+def make_sunburst(trans: pd.DataFrame,
+                  time_span: str,
+                  date_start: np.datetime64 = None,
+                  date_end: np.datetime64 = None,
+                  subtotal_suffix: str = CONST['subtotal_suffix'],
+                  colormap: Dict = {}):
     """
     Using a tree of accounts and a DataFrame of transactions,
     generate a figure for a sunburst, where each node is an account
@@ -701,7 +660,7 @@ def make_sunburst(
     if not date_end:
         date_end = pd.Timestamp.now()
 
-    ts = TIME_SPAN_LOOKUP[time_span]
+    ts = CONST['time_span_lookup'][time_span]
     ts_months = ts.get('months')     # e.g., 12
 
     duration_m = pd.to_timedelta((date_end - date_start), unit='ms') / np.timedelta64(1, 'M')
@@ -786,14 +745,14 @@ def make_sunburst(
             # the root node, which doesn't need a rename
             # and will look worse if it gets one
             if node_id != _sun_tree.ROOT_ID:
-                subtotal_tag = tag + SUBTOTAL_SUFFIX
+                subtotal_tag = tag + CONST['subtotal_suffix']
                 _sun_tree.update_node(node_id, tag=subtotal_tag)
 
             # If it has its own leaf_total, move that amount
             # to a new leaf node
             if leaf_total > 0:
 
-                new_leaf_id = node_id + LEAF_SUFFIX
+                new_leaf_id = node_id + CONST['leaf_suffix']
                 node.data['leaf_total'] = 0
                 _sun_tree.create_node(identifier=new_leaf_id,
                                       tag=tag,
@@ -836,8 +795,8 @@ def make_sunburst(
         nonlocal _sun_tree
         node_id = node.identifier
         children = _sun_tree.children(node_id)
-        if len(children) > (MAX_SLICES - 2):
-            other_id = OTHER_PREFIX + node_id
+        if len(children) > (CONST['max_slices'] - 2):
+            other_id = CONST['other_prefix'] + node_id
             other_subtotal = 0
             _sun_tree.create_node(identifier=other_id,
                                   tag=other_id,
@@ -848,7 +807,7 @@ def make_sunburst(
                           for x in children]
             sorted_list = sorted(total_list, key=lambda k: k['total'], reverse=True)
             for i, child in enumerate(sorted_list):
-                if i > (MAX_SLICES - 2):
+                if i > (CONST['max_slices'] - 2):
                     other_subtotal += child['total']
                     _sun_tree.move_node(child['identifier'], other_id)
             _sun_tree.update_node(other_id, data=dict(total=other_subtotal))
@@ -1012,8 +971,8 @@ def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans
     sel_accounts = []
     filtered_trans = pd.DataFrame()
     desc_account_count = 0
-    tr_label = TIME_RES_LOOKUP[time_resolution]['label']
-    ts_label = TIME_SPAN_LOOKUP[time_span]['label']
+    tr_label = CONST['time_res_lookup'].get(time_resolution)['label']
+    ts_label = CONST['time_span_lookup'].get(time_span)['label']
 
     if len(trans) == 0:
         raise PreventUpdate  # TODO: don't raise this in functions; return an error and handle it upstairs
@@ -1071,7 +1030,7 @@ def trans_to_burst(account_tree, eras, figure, time_resolution, time_span, trans
 
     time_series_selection_info = {'start': min_period_start, 'end': max_period_end, 'count': len(filtered_trans)}
     title = f'Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}'
-    sun_fig = make_sunburst(filtered_trans, min_period_start, max_period_end,
-                            SUBTOTAL_SUFFIX, time_span, colormap)
+    sun_fig = make_sunburst(filtered_trans, time_span, min_period_start, max_period_end,
+                            CONST['subtotal_suffix'], colormap)
 
     return (sel_accounts_content, time_series_selection_info, sun_fig, title)

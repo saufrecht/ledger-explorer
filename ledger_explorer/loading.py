@@ -1,8 +1,5 @@
 import base64
-from dataclasses import dataclass
 import io
-import json
-from types import SimpleNamespace
 import numpy as np
 import pandas as pd
 from treelib import Tree
@@ -11,48 +8,14 @@ import urllib
 
 
 from app import app
-
-from utils import ATree, CONST, LError, get_descendents
+from params import Params, CONST
+from utils import ATree, LError, get_descendents
 
 
 class LoadError(LError):
     """ Errors during transaction, Account Tree, and Eras data load """
     def __init__(self, message):
         self.message = message
-
-
-@dataclass
-class Controls():
-    """ Class to hold everything to do with settings & controls """
-    # Default to the column headings of Gnucash exports
-    account_label: str = 'Account Name'
-    amount_label: str = 'Amount Num.'
-    date_label: str = 'Date'
-    desc_label: str = 'Description'
-    fan_label: str = 'Full Account Name'
-    init_time_span: str = True
-    init_time_res: int = 3
-    ds_data_title: str = 'Ledger'
-    ds_delimiter: str = CONST['delim']
-    ds_unit: str = CONST['unit']
-    ds_label: str = CONST['ds_label']
-    bs_label: str = CONST['bs_label']
-    ex_label: str = CONST['ex_label']
-    ex_account_filter: Iterable = ()
-    bs_account_filter: Iterable = ()
-
-    def to_json(self):
-        """ Convert controls to JSON via dict structure """
-        return json.dumps(self, default=lambda x: x.__dict__)
-
-    @classmethod
-    def from_json(cls, json_data: str):
-        """ Convert controls to JSON via dict structure """
-        if json_data and isinstance(json_data, str) and len(json_data) > 0:
-            body = json.loads(json_data, object_hook=lambda d: SimpleNamespace(**d))
-            return body
-        else:
-            return Controls()
 
 
 def load_eras(data, earliest_date, latest_date):
@@ -66,7 +29,7 @@ def load_eras(data, earliest_date, latest_date):
         data['date_end'] = data['date_end'].astype({'date_end': 'datetime64'})
         # TODO: filter out out-of-order rows
     except Exception as E:
-        app.logger.critical(f'Error parsing eras file: {E}')
+        app.logger.warning(f'Error parsing eras file: {E}')
         return pd.DataFrame()
 
     data = data.sort_values(by=['date_start'], ascending=True)
@@ -102,7 +65,7 @@ def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
     return data
 
 
-def rename_columns(data: pd.DataFrame, parameters: Controls) -> pd.DataFrame:
+def rename_columns(data: pd.DataFrame, parameters: Params) -> pd.DataFrame:
     """ Make all column names lower-case. Renames any mapped columns. """
     data.columns = [x.lower() for x in data.columns]  # n.b. Changes in place
 
@@ -184,7 +147,7 @@ def load_transactions(data: pd.DataFrame):
     return trans
 
 
-def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, parameters: Controls) -> Iterable:  # NOQA
+def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: pd.DataFrame, parameters: Params) -> Iterable:  # NOQA
     """ Try and convert the provided data into usable transaction, tree,
     and era data.  Includes column renaming, and field-level business logic.
     Return dataframe of transactions, tree object of atree, and

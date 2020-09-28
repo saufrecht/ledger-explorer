@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
+import json
 import pandas as pd
 import numpy as np
 
@@ -8,13 +9,12 @@ import plotly.graph_objects as go
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import TIME_RES_OPTIONS, TIME_RES_LOOKUP, TIME_SPAN_LOOKUP, LEAF_SUFFIX, SUBTOTAL_SUFFIX
 from utils import chart_fig_layout, data_from_json_store
 from utils import get_children, get_descendents
 from utils import make_bar
 from utils import ex_trans_table
 from utils import trans_to_burst
-from loading import Controls
+from params import Params, CONST
 from app import app
 
 
@@ -42,7 +42,7 @@ layout = html.Div(
                                 ),
                                 dcc.RadioItems(
                                     id='ex_time_series_resolution',
-                                    options=TIME_RES_OPTIONS,
+                                    options=CONST['time_res_options'],
                                     style={'height': '1.2rem',
                                            'color': 'var(--fg)',
                                            'backgroundColor': 'var(--bg-more)'}
@@ -89,18 +89,35 @@ layout = html.Div(
     ])
 
 
-@app.callback(
-    [Output('ex_master_time_series', 'figure')],
-    [Input('ex_time_series_resolution', 'value'),
-     Input('ex_time_series_span', 'value'),
-     Input('tab_draw_trigger', 'children')],
-    state=[State('data_store', 'children'),
-           State('control_store', 'children')])
-def make_time_series(time_resolution: int, time_span: bool, trigger, data_store: str, control_store: str):
+@app.callback([Output('ex_time_series_resolution', 'value'),
+               Output('ex_time_series_resolution', 'options'),
+               Output('ex_time_series_span', 'value')],
+              [Input('control_store', 'children')],
+              state=[State('data_store', 'children')])
+def load_controls(control_store: str, data_store: str):
+    if control_store and len(control_store) > 0:
+        params = Params(**json.loads(control_store))
+    else:
+        raise PreventUpdate
+    options = CONST['time_res_options']
+    dd = data_from_json_store(data_store)
+    eras = dd.get('eras')
+    if len(eras) > 0:
+        options = [CONST['time_res_era_option']] + options
+
+    return [params.init_time_res, options, params.init_time_span]
+
+
+@app.callback([Output('ex_master_time_series', 'figure')],
+              [Input('ex_time_series_resolution', 'value'),
+               Input('ex_time_series_span', 'value')],
+              state=[State('data_store', 'children'),
+                     State('control_store', 'children')])
+def make_time_series(time_resolution: int, time_span: bool, data_store: str, control_store: str):
+
     if not data_store:
         raise PreventUpdate
-    controls = Controls.from_json(control_store)
-
+    controls = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = controls.init_time_res
 
@@ -108,19 +125,19 @@ def make_time_series(time_resolution: int, time_span: bool, trigger, data_store:
         time_span = controls.init_time_span
 
     try:
-        tr = TIME_RES_LOOKUP[time_resolution]
-        ts = TIME_SPAN_LOOKUP[time_span]
-        ts_label = ts.get('label')      # e.g., 'Annual' or 'Monthly'
-        tr_label = tr.get('label')          # e.g., 'by Era'
+        tr_label = CONST['time_res_lookup'][time_resolution]['label']  # e.g., 'by Era'
+        ts_label = CONST['time_span_lookup'][time_span]['label']       # e.g., 'Annual' or 'Monthly'
+
     except KeyError as E:
-        app.logger.info(f'Bad data from period selectors: time_resolution {time_resolution}, time_span {time_span}. {E}')
+        app.logger.warning(f'Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}')
         raise PreventUpdate
 
+    app.logger.critical(f'in explorer, filter is {controls.ex_account_filter}')
     dd = data_from_json_store(data_store, controls.ex_account_filter)
 
     trans = dd.get('trans')
     eras = dd.get('eras')
-    if time_resolution == 1 and len(eras) == 0:
+    if time_resolution == 'era' and len(eras) == 0:
         raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
     account_tree = dd.get('account_tree')
     unit = dd.get('unit')
@@ -130,7 +147,7 @@ def make_time_series(time_resolution: int, time_span: bool, trigger, data_store:
     selected_accounts = get_children(root_account_id, account_tree)
 
     for i, account in enumerate(selected_accounts):
-        chart_fig.add_trace(make_bar(trans, account_tree, eras, account, i, time_resolution, time_span, deep=True))
+        chart_fig.add_trace(make_bar(trans, account_tree, account, time_resolution, time_span, eras, i, deep=True))
 
     ts_title = f'Average {ts_label} {unit}, by {tr_label} '
     chart_fig.update_layout(
@@ -166,7 +183,7 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     triggering.
 
     """
-    controls = Controls.from_json(control_store)
+    controls = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = controls.init_time_res
     if not time_span:
@@ -194,7 +211,6 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
 def apply_burst_click(burst_clickData, time_series_info, data_store):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
-
     TODO: maybe check for input safety?
     """
     dd = data_from_json_store(data_store)
@@ -215,10 +231,10 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     if burst_clickData:
         click_account = burst_clickData['points'][0]['id']
         # strip any SUFFFIXes from the label that were added in the sunburst hack
-        if LEAF_SUFFIX in click_account:
-            revised_id = click_account.replace(LEAF_SUFFIX, '')
-        elif SUBTOTAL_SUFFIX in click_account:
-            revised_id = click_account.replace(SUBTOTAL_SUFFIX, '')
+        if CONST['leaf_suffix'] in click_account:
+            revised_id = click_account.replace(CONST['leaf_suffix'], '')
+        elif CONST['subtotal_suffix'] in click_account:
+            revised_id = click_account.replace(CONST['subtotal_suffix'], '')
         else:
             revised_id = click_account
     else:

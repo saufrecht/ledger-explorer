@@ -13,8 +13,8 @@ from dash.exceptions import PreventUpdate
 from app import app
 from apps import balance_sheet, data_source, explorer, settings, hometab
 
-from utils import CONST
-from loading import LoadError, convert_raw_data, load_input_file, Controls
+from params import CONST, Params
+from loading import LoadError, convert_raw_data, load_input_file
 
 
 server = app.server
@@ -142,13 +142,20 @@ def parse_url_search(search: str):
     search = search.lstrip('?')
     inputs = parse_qs(search)
 
-    control_input_dict = {}
-    for key, value in vars(Controls()).items():
-        input_value = inputs.get(key, None)
-        if input_value and len(input_value) > 0:
-            control_input_dict[key] = input_value[0]
+    c_data = {}
+    for key, value in vars(Params()).items():
+        try:
+            input_value = inputs.get(key, None)[0]
+            if input_value and len(input_value) > 0 and isinstance(input_value, str):
+                c_data[key] = input_value
+        except TypeError:
+            pass
+        except Exception as E:
+            app.logger.warning(f'failed to parse url input key: {key}, value: {value}.  Error {E}')
+    c_data['ex_account_filter'] = Params.parse_account_string(c_data['ex_account_filter'])
+    c_data['bs_account_filter'] = Params.parse_account_string(c_data['bs_account_filter'])
 
-    control = Controls(**control_input_dict).to_json()
+    control = Params(**c_data).to_json()
 
     raw_trans = None
     trans_input = inputs.get('transu', None)
@@ -160,7 +167,7 @@ def parse_url_search(search: str):
                 if len(t_data) > 0:
                     raw_trans = t_data.to_json()
         except Exception as E:
-            app.logger.info(f'Failed to load {transu} because {E}')
+            app.logger.warning(f'Failed to load {transu} because {E}')
 
     raw_atree = None
     atree_input = inputs.get('atreeu', None)
@@ -217,7 +224,6 @@ def load_and_transform(trans_file_node: str,
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     else:
         trigger_id = None
-    app.logger.info(f'control_urlnode is {control_urlnode}')
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
@@ -274,8 +280,7 @@ def load_and_transform(trans_file_node: str,
             else:
                 c_source = None
 
-            controls = Controls(**c_source)
-            app.logger.info(f'controls are {controls}')
+            controls = Params(**c_source)
             trans, atree, eras = convert_raw_data(trans_data, atree_data, eras_data, controls)
 
             data = json.dumps({'trans': trans.to_json(),
