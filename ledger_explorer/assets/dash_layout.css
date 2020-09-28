@@ -24,12 +24,14 @@
 
 @media (prefers-color-scheme: light) {
     :root {
-        --bg-more: var(--lightest);
-        --bg:      var(--light);         /* body background */
-        --fg:      var(--dark-light);
-        --fg-less: var(--dark-lighter);
-        --fg-more: var(--darkest);
-        --accent:  var(--magenta);
+        --bg-more:  var(--lightest);
+        --bg:       var(--light);         /* body background */
+        --fg:       var(--dark-light);
+        --fg-less:  var(--dark-lighter);
+        --fg-more:  var(--darkest);
+        --link:     rgba(54, 154, 226, 0.4);
+        --link-vis: rgba(83, 84, 150, 0.4);
+        --accent:   var(--magenta);
         --body-shadow: 0.1em 0.2em 0.3em rgba(0, 0, 0, 0.3), 0.2em 0.3em 0.3em 0 rgba(0, 0, 0, 0.28);
         --box-shadow: 0.1em 0.1em 0.2em rgba(0, 0, 0, 0.2), 0.1em 0.2em .4em 0 rgba(0, 0, 0, 0.19);
     }
@@ -42,7 +44,9 @@
         --fg:       var(--dark-lightest);
         --fg-less:  var(--dark-lighterer);
         --fg-more:  var(--dark-lightest);
-        --accent:  var(--magenta);
+        --link-vis: rgba(133, 106, 203, 0.4);
+        --link:     #369be2;
+        --accent:   var(--magenta);
         --body-shadow: none;
         --box-shadow: none;
     }
@@ -102,6 +106,14 @@ h3 {
 h4 {
   font-size: 120%;
   margin-bottom: 1rem;
+}
+
+a {
+    color: var(--link);
+}
+
+a:visited {
+    color: var(--link-vis);
 }
 
 /*———————————————————————————————————————————————————————————*/
@@ -380,4 +392,30 @@ button {
   color: var(--violet)!important;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.radio {
+  align-items: center;
+}
+
+.radio input[type='radio'] {
+  appearance: none;
+  border-radius: 30%;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--accent);
+  margin-right: 0.2rem;
+  cursor: pointer;
+}
+
+.radio input[type='radio']:checked {
+  border: 1px solid var(--bg-more);
+  background-color: var(--bg-more);
+  cursor: default;
+}
+
+.radio label {
+    display: inline-block;
+    font-size: 1.1rem;
+    margin: 0.1rem;
 }

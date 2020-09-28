@@ -147,13 +147,13 @@ def parse_url_search(search: str):
         try:
             input_value = inputs.get(key, None)[0]
             if input_value and len(input_value) > 0 and isinstance(input_value, str):
+                if key in ['ex_account_filter', 'bs_account_filter']:
+                    value = Params.parse_account_string(value)
                 c_data[key] = input_value
         except TypeError:
             pass
         except Exception as E:
             app.logger.warning(f'failed to parse url input key: {key}, value: {value}.  Error {E}')
-    c_data['ex_account_filter'] = Params.parse_account_string(c_data['ex_account_filter'])
-    c_data['bs_account_filter'] = Params.parse_account_string(c_data['bs_account_filter'])
 
     control = Params(**c_data).to_json()
 

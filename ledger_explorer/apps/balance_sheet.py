@@ -1,4 +1,3 @@
-import logging
 import dash_core_components as dcc
 import dash_html_components as html
 from more_itertools import intersperse
@@ -11,11 +10,9 @@ from dash.exceptions import PreventUpdate
 from utils import chart_fig_layout, data_from_json_store, bs_trans_table
 from utils import get_descendents, pretty_date
 from utils import make_cum_area
-from params import CONST
+from params import Params, CONST
 from app import app
 
-
-ACCOUNTS: list = ['Assets', 'Liabilities', 'Equity']
 
 layout: html = html.Div(
     className="layout_box",
@@ -25,37 +22,35 @@ layout: html = html.Div(
             id='bs_time_series_box',
             children=[
                 html.Fieldset(
-                    className='control_bar',
+                    className='flex_forward radio',
                     children=[
-                        html.Span(
-                            children='Group By ',
-                        ),
-                        dcc.RadioItems(
-                            id='bs_period',
-                            options=[x for x in CONST['time_res_options'] if x['label'] != 'Era'],
-                            value=3,
-                            style={'height': '1.2rem',
-                                   'color': 'var(--fg)',
-                                   'backgroundColor': 'var(--bg-more)'}
-                        ),
+                        html.Span(children='Group By '),
+                        dcc.RadioItems(id='bs_period',
+                                       options=CONST['time_res_options']),
                     ]),
-                dcc.Graph(
-                    id='bsa_master_time_series'),
-                dcc.Graph(
-                    id='bsl_master_time_series'),
-                dcc.Graph(
-                    id='bse_master_time_series'),
+                dcc.Graph(id='bsa_master_time_series'),
+                dcc.Graph(id='bsl_master_time_series'),
+                dcc.Graph(id='bse_master_time_series'),
             ]),
         html.Div(
             id='bs_trans_table_box',
             children=[
-                html.Div(
-                    id='bs_trans_table_text',
-                    children=''
-                ),
+                html.Div(id='bs_trans_table_text',
+                         children=''),
                 bs_trans_table
             ]),
     ])
+
+
+@app.callback([Output('bs_period', 'value')],
+              [Input('control_store', 'children')])
+def load_bs_controls(control_store: str):
+    if control_store and len(control_store) > 0:
+        params = Params.from_json(control_store)
+    else:
+        raise PreventUpdate
+
+    return [params.init_time_res]
 
 
 @app.callback(
@@ -63,22 +58,28 @@ layout: html = html.Div(
      Output('bsl_master_time_series', 'figure'),
      Output('bse_master_time_series', 'figure')],
     [Input('bs_period', 'value')],
-    state=[State('data_store', 'children')])
-def bs_set_period(period_value, data_store):
+    state=[State('data_store', 'children'),
+           State('control_store', 'children')])
+def bs_set_period(period_value, data_store, control_store):
     """ When the balance sheet period selector changes, update the time series """
+
+    if control_store and len(control_store) > 0:
+        params = Params.from_json(control_store)
+    else:
+        raise PreventUpdate
 
     try:
         period = CONST['time_res_lookup'][period_value]
     except IndexError:
-        logging.critical(f'Bad data from period selectors: time_resolution {period}')
+        app.logger.warning(f'Bad data from period selectors: time_resolution {period}')
         return
 
-    dd = data_from_json_store(data_store, ACCOUNTS)
+    dd = data_from_json_store(data_store, params.bs_account_filter)
     trans = dd.get('trans')
     account_tree = dd.get('account_tree')
 
     result = []
-    for account in ACCOUNTS:
+    for account in params.bs_account_filter:
         chart_fig = go.Figure(layout=chart_fig_layout)
         subaccounts = get_descendents(account, account_tree)
         for i, subaccount in enumerate(subaccounts):
@@ -103,15 +104,21 @@ def bs_set_period(period_value, data_store):
      Output('bs_trans_table_text', 'children')],
     [Input('bsa_master_time_series', 'selectedData'),
      Input('bsl_master_time_series', 'selectedData'),
-     Input('bse_master_time_series', 'selectedData'),
-     Input('data_store', 'children')])
+     Input('bse_master_time_series', 'selectedData')],
+    state=[State('data_store', 'children'),
+           State('control_store', 'children')])
 def apply_selection_from_bs_time_series(bsa_master_time_series,
                                         bsl_master_time_series,
-                                        bse_master_time_series, data_store):
+                                        bse_master_time_series, data_store, control_store):
     """
     selecting a point or points in the time series updates the transaction table to show
     all transactions up to that point
     """
+    if control_store and len(control_store) > 0:
+        params = Params.from_json(control_store)
+    else:
+        raise PreventUpdate
+
     ctx = dash.callback_context
     click = ctx.triggered[0]['prop_id'].split('.')[0]
     if not data_store or len(click) == 0:
@@ -119,7 +126,7 @@ def apply_selection_from_bs_time_series(bsa_master_time_series,
     inputs = {'bsa_master_time_series': bsa_master_time_series, 'bsl_master_time_series': bsl_master_time_series,
               'bse_master_time_series': bse_master_time_series}
     selection = inputs[click]
-    dd = data_from_json_store(data_store, ACCOUNTS)
+    dd = data_from_json_store(data_store, params.bs_account_filter)
     trans = dd.get('trans')
 
     trans_filter: dict = {}

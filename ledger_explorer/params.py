@@ -55,7 +55,9 @@ CONST = {'parent_col': 'parent account',  # TODO: move the column names into Tra
                               {'value': 'month', 'label': 'Month'}],
          'time_res_era_option': {'value': 'era', 'label': 'Era'},
          'time_span_lookup': {'annual': {'label': 'Annualized', 'abbrev': ' ⁄y', 'months': 12},
-                              'monthly': {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}}}
+                              'monthly': {'label': 'Monthly', 'abbrev': ' ⁄mo', 'months': 1}},
+         'time_span_options': [{'value': 'annual', 'label': 'Annualized'},
+                               {'value': 'monthly', 'label': 'Monthly'}]}
 
 
 @dataclass

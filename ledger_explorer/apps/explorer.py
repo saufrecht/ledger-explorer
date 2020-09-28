@@ -1,5 +1,4 @@
 import dash_core_components as dcc
-import dash_daq as daq
 import dash_html_components as html
 import json
 import pandas as pd
@@ -21,69 +20,44 @@ from app import app
 layout = html.Div(
     className="layout_box",
     children=[
-        html.Div(
-            className="time_series_box",
-            children=[
-                dcc.Graph(
-                    id='ex_master_time_series'),
-                html.Div(
-                    className="control_bar",
-                    children=[
-                        dcc.Store(id='ex_time_series_selection_info',
-                                  storage_type='memory'),
-                        html.Div(
-                            id='ex_selected_trans_display',
-                            children=None),
-                        html.Fieldset(
-                            className='control_bar',
-                            children=[
-                                html.Span(
-                                    children='Group By ',
-                                ),
-                                dcc.RadioItems(
-                                    id='ex_time_series_resolution',
-                                    options=CONST['time_res_options'],
-                                    style={'height': '1.2rem',
-                                           'color': 'var(--fg)',
-                                           'backgroundColor': 'var(--bg-more)'}
-                                ),
-                            ]),
-                        html.Fieldset(
-                            className="control_bar",
-                            children=[
-                                html.Span(
-                                    children='Monthly',
-                                ),
-                                daq.ToggleSwitch(
-                                    id='ex_time_series_span',
-                                ),
-                                html.Span(
-                                    children='Annualized',
-                                ),
-                            ]),
-                    ]),
-            ]),
+        html.Div(className="time_series_box",
+                 children=[
+                     dcc.Graph(id='ex_master_time_series'),
+                     html.Div(className="control_bar",
+                              children=[
+                                  dcc.Store(id='ex_time_series_selection_info',
+                                            storage_type='memory'),
+                                  html.Div(id='ex_selected_trans_display',
+                                           children=None),
+                                  html.Fieldset(className='flex_forward radio',
+                                                children=[
+                                                    html.Span(children='Group By '),
+                                                    dcc.RadioItems(id='ex_time_series_resolution',
+                                                                   options=CONST['time_res_options'])
+                                                ]),
+                                  html.Fieldset(className='flex_forward radio',
+                                                children=[
+                                                    dcc.RadioItems(id='ex_time_series_span',
+                                                                   options=CONST['time_span_options']),
+                                                ]),
+                              ]),
+                 ]),
         html.Div(
             className="account_burst_box",
             children=[
                 html.Div([
-                    html.H3(
-                        id='ex_burst_title',
-                        children=''),
-                    html.Div(
-                        id='ex_selected_account_text',
-                        children='Click a pie slice to filter records'),
+                    html.H3(id='ex_burst_title',
+                            children=''),
+                    html.Div(id='ex_selected_account_text',
+                             children='Click a pie slice to filter records')
                 ]),
-                dcc.Graph(
-                    id='ex_account_burst'),
+                dcc.Graph(id='ex_account_burst')
             ]),
         html.Div(
             className='trans_table_box',
             children=[
-                html.Div(
-                    id='ex_trans_table_text',
-                    children=''
-                ),
+                html.Div(id='ex_trans_table_text',
+                         children=''),
                 ex_trans_table,
             ]),
     ])
@@ -94,7 +68,7 @@ layout = html.Div(
                Output('ex_time_series_span', 'value')],
               [Input('control_store', 'children')],
               state=[State('data_store', 'children')])
-def load_controls(control_store: str, data_store: str):
+def load_ex_controls(control_store: str, data_store: str):
     if control_store and len(control_store) > 0:
         params = Params(**json.loads(control_store))
     else:
@@ -113,8 +87,7 @@ def load_controls(control_store: str, data_store: str):
                Input('ex_time_series_span', 'value')],
               state=[State('data_store', 'children'),
                      State('control_store', 'children')])
-def make_time_series(time_resolution: int, time_span: bool, data_store: str, control_store: str):
-
+def make_time_series(time_resolution: int, time_span: str, data_store: str, control_store: str):
     if not data_store:
         raise PreventUpdate
     controls = Params.from_json(control_store)
@@ -132,7 +105,6 @@ def make_time_series(time_resolution: int, time_span: bool, data_store: str, con
         app.logger.warning(f'Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}')
         raise PreventUpdate
 
-    app.logger.critical(f'in explorer, filter is {controls.ex_account_filter}')
     dd = data_from_json_store(data_store, controls.ex_account_filter)
 
     trans = dd.get('trans')
