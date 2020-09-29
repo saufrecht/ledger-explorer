@@ -83,7 +83,6 @@ def rename_columns(data: pd.DataFrame, parameters: Params) -> pd.DataFrame:
 
 def load_input_file(input_file, url: str, filename: str) -> Iterable:
     """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
-
     data: pd.DataFrame() = pd.DataFrame()
     result_meta: str = ''
     new_filename: str = ''
@@ -130,10 +129,11 @@ def load_transactions(data: pd.DataFrame):
     # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
     try:
         data['date'] = data['date'].fillna(method='ffill')
-        data['description'] = data['description'].fillna(method='ffill').astype(str)
-        data['notes'] = data['notes'].fillna(method='ffill').astype(str)
-        data['notes'] = data['notes']
-        data['description'] = (data['description'] + ' ' + data['memo'] + ' ' + data['notes']).str.strip()
+        data['description'] = data['description'].fillna(method='ffill', limit=1).fillna('').astype(str)
+        data['notes'] = data['notes'].fillna(method='ffill', limit=1).fillna('').astype(str)
+        data['memo'] = data['memo'].fillna(method='ffill', limit=1).fillna('').astype(str)
+        data['description'] = data[['description', 'notes', 'memo']].agg(' '.join, axis=1)
+
     except Exception as E:  # NOQA
         # TODO: handle this better, so it runs only when gnucash is indicated
         pass

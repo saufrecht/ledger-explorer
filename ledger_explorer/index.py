@@ -228,7 +228,6 @@ def load_and_transform(trans_file_node: str,
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
-
     data: str = ''
     controls: Params = None
     trigger: bool = False
