@@ -1,11 +1,11 @@
-import dash_core_components as dcc
-import dash_html_components as html
 import json
 import pandas as pd
 import numpy as np
 
 import plotly.graph_objects as go
 
+import dash_core_components as dcc
+import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from utils import chart_fig_layout, data_from_json_store
@@ -69,6 +69,7 @@ layout = html.Div(
               [Input('control_store', 'children')],
               state=[State('data_store', 'children')])
 def load_ex_controls(control_store: str, data_store: str):
+    """ When the control store changes and this tab is visible, update the top controls"""
     if control_store and len(control_store) > 0:
         params = Params(**json.loads(control_store))
     else:
@@ -88,6 +89,7 @@ def load_ex_controls(control_store: str, data_store: str):
               state=[State('data_store', 'children'),
                      State('control_store', 'children')])
 def make_time_series(time_resolution: int, time_span: str, data_store: str, control_store: str):
+    """ Generate a Dash bar chart figure from transactional data """
     if not data_store:
         raise PreventUpdate
     controls = Params.from_json(control_store)

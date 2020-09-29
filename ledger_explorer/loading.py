@@ -85,19 +85,19 @@ def load_input_file(input_file, url: str, filename: str) -> Iterable:
     """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
 
     data: pd.DataFrame() = pd.DataFrame()
-    result_meta: str = None
-    new_filename: str = None
+    result_meta: str = ''
+    new_filename: str = ''
     if input_file:
         try:
-            data: pd.DataFrame = parse_base64_file(input_file, filename)
-            result_meta: str = f'File {filename} loaded, {len(data)} records.'
+            data = parse_base64_file(input_file, filename)
+            result_meta = f'File {filename} loaded, {len(data)} records.'
             new_filename = filename
         except urllib.error.HTTPError as E:
             result_meta = f'Error loading {filename}: {E}'
     elif url:
         try:
-            data: pd.DataFrame = pd.read_csv(url, thousands=',', low_memory=False)
-            result_meta: str = f'{url} loaded, {len(data)} records.'
+            data = pd.read_csv(url, thousands=',', low_memory=False)
+            result_meta = f'{url} loaded, {len(data)} records.'
             new_filename = url
         except (urllib.error.URLError, FileNotFoundError) as E:
             result_meta = f'Error loading {url}: {E}'

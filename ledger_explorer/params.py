@@ -3,8 +3,6 @@ import json
 from types import SimpleNamespace
 from typing import Iterable
 
-from app import app
-
 
 CONST = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
          'account_col': 'account',
@@ -70,7 +68,7 @@ class Params():
     desc_label: str = 'Description'
     fan_label: str = 'Full Account Name'
     init_time_span: str = 'monthly'
-    init_time_res: int = 'annual'
+    init_time_res: str = 'annual'
     ds_data_title: str = 'Ledger'
     ds_delimiter: str = CONST['delim']
     ds_unit: str = CONST['unit']

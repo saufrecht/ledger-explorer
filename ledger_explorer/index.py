@@ -145,12 +145,13 @@ def parse_url_search(search: str):
     c_data = {}
     for key, value in vars(Params()).items():
         try:
-            input_value = inputs.get(key, None)[0]
+            input_list: list = inputs.get(key, [])
+            input_value: str = input_list[0]
             if input_value and len(input_value) > 0 and isinstance(input_value, str):
                 if key in ['ex_account_filter', 'bs_account_filter']:
-                    value = Params.parse_account_string(value)
+                    input_value = Params.parse_account_string(input_value)
                 c_data[key] = input_value
-        except TypeError:
+        except (IndexError, TypeError):
             pass
         except Exception as E:
             app.logger.warning(f'failed to parse url input key: {key}, value: {value}.  Error {E}')
@@ -228,10 +229,11 @@ def load_and_transform(trans_file_node: str,
     # way, user uploads by file or url will override anything loaded
     # from the ledger_explorer url.
 
-    data = None
-    controls = None
-    trigger = False
-    status = None
+    data: str = ''
+    controls: Params = None
+    trigger: bool = False
+    status: str = ''
+    t_source: str = ''
     if trigger_id == 'trans_file_node':
         t_source = trans_file_node
     elif trigger_id == 'trans_urlfile_node':
@@ -242,7 +244,6 @@ def load_and_transform(trans_file_node: str,
         t_source = trans_urlfile_node
     else:
         status = 'No transaction data loaded.'
-        t_source = None
 
     if t_source and len(t_source) > 0:
         try:
@@ -286,8 +287,6 @@ def load_and_transform(trans_file_node: str,
             data = json.dumps({'trans': trans.to_json(),
                                'eras': eras.to_json()})
             controls = controls.to_json()
-
-            # TODO: this is probably the right place to change the Group By options if eras is missing
 
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = f'{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras.'

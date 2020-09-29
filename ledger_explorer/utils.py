@@ -34,7 +34,7 @@ class ATree(Tree):
         Work in progress, still prints to stdout."""
 
         if len(self) == 0:
-            return
+            return ''
 
         self._reader = ''
 
@@ -880,7 +880,7 @@ def pretty_records(trans: pd.DataFrame) -> list:
     if len(trans) == 0:
         return []
     else:
-        output = []
+        output: list = []
 
     list = trans.to_dict(orient='records')
     for row in list:
