@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from treelib import Tree
 from treelib import exceptions as tle
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 from dash.exceptions import PreventUpdate
 import dash_table
@@ -91,7 +91,7 @@ class ATree(Tree):
             return self
 
     @classmethod
-    def from_names(cls, full_names: list, delim: str = CONST['delim']) -> Tree:
+    def from_names(cls, full_names: pd.Series, delim: str = CONST['delim']) -> Tree:
         """extract all accounts from a list of Gnucash-like account paths
 
         Assumes each account name is a full path, delimiter is :.
@@ -877,17 +877,13 @@ def positize(trans):
 
 def pretty_records(trans: pd.DataFrame) -> list:
     """ Make a nice list of records """
-    if len(trans) == 0:
-        return []
-    else:
-        output: list = []
-
-    list = trans.to_dict(orient='records')
-    for row in list:
-        output = output + ['————————————']
-        for key in row.keys():
-            output = output + [f'{key}={row[key]}']
-
+    output: List = []
+    if len(trans) > 0:
+        list = trans.to_dict(orient='records')
+        for row in list:
+            output = output + ['————————————']
+            for key in row.keys():
+                output = output + [f'{key}={row[key]}']
     return output
 
 

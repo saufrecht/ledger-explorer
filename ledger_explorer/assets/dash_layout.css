@@ -410,12 +410,12 @@ button {
 
 .radio input[type='radio']:checked {
   border: 1px solid var(--bg-more);
-  background-color: var(--bg-more);
+  background-color: var(--accent);
   cursor: default;
 }
 
 .radio label {
-    display: inline-block;
-    font-size: 1.1rem;
-    margin: 0.1rem;
+  display: inline-block;
+  font-size: 1.1rem;
+  margin: 0.1rem;
 }

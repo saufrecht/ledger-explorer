@@ -82,6 +82,7 @@ class Params():
     def parse_account_string(cls, input: str):
         """ Take a string which is a list of account names, separated by commas,
         and return it as a tuple """
+        # TODO: accept [Total] as an input and return ('[Total]')
         if not isinstance(input, str):
             return ()
         input_list = input.split(',')

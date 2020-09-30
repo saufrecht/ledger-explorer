@@ -11,7 +11,7 @@ from dash.exceptions import PreventUpdate
 from utils import chart_fig_layout, data_from_json_store
 from utils import get_children, get_descendents
 from utils import make_bar
-from utils import ex_trans_table
+from utils import ex_trans_table, ATree
 from utils import trans_to_burst
 from params import Params, CONST
 from app import app
@@ -88,47 +88,44 @@ def load_ex_controls(control_store: str, data_store: str):
                Input('ex_time_series_span', 'value')],
               state=[State('data_store', 'children'),
                      State('control_store', 'children')])
-def make_time_series(time_resolution: int, time_span: str, data_store: str, control_store: str):
+def ex_make_time_series(time_resolution: int, time_span: str, data_store: str, control_store: str):
     """ Generate a Dash bar chart figure from transactional data """
     if not data_store:
         raise PreventUpdate
-    controls = Params.from_json(control_store)
+    params = Params.from_json(control_store)
     if not time_resolution:
-        time_resolution = controls.init_time_res
+        time_resolution = params.init_time_res
 
     if not time_span:
-        time_span = controls.init_time_span
+        time_span = params.init_time_span
 
     try:
         tr_label = CONST['time_res_lookup'][time_resolution]['label']  # e.g., 'by Era'
         ts_label = CONST['time_span_lookup'][time_span]['label']       # e.g., 'Annual' or 'Monthly'
-
     except KeyError as E:
         app.logger.warning(f'Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}')
         raise PreventUpdate
 
-    dd = data_from_json_store(data_store, controls.ex_account_filter)
-
-    trans = dd.get('trans')
-    eras = dd.get('eras')
+    dd: dict = data_from_json_store(data_store, params.ex_account_filter)
+    trans: pd.DataFrame = dd.get('trans')
+    eras: pd.DataFrame = dd.get('eras')
     if time_resolution == 'era' and len(eras) == 0:
         raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
-    account_tree = dd.get('account_tree')
+    account_tree: ATree = dd.get('account_tree')
     unit = dd.get('unit')
 
-    chart_fig = go.Figure(layout=chart_fig_layout)
-    root_account_id = account_tree.root  # TODO: Stub for controllable design
+    chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
+    root_account_id: str = account_tree.root  # TODO: Stub for controllable design
     selected_accounts = get_children(root_account_id, account_tree)
 
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(trans, account_tree, account, time_resolution, time_span, eras, i, deep=True))
 
     ts_title = f'Average {ts_label} {unit}, by {tr_label} '
-    chart_fig.update_layout(
-        title={'text': ts_title},
-        xaxis={'showgrid': True, 'nticks': 20},
-        yaxis={'showgrid': True},
-        barmode='relative')
+    chart_fig.update_layout(title={'text': ts_title},
+                            xaxis={'showgrid': True, 'nticks': 20},
+                            yaxis={'showgrid': True},
+                            barmode='relative')
 
     return [chart_fig]
 
@@ -157,11 +154,11 @@ def apply_selection_from_time_series(figure, selectedData, data_store, time_reso
     triggering.
 
     """
-    controls = Params.from_json(control_store)
+    params = Params.from_json(control_store)
     if not time_resolution:
-        time_resolution = controls.init_time_res
+        time_resolution = params.init_time_res
     if not time_span:
-        time_span = controls.init_time_span
+        time_span = params.init_time_span
 
     dd = data_from_json_store(data_store)
     if not dd:

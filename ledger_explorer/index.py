@@ -141,7 +141,6 @@ def parse_url_search(search: str):
         raise PreventUpdate
     search = search.lstrip('?')
     inputs = parse_qs(search)
-
     c_data = {}
     for key, value in vars(Params()).items():
         try:

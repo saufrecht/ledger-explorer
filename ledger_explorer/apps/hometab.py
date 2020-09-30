@@ -17,9 +17,9 @@ Quickly navigate through flow and balance charts as line charts, drill down into
 
 * [Personal accounting sample data (Gnucash format)](/ex/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&erasu=https://ledge.uprightconsulting.com/s/sample_transaction_eras.csv&init_time_res=quarter&ex_account_filter=Income,Expenses&bs_account_filter=Assets,Liabilities,Equity))
    * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
-   * ![Screenshot](/assets/cash_flow_1.jpg)
+   * ![Screenshot](/assets/screenshot_cash_flow_transdata.png)
 
-* [Greenhouse Gas emissions by country over time](/ex/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual)
+* [Greenhouse Gas emissions by country over time](/bs/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual&ds_data_title=Annual%20CO₂%20Emissions&bs_account_filter=root&ds_unit=Mt·CO₂)
    * loads data directly from external source [Our World in Data]({owid_co2_url})
    * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
    * ![Screenshot](/assets/co2_1.jpg)
