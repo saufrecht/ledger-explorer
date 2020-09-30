@@ -29,13 +29,6 @@ layout: html = html.Div(
                      html.Div(id='time_serieses',
                               className='flex_down')
                  ]),
-        html.Div(
-            id='bs_trans_table_box',
-            children=[
-                html.Div(id='bs_trans_table_text',
-                         children=''),
-                bs_trans_table
-            ]),
     ])
 
 
@@ -92,68 +85,3 @@ def bs_make_time_series(time_resolution, data_store, control_store):
             result = [output]
 
     return [result]
-
-
-@app.callback(
-    [Output('bs_trans_table', 'data'),
-     Output('bs_trans_table_text', 'children')],
-    [Input('bsa_master_time_series', 'selectedData'),
-     Input('bsl_master_time_series', 'selectedData'),
-     Input('bse_master_time_series', 'selectedData')],
-    state=[State('data_store', 'children'),
-           State('control_store', 'children')])
-def apply_selection_from_bs_time_series(bsa_master_time_series,
-                                        bsl_master_time_series,
-                                        bse_master_time_series, data_store, control_store):
-    """
-    selecting a point or points in the time series updates the transaction table to show
-    all transactions up to that point
-    TODO: this is temporarily disabled now that the time serieses are dynamically generated.
-    Should be replaced with dynamically generated callbacks?
-    """
-
-    if control_store and len(control_store) > 0:
-        params = Params.from_json(control_store)
-    else:
-        raise PreventUpdate
-
-    ctx = dash.callback_context
-    click = ctx.triggered[0]['prop_id'].split('.')[0]
-    if not data_store or len(click) == 0:
-        raise PreventUpdate
-    inputs = {'bsa_master_time_series': bsa_master_time_series, 'bsl_master_time_series': bsl_master_time_series,
-              'bse_master_time_series': bse_master_time_series}
-    selection = inputs[click]
-    dd = data_from_json_store(data_store, params.bs_account_filter)
-    trans = dd.get('trans')
-
-    trans_filter: dict = {}
-    sel_trans: pd.DataFrame = pd.DataFrame()
-    sel_text: list = []
-    for point in selection['points']:
-        account = point['customdata']
-        end_date = point['x']
-        try:
-            trans_filter[account].append(end_date)
-        except (KeyError, AttributeError):
-            trans_filter[account] = [end_date]
-
-    for account in trans_filter.keys():
-        if not trans_filter[account]:
-            continue
-        end_date = max(trans_filter[account])
-        new_trans = trans.loc[(trans['account'] == account) & (trans['date'] <= end_date)]
-        sel_trans = sel_trans.append(new_trans)
-        new_text = f'{account}: {len(sel_trans)} records through {pretty_date(end_date)}'
-        sel_text = sel_text + [new_text]
-
-    if len(sel_trans) == 0:
-        raise PreventUpdate
-
-    sel_trans = sel_trans.set_index('date').sort_index()
-    sel_trans['total'] = sel_trans['amount'].cumsum()
-    sel_trans['date'] = pd.DatetimeIndex(sel_trans.index).strftime("%Y-%m-%d")
-
-    sel_output = [html.Span(children=x) for x in sel_text]
-    final_label = list(intersperse(html.Br(), sel_output))
-    return [sel_trans.to_dict('records'), final_label]
