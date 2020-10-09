@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import json
-from types import SimpleNamespace
-from typing import Iterable
+from typing import Iterable, Any
 
 
 CONST = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
@@ -70,11 +69,11 @@ class Params():
     init_time_span: str = 'monthly'
     init_time_res: str = 'annual'
     ds_data_title: str = 'Ledger'
-    ds_delimiter: str = CONST['delim']
-    ds_unit: str = CONST['unit']
-    ds_label: str = CONST['ds_label']
-    bs_label: str = CONST['bs_label']
-    ex_label: str = CONST['ex_label']
+    ds_delimiter: Any = CONST['delim']
+    unit: Any = CONST['unit']
+    ds_label: Any = CONST['ds_label']
+    bs_label: Any = CONST['bs_label']
+    ex_label: Any = CONST['ex_label']
     ex_account_filter: Iterable[str] = ()
     bs_account_filter: Iterable[str] = ()
 
@@ -82,7 +81,6 @@ class Params():
     def parse_account_string(cls, input: str):
         """ Take a string which is a list of account names, separated by commas,
         and return it as a tuple """
-        # TODO: accept [Total] as an input and return ('[Total]')
         if not isinstance(input, str):
             return ()
         input_list = input.split(',')
@@ -90,14 +88,14 @@ class Params():
         return tuple(stripped_list)
 
     def to_json(self):
-        """ Convert controls to JSON via dict structure """
+        """ Convert parameters to JSON via dict structure """
         return json.dumps(self, default=lambda x: x.__dict__)
 
     @classmethod
     def from_json(cls, json_data: str):
-        """ Convert controls to JSON via dict structure """
+        """ Convert parameters from JSON via dict structure """
         if json_data and isinstance(json_data, str) and len(json_data) > 0:
-            body = json.loads(json_data, object_hook=lambda d: SimpleNamespace(**d))
+            body = json.loads(json_data, object_hook=lambda d: Params(**d))
             return body
         else:
             return Params()

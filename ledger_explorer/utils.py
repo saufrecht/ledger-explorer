@@ -449,14 +449,11 @@ def data_from_json_store(data_store: str, filter: list = []) -> Dict:
     earliest_trans: np.datetime64 = trans['date'].min()
     latest_trans: np.datetime64 = trans['date'].max()
 
-    unit = data.get('unit', '$')  # TODO: get rid of this; UNIT should come from controls
-
     return {'trans': trans,
             'eras': eras,
             'account_tree': account_tree,
             'earliest_trans': earliest_trans,
-            'latest_trans': latest_trans,
-            'unit': unit}  # NOQA
+            'latest_trans': latest_trans}
 
 
 def get_descendents(account_id: str, account_tree: Tree) -> list:

@@ -74,6 +74,7 @@ def load_ex_controls(control_store: str, data_store: str):
         params = Params(**json.loads(control_store))
     else:
         raise PreventUpdate
+
     options = CONST['time_res_options']
     dd = data_from_json_store(data_store)
     eras = dd.get('eras')
@@ -90,8 +91,10 @@ def load_ex_controls(control_store: str, data_store: str):
                      State('control_store', 'children')])
 def ex_make_time_series(time_resolution: int, time_span: str, data_store: str, control_store: str):
     """ Generate a Dash bar chart figure from transactional data """
+
     if not data_store:
         raise PreventUpdate
+
     params = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = params.init_time_res

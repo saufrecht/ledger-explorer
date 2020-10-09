@@ -1,14 +1,12 @@
 import dash_core_components as dcc
 import dash_html_components as html
-from more_itertools import intersperse
 import pandas as pd
 
 import plotly.graph_objects as go
-import dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import chart_fig_layout, data_from_json_store, bs_trans_table, ATree
-from utils import get_children, get_descendents, pretty_date
+from utils import chart_fig_layout, data_from_json_store, ATree
+from utils import get_children, get_descendents
 from utils import make_cum_area
 from params import Params, CONST
 from app import app
@@ -51,13 +49,13 @@ def bs_make_time_series(time_resolution, data_store, control_store):
     """ Generate cumulative Dash bar charts for all root accounts """
     if not data_store:
         raise PreventUpdate
-    params = Params.from_json(control_store)
+    params: Params = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     dd: dict = data_from_json_store(data_store, params.bs_account_filter)
     trans: pd.DataFrame = dd.get('trans')
     account_tree: ATree = dd.get('account_tree')
-    unit: str = params.ds_unit
+    unit: str = params.unit
     data_title = params.ds_data_title
     result: list = []
     # make one chart for each item in the Balance Sheet account filter

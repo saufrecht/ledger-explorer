@@ -28,6 +28,8 @@ app.layout = html.Div(
     children=[
         dcc.Location(id='url_reader',
                      refresh=False),
+        html.Div(id='change_tabs_node',
+                 className='hidden'),
         html.Div(id='control_node',
                  className='hidden'),
         html.Div(id='control_urlnode',
@@ -91,19 +93,38 @@ def parse_url_path(path: str):
 
 
 @app.callback([Output('tab-content', 'children')],
-              [Input('tabs', 'value')])
-def change_tab(selected_tab: str):
-    """ From a click on the tabbar, change the tab. """
-    if selected_tab == 'bs':
-        return [balance_sheet.layout]
-    elif selected_tab == 'ex':
-        return [explorer.layout]
-    elif selected_tab == 'se':
-        return [settings.layout]
-    elif selected_tab == 'ds':
-        return [data_source.layout]
-    else:
-        return [hometab.layout]
+              [Input('tabs', 'value'),
+              Input('change_tabs_node', 'children')])
+def change_tab(clicked_tab: str, node_tab: str) -> list:
+    """ From a click on the tabbar, or a change
+    in the intermediate node, change the currently shown tab. """
+
+    desired_tab = 'le'  # default to home tab
+    ctx = dash.callback_context
+    if ctx.triggered:
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if trigger_id == 'tabs':
+            desired_tab = clicked_tab
+        elif trigger_id == 'change_tabs_node':
+            desired_tab = node_tab
+        else:
+            app.logger.warning(f'change_tab callback was triggered, but by {trigger_id}, which is not an expected triggers.  Curious.')
+
+    if desired_tab and len(desired_tab) > 0 and isinstance(desired_tab, str):
+        if desired_tab == 'bs':
+            return [balance_sheet.layout]
+        elif desired_tab == 'ex':
+            return [explorer.layout]
+        elif desired_tab == 'se':
+            return [settings.layout]
+        elif desired_tab == 'ds':
+            return [data_source.layout]
+        elif desired_tab == 'le':
+            return [hometab.layout]
+        else:
+            app.logger.warning(f'attempted to change tab to {desired_tab}, which is not a valid choice.')
+
+    raise PreventUpdate
 
 
 @app.callback([Output('ex_tab', 'label'),
@@ -192,8 +213,7 @@ def parse_url_search(search: str):
 
 @app.callback([Output('data_store', 'children'),
                Output('control_store', 'children'),
-               Output('files_status', 'children'),
-               Output('tab_draw_trigger', 'children')],
+               Output('files_status', 'children')],
               [Input('trans_file_node', 'children'),
                Input('atree_file_node', 'children'),
                Input('eras_file_node', 'children'),
@@ -229,7 +249,6 @@ def load_and_transform(trans_file_node: str,
     # from the ledger_explorer url.
     data: str = ''
     controls: Params = None
-    trigger: bool = False
     status: str = ''
     t_source: str = ''
     if trigger_id == 'trans_file_node':
@@ -288,11 +307,10 @@ def load_and_transform(trans_file_node: str,
 
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = f'{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras.'
-            trigger = True
         except LoadError as LE:
             status = f'Error loading transaction data: {LE.message}'
 
-    return [data, controls, status, trigger]
+    return [data, controls, status]
 
 
 if __name__ == '__main__':
