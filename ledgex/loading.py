@@ -9,7 +9,8 @@ import urllib
 
 from ledgex.app import app
 from ledgex.params import Params, CONST
-from ledgex.utils import ATree, LError, get_descendents
+from ledgex.utils import LError
+from ledgex.atree import ATree
 
 
 class LoadError(LError):
@@ -188,7 +189,7 @@ def convert_raw_data(raw_trans: pd.DataFrame, raw_tree: pd.DataFrame, raw_eras: 
     # mangle amounts signs for known account types, to make graphs least surprising
     for account in [ra for ra in CONST['root_accounts'] if ra['flip_negative'] is True]:
         if atree.get_node(account['id']):
-            trans['amount'] = np.where(trans[CONST['account_col']].isin(get_descendents(account['id'], atree)),
+            trans['amount'] = np.where(trans[CONST['account_col']].isin(atree.get_descendents(account['id'])),
                                        trans['amount'] * -1,
                                        trans['amount'])
 

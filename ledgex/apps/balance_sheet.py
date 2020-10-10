@@ -5,11 +5,13 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import chart_fig_layout, data_from_json_store, ATree
-from utils import get_children, get_descendents
-from utils import make_cum_area
-from params import Params, CONST
-from app import app
+
+
+from ledgex.utils import chart_fig_layout, data_from_json_store
+from ledgex.utils import make_cum_area
+from ledgex.params import Params, CONST
+from ledgex.app import app
+from ledgex.atree import ATree
 
 
 layout: html = html.Div(
@@ -68,9 +70,9 @@ def bs_make_time_series(time_resolution, data_store, control_store):
                                   'yanchor': 'bottom', 'y': 0,
                                   'bgcolor': 'rgba(0, 0, 0, 0)'},
                           barmode='relative')
-        subaccounts: iter = get_children(account, account_tree)
+        subaccounts: iter = account_tree.get_children(account)
         for j, subaccount in enumerate(subaccounts):
-            sub_desc = get_descendents(subaccount, account_tree)
+            sub_desc = account_tree.get_descendents(subaccount)
             tba = trans[trans['account'].isin(sub_desc)]
             if len(tba) > 0:
                 fig.add_trace(make_cum_area(tba, subaccount, j, time_resolution))

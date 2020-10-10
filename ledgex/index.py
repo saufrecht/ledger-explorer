@@ -108,7 +108,7 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
         elif trigger_id == 'change_tabs_node':
             desired_tab = node_tab
         else:
-            app.logger.warning(f'change_tab callback was triggered, but by {trigger_id}, which is not an expected triggers.  Curious.')
+            app.logger.warning(f'change_tab callback was triggered, but by {trigger_id}, which is unexpected.')
 
     if desired_tab and len(desired_tab) > 0 and isinstance(desired_tab, str):
         if desired_tab == 'bs':

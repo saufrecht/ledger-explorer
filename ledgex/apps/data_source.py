@@ -5,9 +5,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from loading import load_input_file
 
-from app import app
+
+from ledgex.loading import load_input_file
+from ledgex.app import app
 
 
 layout = html.Div(

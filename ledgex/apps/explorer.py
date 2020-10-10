@@ -8,13 +8,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from utils import chart_fig_layout, data_from_json_store
-from utils import get_children, get_descendents
-from utils import make_bar
-from utils import ex_trans_table, ATree
-from utils import trans_to_burst
-from params import Params, CONST
-from app import app
+
+
+from ledgex.app import app
+from ledgex.atree import ATree
+from ledgex.params import Params, CONST
+from ledgex.utils import chart_fig_layout, data_from_json_store
+from ledgex.utils import make_bar, ex_trans_table, trans_to_burst
 
 
 layout = html.Div(
@@ -119,7 +119,7 @@ def ex_make_time_series(time_resolution: int, time_span: str, data_store: str, c
 
     chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
     root_account_id: str = account_tree.root  # TODO: Stub for controllable design
-    selected_accounts = get_children(root_account_id, account_tree)
+    selected_accounts = account_tree.get_children(root_account_id)
 
     for i, account in enumerate(selected_accounts):
         chart_fig.add_trace(make_bar(trans, account_tree, account, time_resolution, time_span, eras, i, deep=True))
@@ -218,7 +218,7 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
 
     if revised_id:
         # Add any sub-accounts
-        sub_accounts = get_descendents(revised_id, account_tree)
+        sub_accounts = account_tree.get_descendents(revised_id)
         filter_accounts = [revised_id] + sub_accounts
         sel_trans = trans[trans['account'].isin(filter_accounts)]
         if (len_sub := len(sub_accounts)) > 0:
