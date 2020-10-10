@@ -8,7 +8,7 @@ server {
 
         location / {
                  include proxy_params;
-                 proxy_pass http://unix:/home/s/ledger-explorer/ledger_explorer/ledge.sock;
+                 proxy_pass http://unix:/home/s/ledger-explorer/ledgex/ledge.sock;
         }
 
         

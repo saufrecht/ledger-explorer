@@ -6,7 +6,7 @@ After=network.target
 User=s
 Group=www-data
 
-WorkingDirectory=/home/ledge/ledger-explorer/ledger_explorer
+WorkingDirectory=/home/ledge/ledger-explorer/ledgex
 Environment="PATH=/home/s/.venv_le/bin/"
 ExecStart=/home/ledge/.venv_le/bin/gunicorn --bind unix:ledge.sock index:server
 

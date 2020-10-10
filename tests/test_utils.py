@@ -1,5 +1,4 @@
-
-from ledger_explorer.utils import ATree
+from ledgex.utils import ATree
 
 skinny_tree: ATree = ATree()
 skinny_tree.create_node('Lower Trunk', 'lt')

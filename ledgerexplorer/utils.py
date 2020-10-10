@@ -12,8 +12,8 @@ import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
 
-from app import app
-from params import CONST
+from ledgex.app import app
+from ledgex.params import CONST
 
 
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function

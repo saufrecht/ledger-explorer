@@ -10,11 +10,11 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 
-from app import app
-from apps import balance_sheet, data_source, explorer, settings, hometab
+from ledgex.app import app
+from ledgex.apps import balance_sheet, data_source, explorer, settings, hometab
 
-from params import CONST, Params
-from loading import LoadError, convert_raw_data, load_input_file
+from ledgex.params import CONST, Params
+from ledgex.loading import LoadError, convert_raw_data, load_input_file
 
 
 server = app.server
@@ -246,7 +246,7 @@ def load_and_transform(trans_file_node: str,
         trigger_id = None
     # look for fresh input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
-    # from the ledger_explorer url.
+    # from the Ledger Explorer url.
     data: str = ''
     controls: Params = None
     status: str = ''

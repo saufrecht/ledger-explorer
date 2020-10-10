@@ -58,7 +58,7 @@ You will need to activate the virtual environment every time you open a new shel
 4. Enter filename, for example, `transactions.csv`
 
 ## Run program
-1. `python ledger_explorer/index.py`
+1. `python ledgex/index.py`
 1. Browse to http://localhost:8050.
 1. In the *Load File* » *Transaction File* » "Drag and Drop or Select Files" box, either
   1. Drop transactions.csv into the box from another window,
@@ -76,7 +76,7 @@ A production-ready setup, using Nginx and GUnicorn.
 ## How it works (when it works)
 
 1. systemd manages an automatic service named **ledge**.  (**ledge** is an example name, which can be replaced with anything else)
-2. **ledge** calls on gunicorn, which runs the **ledger_explorer** code
+2. **ledge** calls on gunicorn, which runs the **Ledger Explorer** code
     1. **Ledger Explorer** is now accessible on a local unix socket
 3. nginx takes HTTPS web requests to the public url and passes them to the unix socket, and then returns the response
     1. **Ledger Explorer** is now accessible at the web address of the server
@@ -125,7 +125,7 @@ After=network.target
 User=s
 Group=www-data
 
-WorkingDirectory=/home/ledge/ledger-explorer/ledger_explorer
+WorkingDirectory=/home/ledge/ledger-explorer/ledgex
 Environment="PATH=/home/ledge/.venv_le/bin/"
 ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
 
@@ -152,7 +152,7 @@ server {
 
         location / {
                  include proxy_params;
-                 proxy_pass http://unix:/home/ledge/ledger-explorer/ledger_explorer/ledge.sock;
+                 proxy_pass http://unix:/home/ledge/ledger-explorer/ledgex/ledge.sock;
         }
 
         
