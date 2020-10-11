@@ -14,9 +14,14 @@ class ATree(Tree):
     ROOT_TAG = '[Total]'
     ROOT_ID = 'root'
 
+    @classmethod
+    def cast(cls, tree: Tree):
+        """ Cast a Tree into an ATree """
+        tree.__class__ = cls
+        return tree
+
     def show_to_string(self) -> str:
-        """ Alternative to the parent method show(), which outputs to stdout.
-        Work in progress, still prints to stdout."""
+        """ Alternative to the parent method show(), which outputs to stdout. """
 
         if len(self) == 0:
             return ''
@@ -50,12 +55,6 @@ class ATree(Tree):
         for leaf in self.all_nodes():
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
         return {x[-1]: ':'.join(x) for x in res}
-
-    @classmethod
-    def cast(cls, tree: Tree):
-        """ Cast a Tree into an ATree """
-        tree.__class__ = cls
-        return tree
 
     def trim_excess_root(self):
         """ Remove any nodes from the root that have only 1 child.
