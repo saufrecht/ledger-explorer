@@ -1,0 +1,9 @@
+Date,Transaction ID,Number,Description,Notes,Commodity/Currency,Void Reason,Action,Memo,Full Account Name,Account Name,Amount With Sym,Amount Num.,Reconcile,Reconcile Date,Rate/Price
+01/01/2017,01faca5a75ed4fed9f36f6dea04b9f9c,,Found money on the street,,CURRENCY::USD,,,,Assets:Current Assets:Cash in Wallet,Cash in Wallet,"$1,000.00","1,000.00",n,,1.00
+,,,,,,,,,Income:Other Income,Other Income,"-$1,000.00","-1,000.00",n,,1.00
+09/29/2018,dbbbd767727c4bb5aa97f731c5c8901c,,Security Guard Job,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,"$1,875.00","1,875.00",n,,1.00
+,,,,,,,1/1/19,Direct deposit from security guard job,Income:Salary,Salary,"-$1,875.00","-1,875.00",n,,1.00
+01/03/2019,98c81f2b3d214514b8717ea19ffc72ce,,cocaine habit,,CURRENCY::USD,,,,Assets:Current Assets:Checking Account,Checking Account,-$100.00,-100.00,n,,1.00
+,,,,,,,,,Expenses:Hobbies,Hobbies,$100.00,100.00,n,,1.00
+04/15/2020,f435ce7378894d20bdf0cdf5e3e14e43,,nothing suspicious about this tax payment,,CURRENCY::USD,,,,Expenses:Taxes:Federal,Federal,"$2,000.00","2,000.00",n,,1.00
+,,,,,,,,,Income:Salary,Salary,"-$2,000.00","-2,000.00",n,,1.00
