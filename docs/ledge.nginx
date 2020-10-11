@@ -8,7 +8,7 @@ server {
 
         location / {
                  include proxy_params;
-                 proxy_pass http://unix:/home/s/ledger-explorer/ledgex/ledge.sock;
+                 proxy_pass http://unix:/home/s/ledger-explorer/ledge.sock;
         }
 
         
@@ -21,6 +21,7 @@ server {
 
 
 }
+
 server {
     if ($host = www.ledge.uprightconsulting.com) {
         return 301 https://$host$request_uri;
@@ -31,10 +32,10 @@ server {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
+    
+    listen 80;
+    listen [::]:80;
 
-        listen 80;
-        listen [::]:80;
-
-        server_name ledge.uprightconsulting.com www.ledge.uprightconsulting.com;
+    server_name ledge.uprightconsulting.com www.ledge.uprightconsulting.com;
     return 404; # managed by Certbot
 }
