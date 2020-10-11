@@ -3,9 +3,9 @@ import dash_html_components as html
 
 from dash.dependencies import Input, Output
 
-from app import app
+from ledgex.app import app
 
-from params import Params, CONST
+from ledgex.params import Params, CONST
 
 
 layout = html.Div(
