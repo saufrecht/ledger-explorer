@@ -37,11 +37,12 @@ def load_eras(data, earliest_date, latest_date):
     data = data.reset_index(drop=True).set_index('name')
 
     # if the first start or last end is missing, substitute earliest/lastest possible date
-    if pd.isnull(data.iloc[0].date_end):
-        data.iloc[0].date_end = latest_date
-    if pd.isnull(data.iloc[-1].date_start):
+    # TODO: this is broken because sorting is not reliable, because data containing NaN is not sorted
+    # to the right place for this logic to work
+    if pd.isnull(data.iloc[0].date_start):
         data.iloc[-1].date_start = earliest_date
-
+    if pd.isnull(data.iloc[-1].date_end):
+        data.iloc[0].date_end = latest_date
     return data
 
 
@@ -49,7 +50,6 @@ def parse_base64_file(content: str, filename: str) -> pd.DataFrame:
     """ Take the input to the upload control, assuming it's a csv,
     and return a dataframe"""
     content_type, content_string = content.split(',')
-
     decoded = base64.b64decode(content_string + '===')  # prevent padding errors
     data: pd.DataFrame = pd.DataFrame()
     try:
