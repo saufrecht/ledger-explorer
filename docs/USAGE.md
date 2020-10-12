@@ -1,24 +1,19 @@
-# Ledger Explorer User Manual
+# Quick Start
 
-## Data Source tab
+## Export data from Gnucash
 
-![Screenshot](https://raw.githubusercontent.com/saufrecht/ledger-explorer/master/docs/data_source.png?s=820x838)
+1. `File` → `Export` → `Export Transactions to CSV …`
+2. `Next`
+3. `Select All`, `Next`
+4. Enter filename, for example, `transactions.csv`
 
-### Features
-This tab determines which data the program uses.  It reads Transaction CSV exports from GnuCash, and can read any csv file with these properties:
-* one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or either the credit or the debit from double-entry.
-* The following columns are present and labelled exactly:
-  * **Account Name**.
-  * **Description** and/or **Notes** *(optional)*.  Any blanks in these fields get filled with the closest previous entry.
-  * **Memo** *(optional)*  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
-  * **Full Account Name**.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
-  * **Date**. Entry date.
-  * **Amount Num**. Value of the transaction.  Ledger Explorer assumes all values are the same currency.
+## Load it into Ledger Explorer demo site
+1. Browse to [https://ledge.uprightconsulting.com/ds](https://ledge.uprightconsulting.com/ds)
+2. Under Transactions, click `Select a file`
+3. Select the Gnucash CSV file you just created.
+4. Click the Cash Flow and Balance Sheet tabs to see your data.
 
-### Usage
-
-1. If installed as described above, this tab will load the provided sample transaction file automatically.
-1. To load other data, enter the file name and click *reload*.
+# User Manual
 
 ## Cash Flow
 
@@ -44,4 +39,19 @@ This tab determines which data the program uses.  It reads Transaction CSV expor
 
 ### Features
 1. Time series of cumulative value of all Assets, Liabilities, and Equity.  Grouped by Year, Quarter, or Month.
-1. A transaction table showing all transactions, and cumulative total, for selected accounts up to the point of selection.
+
+## Data Source tab
+
+![Screenshot](https://raw.githubusercontent.com/saufrecht/ledger-explorer/master/docs/data_source.png?s=820x838)
+
+### Features
+This tab determines which data the program uses.  It can read Transaction CSV exports from GnuCash.  It can also read any csv file with these properties:
+* one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or one entry (debit or credit) out of a double-entry system.
+* The following columns are present and labelled exactly:
+  * **Account Name**.
+  * **Description** and/or **Notes** *(optional)*.  Any blanks in these fields get filled with the closest previous entry.
+  * **Memo** *(optional)*  Not filled.  Combined with 'Description' and 'Notes' to make a single 'description' field.
+  * **Full Account Name**.  An ordered list of the account tree, delimited by colons.  For example: "Assets:Short-Term:North Korean Energy Bonds"
+  * **Date**. Entry date.
+  * **Amount Num**. Value of the transaction.  Ledger Explorer assumes all values are the same currency.
+

@@ -48,15 +48,6 @@ You will need to activate the virtual environment every time you open a new shel
 
 `pip install -r docs/requirements.txt`
 
-## Prepare data
-
-### Export data from Gnucash
-
-1. `File` → `Export` → `Export Transactions to CSV …`
-2. `Next`
-3. `Select All`, `Next`
-4. Enter filename, for example, `transactions.csv`
-
 ## Run program
 1. `python ledgex/index.py`
 1. Browse to http://localhost:8050.
