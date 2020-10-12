@@ -33,7 +33,7 @@ Quickly navigate through flow and balance charts as line charts, drill down into
 ### About, Privacy, and Security
 Ledger Explorer is a Free Software product and service, built with [Dash](https://plotly.com/dash/) and other free/open source software.  Ledger Explorer is provided free of cost, with no warranty.  It collects no personal data, uses no tracking technologies, and has no commercial relationships.  It retains normal web traffic logs, which include your [IP address](https://ssd.eff.org/en/glossary/ip-address) and the time and address of the pages you access on this site.  No other information is collected or retained.  Reloading your browser should remove all data from your browser and this site's server.  The data you provide to the site in order to use its features is not inspected or retained, but its privacy and security cannot be guaranteed, so please don't provide anything sensitive.
 
-  © 2020 Joel Aufrecht.
+© 2020 Joel Aufrecht.
 ## More information
 * [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)
 * [Upright Consulting](https://uprightconsulting.com)''')])

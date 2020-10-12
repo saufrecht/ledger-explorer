@@ -63,7 +63,10 @@ app.layout = html.Div(
                                         dcc.Tab(label='Settings', id='se_tab', value='se'),
                                         dcc.Tab(label=CONST['ds_label'], id='ds_tab', value='ds')]),
                      html.Div(id='files_status',
-                              children=[])]),
+                              children=[]),
+                     html.Div(id='infodex',
+                              children=[
+                              dcc.Markdown("[Report an issue](https://github.com/saufrecht/ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)")])]),
         html.Div(id='tab-content',
                  className='tab_content'),
     ])
