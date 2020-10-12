@@ -29,8 +29,8 @@
         --fg:       var(--dark-light);
         --fg-less:  var(--dark-lighter);
         --fg-more:  var(--darkest);
-        --link:     rgba(54, 154, 226, 0.4);
-        --link-vis: rgba(83, 84, 150, 0.4);
+        --link:     var(--violet);
+        --link-vis: rgb(83, 84, 150);
         --accent:   var(--magenta);
         --body-shadow: 0.1em 0.2em 0.3em rgba(0, 0, 0, 0.3), 0.2em 0.3em 0.3em 0 rgba(0, 0, 0, 0.28);
         --box-shadow: 0.1em 0.1em 0.2em rgba(0, 0, 0, 0.2), 0.1em 0.2em .4em 0 rgba(0, 0, 0, 0.19);

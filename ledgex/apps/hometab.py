@@ -20,9 +20,9 @@ Quickly navigate through flow and balance charts as line charts, drill down into
    * ![Screenshot](/assets/screenshot_cash_flow_transdata.png)
 
 * [Greenhouse Gas emissions by country over time](/bs/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual&ds_data_title=Annual_CO₂_Emissions&bs_account_filter=root&unit=Mt·CO₂)
-   * loads data directly from external source [Our World in Data]({owid_co2_url})
+   * loads data directly from external source [Our World in Data](https://ourworldindata.org/co2-and-other-greenhouse-gas-emissions)
    * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
-   * ![Screenshot](/assets/co2_1.jpg)
+   * ![Screenshot](/assets/screenshot_balance_sheet_co2data.png)
 
 ## Try it yourself
 
