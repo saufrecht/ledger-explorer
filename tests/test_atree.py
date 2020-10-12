@@ -1,10 +1,8 @@
 import pandas as pd
 import pytest
 
-
 from ledgex.atree import ATree
 from ledgex.params import CONST
-
 
 skinny_tree: ATree = ATree()
 skinny_tree.create_node('Lower Trunk', 'lt')

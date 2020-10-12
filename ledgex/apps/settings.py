@@ -1,12 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
-
 from dash.dependencies import Input, Output
-
 from ledgex.app import app
-
-from ledgex.params import Params, CONST
-
+from ledgex.params import CONST, Params
 
 layout = html.Div(
     className="layout_box",

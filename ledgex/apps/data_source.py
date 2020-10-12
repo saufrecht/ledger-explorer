@@ -1,15 +1,11 @@
 from typing import Iterable
 
-
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-
-
-from ledgex.loading import load_input_file
 from ledgex.app import app
-
+from ledgex.loading import load_input_file
 
 layout = html.Div(
     className="layout_box col3",

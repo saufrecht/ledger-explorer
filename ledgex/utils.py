@@ -1,19 +1,18 @@
 import calendar
 import json
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple
+
+import dash_table
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, Tuple, List
-
-from dash.exceptions import PreventUpdate
-import dash_table
 import plotly.express as px
 import plotly.graph_objects as go
+from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
-from ledgex.params import CONST
 from ledgex.atree import ATree
-
+from ledgex.params import CONST
 
 pd.options.mode.chained_assignment = None  # default='warn'  This suppresses the invalid warning for the .map function
 

@@ -1,18 +1,13 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-
-
-from ledgex.utils import chart_fig_layout, data_from_json_store
-from ledgex.utils import make_cum_area
-from ledgex.params import Params, CONST
 from ledgex.app import app
 from ledgex.atree import ATree
-
+from ledgex.params import CONST, Params
+from ledgex.utils import chart_fig_layout, data_from_json_store, make_cum_area
 
 layout: html = html.Div(
     className="layout_box",

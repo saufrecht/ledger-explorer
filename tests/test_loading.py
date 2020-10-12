@@ -1,10 +1,8 @@
 import pandas as pd
 import pytest
 
-
 import ledgex.loading as loading
 import ledgex.params as params
-
 
 def_params = params.Params()
 min_trans_url = 'https://ledge.uprightconsulting.com/s/minimal_transaction_data.csv'

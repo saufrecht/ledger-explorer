@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 import json
-from typing import Iterable, Any
-
+from dataclasses import dataclass
+from typing import Any, Iterable
 
 CONST = {'parent_col': 'parent account',  # TODO: move the column names into Trans class
          'account_col': 'account',

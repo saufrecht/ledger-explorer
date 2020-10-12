@@ -1,16 +1,16 @@
 import base64
 import io
+import urllib
+from typing import Iterable
+
 import numpy as np
 import pandas as pd
 from treelib import Tree
-from typing import Iterable
-import urllib
-
 
 from ledgex.app import app
-from ledgex.params import Params, CONST
-from ledgex.utils import LError
 from ledgex.atree import ATree
+from ledgex.params import CONST, Params
+from ledgex.utils import LError
 
 
 class LoadError(LError):
