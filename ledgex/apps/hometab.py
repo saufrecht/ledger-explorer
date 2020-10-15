@@ -3,13 +3,16 @@ from urllib.parse import quote
 import dash_core_components as dcc
 import dash_html_components as html
 
-owid_co2_url = quote('https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv')  # NOQA
+owid_co2_url = quote(
+    "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv"
+)  # NOQA
 
 
 layout = html.Div(
     className="layout_box presentation",
     children=[
-        dcc.Markdown(f'''# Ledger Explorer (ALPHA RELEASE)
+        dcc.Markdown(
+            f"""# Ledger Explorer (ALPHA RELEASE)
 
 Quickly navigate through flow and balance charts as line charts, drill down into account rollups, and get from annual totals to individual records in a register all on one page.  Import CSV from files or URLs, match the columns, handling tens of thousands of records quickly.  Chart any data that comprises individual transactions, each with a time, amount, and category/account.
 
@@ -36,4 +39,7 @@ Ledger Explorer is a Free Software product and service, built with [Dash](https:
 © 2020 Joel Aufrecht.
 ## More information
 * [Ledger Explorer on Github](https://github.com/saufrecht/ledger-explorer/)
-* [Upright Consulting](https://uprightconsulting.com)''')])
+* [Upright Consulting](https://uprightconsulting.com)"""
+        )
+    ],
+)
