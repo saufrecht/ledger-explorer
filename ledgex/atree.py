@@ -11,8 +11,8 @@ from ledgex.params import CONST
 class ATree(Tree):
     """ Subclass of treelib Tree for holding extra functions """
 
-    ROOT_TAG = '[Total]'
-    ROOT_ID = 'root'
+    ROOT_TAG = "[Total]"
+    ROOT_ID = "root"
 
     @classmethod
     def cast(cls, tree: Tree):
@@ -24,40 +24,42 @@ class ATree(Tree):
         """ Alternative to the parent method show(), which outputs to stdout. """
 
         if len(self) == 0:
-            return ''
+            return ""
 
-        self._reader = ''
+        self._reader = ""
 
         def write(line):
-            self._reader += line.decode('utf-8') + "\n"
+            self._reader += line.decode("utf-8") + "\n"
 
         try:
             self._Tree__print_backend(func=write)
         except tle.NodeIDAbsentError:
-            print('Tree is empty')
+            print("Tree is empty")
 
         return self._reader
 
     def to_json(self, with_data=False, sort=True, reverse=False):
         """Override Tree.to_json with a version that doesn't error if tree is empty """
         if len(self) > 0:
-            return json.dumps(self.to_dict(with_data=with_data, sort=sort, reverse=reverse))
+            return json.dumps(
+                self.to_dict(with_data=with_data, sort=sort, reverse=reverse)
+            )
         else:
-            return ''
+            return ""
 
     def dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
-         tree. Note that ':' here is an internal detail, and so not
-         affected by DELIM constant or user input
+        tree. Note that ':' here is an internal detail, and so not
+        affected by DELIM constant or user input
 
         """
         res = []
         for leaf in self.all_nodes():
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
-        return {x[-1]: ':'.join(x) for x in res}
+        return {x[-1]: ":".join(x) for x in res}
 
     def trim_excess_root(self):
-        """ Remove any nodes from the root that have only 1 child.
+        """Remove any nodes from the root that have only 1 child.
         I.e, replace A → B → (C, D) with B → (C, D)
         It feels like this should be an instance method, but when that was tried,
         ran into problems with subtleties of subclassing and scope:
@@ -75,7 +77,7 @@ class ATree(Tree):
             return self
 
     @classmethod
-    def from_names(cls, full_names: pd.Series, delim: str = CONST['delim']) -> Tree:
+    def from_names(cls, full_names: pd.Series, delim: str = CONST["delim"]) -> Tree:
         """extract all accounts from a list of Gnucash-like account paths
 
         Assumes each account name is a full path, delimiter is :.
@@ -101,13 +103,11 @@ class ATree(Tree):
                         if i == 0:
                             parent = tree.ROOT_ID
                         else:
-                            parent = branches[i-1]
+                            parent = branches[i - 1]
                         if not tree.get_node(name):
-                            tree.create_node(tag=name,
-                                             identifier=name,
-                                             parent=parent)
+                            tree.create_node(tag=name, identifier=name, parent=parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.warning(f'Problem building account tree: {E}')
+                app.logger.warning(f"Problem building account tree: {E}")
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -142,7 +142,7 @@ class ATree(Tree):
         when needed, and then moved to the right place in a second pass.
 
         """
-        clean_list = parent_list[[CONST['account_col'], CONST['parent_col']]]
+        clean_list = parent_list[[CONST["account_col"], CONST["parent_col"]]]
         tree = cls()
         tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
         for row in clean_list.itertuples(index=False):
@@ -150,15 +150,11 @@ class ATree(Tree):
                 name = row[0]  # index assumes clean_list fixed column order
                 parent = row[1]
                 if not tree.get_node(parent):
-                    tree.create_node(tag=parent,
-                                     identifier=parent,
-                                     parent=cls.ROOT_ID)
+                    tree.create_node(tag=parent, identifier=parent, parent=cls.ROOT_ID)
                 if not tree.get_node(name):
-                    tree.create_node(tag=name,
-                                     identifier=name,
-                                     parent=parent)
+                    tree.create_node(tag=name, identifier=name, parent=parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.warning(f'Error creating parent list: {E}')
+                app.logger.warning(f"Error creating parent list: {E}")
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -170,7 +166,7 @@ class ATree(Tree):
                 parent = row[1]
                 tree.move_node(name, parent)
             except tle.NodeIDAbsentError as E:
-                app.logger.warning(f'Error moving node: {E}')
+                app.logger.warning(f"Error moving node: {E}")
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
@@ -179,9 +175,9 @@ class ATree(Tree):
 
     @staticmethod
     def stuff_tree_into_trans(trans: pd.DataFrame, tree: Tree) -> pd.DataFrame:
-        """ Convert the tree into full account name format and add/update the
+        """Convert the tree into full account name format and add/update the
         full account field in trans accordingly.
         This should probably be a static method on TransFrame, once that Class exists."""
         paths = tree.dict_of_paths()
-        trans[CONST['fan_col']] = trans[CONST['account_col']].map(paths)
+        trans[CONST["fan_col"]] = trans[CONST["account_col"]].map(paths)
         return trans

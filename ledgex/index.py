@@ -194,7 +194,7 @@ def parse_url_search(search: str):
         try:
             transu = trans_input[0]
             if isinstance(transu, str):
-                filename, t_data, text = load_input_file(None, transu, None)
+                filename, t_data, text = load_input_file('', transu, '')
                 if len(t_data) > 0:
                     raw_trans = t_data.to_json()
         except Exception as E:
@@ -205,7 +205,7 @@ def parse_url_search(search: str):
     if atree_input:
         atreeu = atree_input[0]
         if isinstance(atreeu, str):
-            filename, t_data, text = load_input_file(None, atreeu, None)
+            filename, t_data, text = load_input_file('', atreeu, '')
             if len(t_data) > 0:
                 raw_atree = t_data.to_json()
 
@@ -214,7 +214,7 @@ def parse_url_search(search: str):
     if eras_input:
         erasu = eras_input[0]
         if isinstance(erasu, str):
-            filename, t_data, text = load_input_file(None, erasu, None)
+            filename, t_data, text = load_input_file('', erasu, '')
             if len(t_data) > 0:
                 raw_eras = t_data.to_json()
 
@@ -265,7 +265,7 @@ def load_and_transform(
     # way, user uploads by file or url will override anything loaded
     # from the Ledger Explorer url.
     data: str = ""
-    controls: Params = None
+    controls_j: str = ""
     status: str = ""
     t_source: str = ""
     if trigger_id == "trans_file_node":
@@ -321,14 +321,14 @@ def load_and_transform(
             )
 
             data = json.dumps({"trans": trans.to_json(), "eras": eras.to_json()})
-            controls = controls.to_json()
+            controls_j = controls.to_json()
 
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = f"{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras."
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
 
-    return [data, controls, status]
+    return [data, controls_j, status]
 
 
 if __name__ == "__main__":
