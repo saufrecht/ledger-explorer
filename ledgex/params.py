@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Iterable
 
 CONST = {
     "parent_col": "parent account",  # TODO: move the column names into Trans class
@@ -81,21 +81,19 @@ CONST = {
 @dataclass
 class Params:
     """ Class to hold everything to do with settings & controls """
-
-    # Default to the column headings of Gnucash exports
-    account_label: str = "Account Name"
-    amount_label: str = "Amount Num."
-    date_label: str = "Date"
-    desc_label: str = "Description"
-    fan_label: str = "Full Account Name"
-    init_time_span: str = "monthly"
-    init_time_res: str = "annual"
-    ds_data_title: str = "Ledger"
-    ds_delimiter: Any = CONST["delim"]
-    unit: Any = CONST["unit"]
-    ds_label: Any = CONST["ds_label"]
-    bs_label: Any = CONST["bs_label"]
-    ex_label: Any = CONST["ex_label"]
+    account_label: str = None
+    amount_label: str = None
+    date_label: str = None
+    desc_label: str = None
+    fan_label: str = None
+    init_time_span: str = None
+    init_time_res: str = None
+    ds_data_title: str = None
+    ds_delimiter: str = None
+    unit: str = None
+    ds_label: str = None
+    bs_label: str = None
+    ex_label: str = None
     ex_account_filter: Iterable[str] = ()
     bs_account_filter: Iterable[str] = ()
 
@@ -121,3 +119,38 @@ class Params:
             return body
         else:
             return Params()
+
+    def __post_init__(self):
+        """Quick hack to address the case where Nones are input, when we
+        really want any Nones to be replaced with Default.
+        Use gnucash account labels as defaults"""
+        if not self.account_label:
+            self.account_label = "Account Name"
+        if not self.amount_label:
+            self.amount_label = "Amount Num."
+        if not self.date_label:
+            self.date_label = "Date"
+        if not self.desc_label:
+            self.desc_label = "Description"
+        if not self.fan_label:
+            self.fan_label = "Full Account Name"
+        if not self.init_time_span:
+            self.init_time_span = "monthly"
+        if not self.init_time_res:
+            self.init_time_res = "annual"
+        if not self.ds_data_title:
+            self.ds_data_title = "Ledger"
+        if not self.ds_delimiter:
+            self.ds_delimiter = CONST["delim"]
+        if not self.unit:
+            self.unit = CONST["unit"]
+        if not self.ds_label:
+            self.ds_label = CONST["ds_label"]
+        if not self.bs_label:
+            self.bs_label = CONST["bs_label"]
+        if not self.ex_label:
+            self.ex_label = CONST["ex_label"]
+        if not self.ex_account_filter:
+            self.ex_account_filter = ()
+        if not self.bs_account_filter:
+            self.bs_account_filter = ()

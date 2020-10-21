@@ -45,6 +45,13 @@
 ![Screenshot](https://raw.githubusercontent.com/saufrecht/ledger-explorer/master/docs/data_source.png?s=820x838)
 
 ### Features
+* Load transaction file from URL or upload
+* Load Account Tree (optional)
+* Load Custom Reporting Periods (optional)
+* Adjust parameters
+* Make a bookmark
+
+### Instructions
 This tab determines which data the program uses.  It can read Transaction CSV exports from GnuCash.  It can also read any csv file with these properties:
 * one row is one ledger entry.  That is, either an full entry in single-entry bookkeeping or one entry (debit or credit) out of a double-entry system.
 * The following columns are present and labelled exactly:
@@ -55,3 +62,17 @@ This tab determines which data the program uses.  It can read Transaction CSV ex
   * **Date**. Entry date.
   * **Amount Num**. Value of the transaction.  Ledger Explorer assumes all values are the same currency.
 
+
+Read a CSV or XLS file, one row per transaction.
+
+
+* If column names in the source data don't match the Fields listed, enter new column names.  Matching and renaming ignores capitalization
+* Date: required.  parsable date, or YYYY.
+* Label for each individual transaction (if importing Gnucash, Notes and Memo added automatically)
+* Used to determine account tree.  Full path of account, e.g., Assets:Tools:Wheelbarrow.
+* Alternative method for account tree
+* Account tree is derived from tree source file if present, or transaction source if not.  Within each source, full account name is preferred over parent.
+* Delimiter: If Full Account Names are used to generate the path, use this delimiter between each account name.
+* Unit: For data not in dollars.  E.g., in $000s, or another unit altogether.
+* Alternate label for Cash Flow, e.g., Examining cumulative data by account
+* Alternate label for Balance Sheet, e.g., Examining transactions as flows by account and time

@@ -12,11 +12,12 @@ from ledgex.atree import ATree
 from ledgex.params import CONST, Params
 from ledgex.utils import (
     chart_fig_layout,
-    data_from_json_store,
     ex_trans_table,
     make_bar,
     trans_to_burst,
 )
+from ledgex.data_store import Datastore
+
 
 layout = html.Div(
     className="layout_box",
@@ -98,8 +99,8 @@ def load_ex_controls(control_store: str, data_store: str):
         raise PreventUpdate
 
     options = CONST["time_res_options"]
-    dd = data_from_json_store(data_store)
-    eras = dd.get("eras")
+    datastore: Datastore() = Datastore.from_json_store(data_store)
+    eras = datastore.eras
     if len(eras) > 0:
         options = [CONST["time_res_era_option"]] + options
 
@@ -122,7 +123,7 @@ def ex_make_time_series(
     if not data_store:
         raise PreventUpdate
 
-    params = Params.from_json(control_store)
+    params: Params() = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = params.init_time_res
 
@@ -140,13 +141,13 @@ def ex_make_time_series(
         )
         raise PreventUpdate
 
-    dd: dict = data_from_json_store(data_store, params.ex_account_filter)
-    trans: pd.DataFrame = dd.get("trans")
-    eras: pd.DataFrame = dd.get("eras")
+    datastore: Datastore() = Datastore.from_json(data_store, params.ex_account_filter)
+    trans: pd.DataFrame = datastore.trans
+    eras: pd.DataFrame = datastore.eras
     if time_resolution == "era" and len(eras) == 0:
         raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
-    account_tree: ATree = dd.get("account_tree")
-    unit = dd.get("unit")
+    account_tree: ATree = datastore.account_tree
+    unit = params.unit
 
     chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
     root_account_id: str = account_tree.root  # TODO: Stub for controllable design
@@ -210,20 +211,20 @@ def apply_selection_from_time_series(
     triggering.
 
     """
-    params = Params.from_json(control_store)
+    params: Params() = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
         time_span = params.init_time_span
 
-    dd = data_from_json_store(data_store)
-    if not dd:
+    datastore: Datastore() = Datastore.from_json(data_store)
+    if not datastore:
         raise PreventUpdate
 
-    trans = dd.get("trans")
-    eras = dd.get("eras")
-    account_tree = dd.get("account_tree")
-    unit = dd.get("unit")
+    trans = datastore.trans
+    eras = datastore.eras
+    account_tree = datastore.account_tree
+    unit = params.unit
 
     return trans_to_burst(
         account_tree, eras, figure, time_resolution, time_span, trans, unit
@@ -238,22 +239,23 @@ def apply_selection_from_time_series(
     ],
     [
         Input("ex_account_burst", "clickData"),
-        Input("ex_time_series_selection_info", "data"),
-        Input("data_store", "children"),
+
     ],
+    state=[State("ex_time_series_selection_info", "data"),
+           State("data_store", "children")]
 )
 def apply_burst_click(burst_clickData, time_series_info, data_store):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
     TODO: maybe check for input safety?
     """
-    dd = data_from_json_store(data_store)
-    trans = dd.get("trans")
+    datastore: Datastore() = Datastore.from_json(data_store)
+    trans = datastore.trans
     if not isinstance(trans, pd.DataFrame) or len(trans) == 0:
         raise PreventUpdate
-    account_tree = dd.get("account_tree")
-    earliest_trans = dd.get("earliest_trans")
-    latest_trans = dd.get("latest_trans")
+    account_tree = datastore.account_tree
+    earliest_trans = datastore.earliest_trans
+    latest_trans = datastore.latest_trans
 
     date_start: np.datetime64 = pd.to_datetime(
         time_series_info.get("start", earliest_trans)

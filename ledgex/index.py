@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
-from ledgex.apps import balance_sheet, data_source, explorer, hometab, settings
+from ledgex.apps import balance_sheet, data_source, explorer, hometab
 from ledgex.loading import LoadError, convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
 
@@ -47,7 +47,6 @@ app.layout = html.Div(
                         dcc.Tab(label="Home", id="le_tab", value="le"),
                         dcc.Tab(label=CONST["ex_label"], id="ex_tab", value="ex"),
                         dcc.Tab(label=CONST["bs_label"], id="bs_tab", value="bs"),
-                        dcc.Tab(label="Settings", id="se_tab", value="se"),
                         dcc.Tab(label=CONST["ds_label"], id="ds_tab", value="ds"),
                     ],
                 ),
@@ -56,7 +55,8 @@ app.layout = html.Div(
                     id="infodex",
                     children=[
                         dcc.Markdown(
-                            "[Report an issue](https://github.com/saufrecht/ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)"
+                            "[Report an issue](https://github.com/saufrecht/"
+                            + "ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)"
                         )
                     ],
                 ),
@@ -74,20 +74,19 @@ app.validation_layout = html.Div(
         data_source.layout,
         explorer.layout,
         hometab.layout,
-        settings.layout,
     ]
 )
 
 
 @app.callback([Output("tabs", "value")], [Input("url_reader", "pathname")])
 def parse_url_path(path: str):
-    """IF the URL path comprises a two-character string, set the tabs value,
-    which will trigger a switching of tabs"""
+    """Handle the path portion of the URL by which the page was reached.
+    If the URL path comprises a two-character string, set the tabs value,
+    which will in turn trigger a switching of tabs"""
     if isinstance(path, str):
         tab = path.strip("/")
         if len(tab) == 2:
             return [tab]
-
     raise PreventUpdate
 
 
@@ -117,8 +116,6 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
             return [balance_sheet.layout]
         elif desired_tab == "ex":
             return [explorer.layout]
-        elif desired_tab == "se":
-            return [settings.layout]
         elif desired_tab == "ds":
             return [data_source.layout]
         elif desired_tab == "le":
@@ -135,24 +132,14 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
     [Output("ex_tab", "label"), Output("bs_tab", "label"), Output("ds_tab", "label")],
     [Input("control_store", "children")],
 )
-def relabel_tab(control_data: str):
+def relabel_tab(control_store: str):
     """ If the setttings have any renaming for tab labels, apply them """
-    if not control_data:
+    if control_store and len(control_store) > 0:
+        params = Params(**json.loads(control_store))
+    else:
         raise PreventUpdate
 
-    cd = json.loads(control_data)
-    ex_label = cd.get("ex_label", None)
-    bs_label = cd.get("bs_label", None)
-    ds_label = cd.get("ds_label", None)
-
-    if not ex_label:
-        ex_label = CONST["ex_label"]
-    if not ds_label:
-        ds_label = CONST["ds_label"]
-    if not bs_label:
-        bs_label = CONST["bs_label"]
-
-    return [ex_label, bs_label, ds_label]
+    return [params.ex_label, params.bs_label, params.ds_label]
 
 
 @app.callback(
@@ -185,40 +172,35 @@ def parse_url_search(search: str):
             app.logger.warning(
                 f"failed to parse url input key: {key}, value: {value}.  Error {E}"
             )
-
-    control = Params(**c_data).to_json()
-
-    raw_trans = None
+    params_j = Params(**c_data).to_json()
+    trans_j = None
     trans_input = inputs.get("transu", None)
     if trans_input:
         try:
             transu = trans_input[0]
             if isinstance(transu, str):
-                filename, t_data, text = load_input_file('', transu, '')
+                filename, t_data, text = load_input_file("", transu, "")
                 if len(t_data) > 0:
-                    raw_trans = t_data.to_json()
+                    trans_j = t_data.to_json()
         except Exception as E:
             app.logger.warning(f"Failed to load {transu} because {E}")
-
-    raw_atree = None
+    atree_j = None
     atree_input = inputs.get("atreeu", None)
     if atree_input:
         atreeu = atree_input[0]
         if isinstance(atreeu, str):
-            filename, t_data, text = load_input_file('', atreeu, '')
+            filename, t_data, text = load_input_file("", atreeu, "")
             if len(t_data) > 0:
-                raw_atree = t_data.to_json()
-
-    raw_eras = None
+                atree_j = t_data.to_json()
+    eras_j = None
     eras_input = inputs.get("erasu", None)
     if eras_input:
         erasu = eras_input[0]
         if isinstance(erasu, str):
-            filename, t_data, text = load_input_file('', erasu, '')
+            filename, t_data, text = load_input_file("", erasu, "")
             if len(t_data) > 0:
-                raw_eras = t_data.to_json()
-
-    return [control, raw_trans, raw_atree, raw_eras]
+                eras_j = t_data.to_json()
+    return [params_j, trans_j, atree_j, eras_j]
 
 
 @app.callback(
@@ -247,14 +229,13 @@ def load_and_transform(
     control_urlnode: str,
     control_node: str,
 ):
-    """When any of the input files changes in interim storage, reload all
-    the data.  Because control store is a state input, the control
-    data has to be loaded before the files to have an effect; changing
-    the control data after loading will not re-trigger this.  it is implemented this way
-    because control data is already an Input for something else.  If that
-    turns out to be annoying, split the control_store into a params
-    portion and a tab-name portion?
-
+    """When any of the input files changes in interim storage, reload
+    all the data.  The control store is a state input, so changing
+    controls does not trigger a reload; only changing one of the input
+    files does that.  Tt is implemented this way because control data
+    is already an Input for something else.  If that turns out to be
+    annoying, split the control_store into a params portion and a
+    tab-name portion, or add a reload button.
     """
     ctx = dash.callback_context
     if ctx.triggered:
@@ -278,7 +259,6 @@ def load_and_transform(
         t_source = trans_urlfile_node
     else:
         status = "No transaction data loaded."
-
     if t_source and len(t_source) > 0:
         try:
             trans_data = pd.read_json(t_source)
@@ -294,7 +274,6 @@ def load_and_transform(
                 a_source = atree_urlfile_node
             if a_source:
                 atree_data = pd.read_json(a_source)
-
             eras_data: pd.DataFrame = pd.DataFrame()
             e_source = None
             if trigger_id == "eras_file_node":
@@ -307,27 +286,22 @@ def load_and_transform(
                 e_source = eras_urlfile_node
             if e_source:
                 eras_data = pd.read_json(e_source)
-
             if control_node and len(control_node) > 0:
                 c_source = json.loads(control_node)
             elif control_urlnode and len(control_urlnode) > 0:
                 c_source = json.loads(control_urlnode)
             else:
                 c_source = None
-
             controls = Params(**c_source)
             trans, atree, eras = convert_raw_data(
                 trans_data, atree_data, eras_data, controls
             )
-
             data = json.dumps({"trans": trans.to_json(), "eras": eras.to_json()})
             controls_j = controls.to_json()
-
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = f"{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras."
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-
     return [data, controls_j, status]
 
 
@@ -338,9 +312,7 @@ if __name__ == "__main__":
     #     datefmt='%Y-%m-%d %H:%M:%S %z')
     app.config["suppress_callback_exceptions"] = True
     app.run_server(debug=True, host="0.0.0.0", port="8081")
-
-
-if __name__ != "__main__":
+else:
     # Logging flows all the way to gunicorn.
     # (from https://trstringer.com/logging-flask-gunicorn-the-manageable-way/)
     gunicorn_logger = logging.getLogger("gunicorn.error")

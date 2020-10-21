@@ -7,7 +7,8 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import chart_fig_layout, data_from_json_store, make_cum_area
+from ledgex.utils import chart_fig_layout, make_cum_area
+from ledgex.data_store import Datastore
 
 layout: html = html.Div(
     className="layout_box",
@@ -56,9 +57,9 @@ def bs_make_time_series(time_resolution, data_store, control_store):
     params: Params = Params.from_json(control_store)
     if not time_resolution:
         time_resolution = params.init_time_res
-    dd: dict = data_from_json_store(data_store, params.bs_account_filter)
-    trans: pd.DataFrame = dd.get("trans")
-    account_tree: ATree = dd.get("account_tree")
+    datastore: Datastore() = Datastore.from_json(data_store, params.bs_account_filter)
+    trans: pd.DataFrame = datastore.trans
+    account_tree: ATree = datastore.account_tree
     unit: str = params.unit
     data_title = params.ds_data_title
     result: list = []
