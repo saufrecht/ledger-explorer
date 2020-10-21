@@ -287,11 +287,11 @@ layout = (
         Output("bs_label", "value"),
         Output("ex_label", "value"),
     ],
-    [Input("control_urlnode", "children")],
+    [Input("param_urlnode", "children")],
 )
-def url_params_to_ui(control_urlnode: str):
-    if control_urlnode and len(control_urlnode) > 0:
-        params = Params.from_json(control_urlnode)
+def url_params_to_ui(param_urlnode: str):
+    if param_urlnode and len(param_urlnode) > 0:
+        params = Params.from_json(param_urlnode)
     else:
         raise PreventUpdate
 
@@ -311,7 +311,7 @@ def url_params_to_ui(control_urlnode: str):
 
 
 @app.callback(
-    [Output("control_node", "children")],
+    [Output("param_node", "children")],
     [
         Input("account_name_col", "value"),
         Input("amount_col", "value"),
@@ -339,11 +339,11 @@ def apply_settings(
     bs_label: str,
     ex_label: str,
 ) -> str:
-    """Store all manually input setting information into the control node,
-    which in turn will update the control store, for use during
+    """Store all manually input setting information into the param node,
+    which in turn will update the param store, for use during
     load
     """
-    controls: Params = Params(
+    params: Params = Params(
         account_label,
         amount_label,
         date_label,
@@ -356,7 +356,7 @@ def apply_settings(
         bs_label,
         ex_label,
     )
-    return [controls.to_json()]
+    return [params.to_json()]
 
 
 # @app.callback(

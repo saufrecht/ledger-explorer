@@ -25,10 +25,10 @@ app.layout = html.Div(
     children=[
         dcc.Location(id="url_reader", refresh=False),
         html.Div(id="change_tabs_node", className="hidden"),
-        html.Div(id="control_node", className="hidden"),
-        html.Div(id="control_urlnode", className="hidden"),
+        html.Div(id="param_node", className="hidden"),
+        html.Div(id="param_urlnode", className="hidden"),
         html.Div(id="data_store", className="hidden"),
-        html.Div(id="control_store", className="hidden"),
+        html.Div(id="param_store", className="hidden"),
         html.Div(id="trans_file_node", className="hidden"),
         html.Div(id="atree_file_node", className="hidden"),
         html.Div(id="eras_file_node", className="hidden"),
@@ -130,12 +130,12 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
 
 @app.callback(
     [Output("ex_tab", "label"), Output("bs_tab", "label"), Output("ds_tab", "label")],
-    [Input("control_store", "children")],
+    [Input("param_store", "children")],
 )
-def relabel_tab(control_store: str):
+def relabel_tab(param_store: str):
     """ If the setttings have any renaming for tab labels, apply them """
-    if control_store and len(control_store) > 0:
-        params = Params(**json.loads(control_store))
+    if param_store and len(param_store) > 0:
+        params = Params(**json.loads(param_store))
     else:
         raise PreventUpdate
 
@@ -144,7 +144,7 @@ def relabel_tab(control_store: str):
 
 @app.callback(
     [
-        Output("control_urlnode", "children"),
+        Output("param_urlnode", "children"),
         Output("trans_urlfile_node", "children"),
         Output("atree_urlfile_node", "children"),
         Output("eras_urlfile_node", "children"),
@@ -206,7 +206,7 @@ def parse_url_search(search: str):
 @app.callback(
     [
         Output("data_store", "children"),
-        Output("control_store", "children"),
+        Output("param_store", "children"),
         Output("files_status", "children"),
     ],
     [
@@ -217,7 +217,7 @@ def parse_url_search(search: str):
         Input("atree_urlfile_node", "children"),
         Input("eras_urlfile_node", "children"),
     ],
-    state=[State("control_urlnode", "children"), State("control_node", "children")],
+    state=[State("param_urlnode", "children"), State("param_node", "children")],
 )
 def load_and_transform(
     trans_file_node: str,
@@ -226,15 +226,15 @@ def load_and_transform(
     trans_urlfile_node: str,
     atree_urlfile_node: str,
     eras_urlfile_node: str,
-    control_urlnode: str,
-    control_node: str,
+    param_urlnode: str,
+    param_node: str,
 ):
     """When any of the input files changes in interim storage, reload
-    all the data.  The control store is a state input, so changing
-    controls does not trigger a reload; only changing one of the input
-    files does that.  Tt is implemented this way because control data
+    all the data.  The param store is a state input, so changing
+    params does not trigger a reload; only changing one of the input
+    files does that.  Tt is implemented this way because param data
     is already an Input for something else.  If that turns out to be
-    annoying, split the control_store into a params portion and a
+    annoying, split the param_store into a params portion and a
     tab-name portion, or add a reload button.
     """
     ctx = dash.callback_context
@@ -246,7 +246,7 @@ def load_and_transform(
     # way, user uploads by file or url will override anything loaded
     # from the Ledger Explorer url.
     data: str = ""
-    controls_j: str = ""
+    params_j: str = ""
     status: str = ""
     t_source: str = ""
     if trigger_id == "trans_file_node":
@@ -286,23 +286,23 @@ def load_and_transform(
                 e_source = eras_urlfile_node
             if e_source:
                 eras_data = pd.read_json(e_source)
-            if control_node and len(control_node) > 0:
-                c_source = json.loads(control_node)
-            elif control_urlnode and len(control_urlnode) > 0:
-                c_source = json.loads(control_urlnode)
+            if param_node and len(param_node) > 0:
+                c_source = json.loads(param_node)
+            elif param_urlnode and len(param_urlnode) > 0:
+                c_source = json.loads(param_urlnode)
             else:
                 c_source = None
-            controls = Params(**c_source)
+            params = Params(**c_source)
             trans, atree, eras = convert_raw_data(
-                trans_data, atree_data, eras_data, controls
+                trans_data, atree_data, eras_data, params
             )
             data = json.dumps({"trans": trans.to_json(), "eras": eras.to_json()})
-            controls_j = controls.to_json()
+            params_j = params.to_json()
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = f"{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras."
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-    return [data, controls_j, status]
+    return [data, params_j, status]
 
 
 if __name__ == "__main__":

@@ -88,18 +88,18 @@ layout = html.Div(
         Output("ex_time_series_resolution", "options"),
         Output("ex_time_series_span", "value"),
     ],
-    [Input("control_store", "children")],
+    [Input("param_store", "children")],
     state=[State("data_store", "children")],
 )
-def load_ex_controls(control_store: str, data_store: str):
-    """ When the control store changes and this tab is visible, update the top controls"""
-    if control_store and len(control_store) > 0:
-        params = Params(**json.loads(control_store))
+def load_ex_params(param_store: str, data_store: str):
+    """ When the param store changes and this tab is visible, update the top params"""
+    if param_store and len(param_store) > 0:
+        params = Params(**json.loads(param_store))
     else:
         raise PreventUpdate
 
     options = CONST["time_res_options"]
-    datastore: Datastore() = Datastore.from_json_store(data_store)
+    datastore: Datastore() = Datastore.from_json(data_store)
     eras = datastore.eras
     if len(eras) > 0:
         options = [CONST["time_res_era_option"]] + options
@@ -113,17 +113,17 @@ def load_ex_controls(control_store: str, data_store: str):
         Input("ex_time_series_resolution", "value"),
         Input("ex_time_series_span", "value"),
     ],
-    state=[State("data_store", "children"), State("control_store", "children")],
+    state=[State("data_store", "children"), State("param_store", "children")],
 )
 def ex_make_time_series(
-    time_resolution: int, time_span: str, data_store: str, control_store: str
+    time_resolution: int, time_span: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
 
     if not data_store:
         raise PreventUpdate
 
-    params: Params() = Params.from_json(control_store)
+    params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
 
@@ -193,11 +193,11 @@ def ex_make_time_series(
     state=[
         State("ex_time_series_resolution", "value"),
         State("ex_time_series_span", "value"),
-        State("control_store", "value"),
+        State("param_store", "value"),
     ],
 )
 def apply_selection_from_time_series(
-    figure, selectedData, data_store, time_resolution, time_span, control_store
+    figure, selectedData, data_store, time_resolution, time_span, param_store
 ):
     """
     Selecting specific points from the time series chart updates the
@@ -211,7 +211,7 @@ def apply_selection_from_time_series(
     triggering.
 
     """
-    params: Params() = Params.from_json(control_store)
+    params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
@@ -249,6 +249,8 @@ def apply_burst_click(burst_clickData, time_series_info, data_store):
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
     TODO: maybe check for input safety?
     """
+    if not data_store or len(data_store) == 0:
+        raise PreventUpdate
     datastore: Datastore() = Datastore.from_json(data_store)
     trans = datastore.trans
     if not isinstance(trans, pd.DataFrame) or len(trans) == 0:

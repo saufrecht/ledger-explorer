@@ -80,7 +80,7 @@ CONST = {
 
 @dataclass
 class Params:
-    """ Class to hold everything to do with settings & controls """
+    """ Class to hold everything to do with settings & parameters """
     account_label: str = None
     amount_label: str = None
     date_label: str = None

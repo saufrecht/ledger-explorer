@@ -34,11 +34,11 @@ layout: html = html.Div(
 
 
 @app.callback(
-    [Output("bs_time_series_resolution", "value")], [Input("control_store", "children")]
+    [Output("bs_time_series_resolution", "value")], [Input("param_store", "children")]
 )
-def load_bs_controls(control_store: str):
-    if control_store and len(control_store) > 0:
-        params = Params.from_json(control_store)
+def load_bs_params(param_store: str):
+    if param_store and len(param_store) > 0:
+        params = Params.from_json(param_store)
     else:
         raise PreventUpdate
 
@@ -48,13 +48,13 @@ def load_bs_controls(control_store: str):
 @app.callback(
     [Output("time_serieses", "children")],
     [Input("bs_time_series_resolution", "value")],
-    state=[State("data_store", "children"), State("control_store", "children")],
+    state=[State("data_store", "children"), State("param_store", "children")],
 )
-def bs_make_time_series(time_resolution, data_store, control_store):
+def bs_make_time_series(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
     if not data_store:
         raise PreventUpdate
-    params: Params = Params.from_json(control_store)
+    params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     datastore: Datastore() = Datastore.from_json(data_store, params.bs_account_filter)
