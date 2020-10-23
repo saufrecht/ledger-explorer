@@ -1,4 +1,5 @@
 from typing import Iterable
+from numpy import datetime64
 import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
@@ -8,7 +9,7 @@ from ledgex.app import app
 from ledgex.loading import load_input_file
 from ledgex.params import CONST, Params
 from ledgex.data_store import Datastore
-from ledgex.utils import require_or_raise
+from ledgex.utils import require_or_raise, pretty_date
 
 
 layout = (
@@ -57,11 +58,8 @@ layout = (
             ),
             html.Div(
                 children=[
-                    html.H2("Current Data"),
-                    html.Div("Currently loaded file"),
-                    html.Div(id="trans_status"),
                     html.Div(id="trans_loaded_meta"),
-                    html.Div(id="trans_parsed_meta"),
+                    html.Div(id="trans_status"),
                 ]
             ),
             html.Div(
@@ -234,9 +232,14 @@ layout = (
                         type="url",
                         placeholder="URL for account csv file",
                     ),
-                    html.Div(id="atree_status", children=["No accounts"]),
+                ],
+            ),
+            html.Div(
+                className="ds_column shadow",
+                children=[
                     html.Div(id="atree_loaded_meta"),
-                    html.Div(id="atree_parsed_meta"),
+                    html.Div(id="atree_status", children=["No accounts"]),
+                    html.Pre(id="atree_display", className="code"),
                 ],
             ),
             html.Div(
@@ -267,9 +270,13 @@ layout = (
                         type="url",
                         placeholder="URL for report era csv file",
                     ),
-                    html.Div(id="eras_status", children=["No reporting periods"]),
+                ],
+            ),
+            html.Div(
+                className="ds_column shadow",
+                children=[
                     html.Div(id="eras_loaded_meta"),
-                    html.Div(id="eras_parsed_meta"),
+                    html.Div(id="eras_status", children=["No reporting periods"]),
                 ],
             ),
         ],
@@ -380,7 +387,8 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     upload it and provide visual feedback.
     Can't use time comparison to see which one is more recent (because dcc.Upload
     doesn't have an upload timestamp), so punt that for now; need to reload the page
-    to control whether url or file takes precedence."""
+    to control whether url or file takes precedence. TODO: reuse code between upload_trans,
+    upload_atree, and upload_eras"""
     if (not filename or len(filename) == 0) and (not url or len(url) == 0):
         raise PreventUpdate
 
@@ -478,22 +486,23 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         Output("desc_row_2", "children"),
         Output("fan_row_2", "children"),
         Output("parent_row_2", "children"),
-        Output("trans_status", "children")
+        Output('trans_status', 'children'),
+        Output('atree_status', 'children'),
+        Output('atree_display', 'children'),
+        Output('eras_status', 'children'),
     ],
     [Input("data_store", "children")],
-    state=[State("param_store", "children")]
-)
+    state=[State("param_store", "children")])
 def update_status_on_tab(data_store: str, param_store: str):
     """ When the loaded files change, and the data source tab is open,
     then presumably the files changed because of user input to the
     tab controls, so show feedback.  If the loaded files change
     through the URL mechanism, and the data source tab isn't open,
-    then this callback should be ignored. """
+    then this callback is ignored. """
 
     require_or_raise(data_store)
     datastore: Datastore() = Datastore.from_json(data_store)
     params = Params.from_json(param_store)
-
     trans: pd.DataFrame = datastore.trans
     require_or_raise(trans)
     trans_filename = params.ds_data_title
@@ -501,48 +510,25 @@ def update_status_on_tab(data_store: str, param_store: str):
     c2: pd.DataFrame = trans.iloc[-1]
     r1: list = [c1.account, c1.amount, c1.date, c1.get('desc'), c1.get('full account name'), c1.get('parent account')]
     r2: list = [c2.account, c2.amount, c2.date, c2.get('desc'), c2.get('full account name'), c2.get('parent account')]
-    trans_status: str = f'File: {trans_filename} loaded, with {len(trans)} transactions'
-    return r1 + r2 + [trans_status]
 
+    # As quick hack to get linebreaks in Dash for pre-formatted text, generate status info as lists,
+    # then render lists into Divs
 
-# @app.callback([Output('trans_status', 'children'),
-#                Output('atree_status', 'children'),
-#                Output('eras_status', 'children'),
-#                Output('trans_parsed_meta', 'children'),
-#                Output('atree_parsed_meta', 'children'),
-#                Output('eras_parsed_meta', 'children')],
-#               [Input('files_status', 'children')],
-#               state=[State('data_store', 'children')])
-# def update_load_status(files_status, data_store):
-#     earliest_trans: np.datetime64 = trans['date'].min()
-#     latest_trans: np.datetime64 = trans['date'].max()
+    earliest_trans: datetime64 = trans['date'].min()
+    latest_trans: datetime64 = trans['date'].max()
 
-#     trans_summary: str = f'File: {trans_filename} loaded, with {len(trans)} transactions'
-#     files_status: str = f'{trans_filename}, {len(trans)} transactions'
-#     trans_status_list: list = [f'Data loaded: {len(trans)} between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}']  # NOQA
-#     first_rec = pretty_records(trans.head(3))
-#     last_rec = pretty_records(trans.tail(3))
-#     records: list = ['=================='] + ['first and last 3 records'] + first_rec + ['=================='] + last_rec  # NOQA
-#     trans_status_list = trans_status_list + records
+    trans_summary: list = [f'{trans_filename}: {len(trans)} records loaded, between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}']  # NOQA
 
-#     atree_summary: str = None
-#     atree_status_list: list = []
-#     if atree and len(atree) > 0:
-#         atree_summary: str = f'{len(atree)} accounts'
-#         atree_list: list = [f'Account Tree loaded: {atree_summary}, {atree.depth()} levels deep', atree.show_to_string()]  # NOQA
-#         files_status = f'{files_status}, {atree_summary}.'
+    atree = datastore.account_tree
+    atree_summary: str = None
+    atree_display: str = None
+    if atree and len(atree) > 0:
+        atree_summary: str = f'{len(atree)} accounts loaded, {atree.depth()} levels deep'
+        atree_display: str = atree.show_to_string()
 
-#     eras_summary: str = None
-#     eras_status_list: list = []
-#     if len(eras) > 0:
-#         eras_summary: str = f'{len(eras)} reporting eras'
-#         eras_status_list = [eras_summary]
-#         files_status = f'{files_status}, {eras_summary}.'
+    eras = datastore.eras
+    eras_summary: str = None
+    if len(eras) > 0:
+        eras_summary: str = f'{len(eras)} reporting eras'
 
-#     trans_detail: list = [html.Div(children=x) for x in trans_status_list]
-#     atree_detail: list = [html.Div(children=x) for x in atree_status_list]
-#     eras_detail: list = [html.Div(children=x) for x in eras_status_list]
-
-#     data = json.dumps({'trans': trans.to_json(),
-#                        'eras': eras.to_json()})
-#     return [data, trans_summary, atree_summary, eras_summary, files_status, trans_detail, atree_detail, eras_detail]
+    return r1 + r2 + [trans_summary, atree_summary, atree_display, eras_summary]
