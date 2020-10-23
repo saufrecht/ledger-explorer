@@ -10,14 +10,7 @@ from treelib import Tree
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import LError
-
-
-class LoadError(LError):
-    """ Errors during transaction, Account Tree, and Eras data load """
-
-    def __init__(self, message):
-        self.message = message
+from ledgex.utils import LoadError
 
 
 def load_eras(data, earliest_date, latest_date):

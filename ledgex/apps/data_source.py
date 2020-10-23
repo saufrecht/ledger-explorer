@@ -1,5 +1,5 @@
 from typing import Iterable
-
+import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -7,65 +7,74 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.loading import load_input_file
 from ledgex.params import CONST, Params
+from ledgex.data_store import Datastore
+from ledgex.utils import require_or_raise
+
 
 layout = (
     html.Div(
         className="layout_box",
         children=[
             html.Div(
-                id="trans_box",
-                className="layout_box shadow",
+                className="ds_column shadow",
                 children=[
-                    html.Div(
-                        className="ds_column",
+                    html.H2(
+                        "Transactions",
+                        className="col_heading",
+                        id="trans_heading",
+                    ),
+                    dcc.Markdown(
+                        """Upload a Gnucash transaction CSV export, or any CSV file with
+                        matching columns.  See
+                        [Instructions](https://github.com/saufrecht/ledger-explorer/blob/master/docs/USAGE.md)
+                        for more information."""
+                    ),
+                    dcc.Upload(
+                        id="trans_file",
+                        className="upload_target upload_target_big",
                         children=[
-                            html.H2(
-                                "Transactions",
-                                className="col_heading",
-                                id="trans_heading",
+                            html.Div(
+                                id="trans_filename",
+                                className="filename",
+                                children="no transaction file",
                             ),
-                            dcc.Markdown(
-                                """Upload a Gnucash transaction CSV export, or any CSV file with
-                    matching columns.  See
-                    [Instructions](https://github.com/saufrecht/ledger-explorer/blob/master/docs/USAGE.md)
-                    for more information."""
+                            html.A(
+                                id="trans_select",
+                                children="Drop or Select a file",
                             ),
-                            dcc.Upload(
-                                id="trans_file",
-                                className="upload_target upload_target_big",
-                                children=[
-                                    html.Div(
-                                        id="trans_filename",
-                                        className="filename",
-                                        children="no transaction file",
-                                    ),
-                                    html.A(
-                                        id="trans_select",
-                                        children="Drop or Select a file",
-                                    ),
-                                ],
-                            ),
-                            dcc.Input(
-                                className="url_input",
-                                id="trans_url",
-                                persistence=True,
-                                persistence_type="memory",
-                                type="url",
-                                value="",
-                                placeholder="URL for transaction csv file",
-                            ),
-                            html.Div(id="trans_status", children=["No transactions"]),
-                            html.Div(id="trans_loaded_meta"),
-                            html.Div(id="trans_parsed_meta"),
                         ],
                     ),
+                    dcc.Input(
+                        className="url_input",
+                        id="trans_url",
+                        persistence=True,
+                        persistence_type="memory",
+                        type="url",
+                        value="",
+                        placeholder="URL for transaction csv file",
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H2("Current Data"),
+                    html.Div("Currently loaded file"),
+                    html.Div(id="trans_status"),
+                    html.Div(id="trans_loaded_meta"),
+                    html.Div(id="trans_parsed_meta"),
+                ]
+            ),
+            html.Div(
+                className="ds_column shadow",
+                children=[
+                    html.H3("Columns"),
                     html.Fieldset(
                         className="field_grid field_grid4",
                         children=[
                             html.H4("Required Field"),
                             html.H4("Column Name"),
                             html.H4(id="first_row", children="First Row"),
-                            html.H4(id="second_row", children="Second Row"),
+                            html.H4(id="second_row", children="Last Row"),
                             html.Label(htmlFor="account_name_col", children="Account"),
                             dcc.Input(
                                 id="account_name_col",
@@ -136,73 +145,6 @@ layout = (
                     ),
                 ],
             ),
-        ],
-    ),
-    html.Div(
-        className="layout_box col3",
-        children=[
-            html.Div(
-                className="ds_column shadow",
-                children=[
-                    html.H3("Accounts", className="col_heading", id="atree_heading"),
-                    dcc.Upload(
-                        id="atree_file",
-                        className="upload_target",
-                        children=[
-                            html.Div(
-                                id="atree_filename",
-                                className="filename",
-                                children="No account file",
-                            ),
-                            html.A(id="atree_select", children="Drop or Select a file"),
-                        ],
-                    ),
-                    dcc.Input(
-                        className="url_input",
-                        id="atree_url",
-                        persistence=True,
-                        persistence_type="memory",
-                        type="url",
-                        placeholder="URL for account csv file",
-                    ),
-                    html.Div(id="atree_status", children=["No accounts"]),
-                    html.Div(id="atree_loaded_meta"),
-                    html.Div(id="atree_parsed_meta"),
-                ],
-            ),
-            html.Div(
-                className="ds_column shadow",
-                children=[
-                    html.H3(
-                        "Custom Reporting Periods",
-                        className="col_heading",
-                        id="eras_heading",
-                    ),
-                    dcc.Upload(
-                        id="eras_file",
-                        className="upload_target",
-                        children=[
-                            html.Div(
-                                id="eras_filename",
-                                className="filename",
-                                children="No custom reporting period file",
-                            ),
-                            html.A(id="eras_select", children="Drop or Select a file"),
-                        ],
-                    ),
-                    dcc.Input(
-                        className="url_input",
-                        id="eras_url",
-                        persistence=True,
-                        persistence_type="memory",
-                        type="url",
-                        placeholder="URL for report era csv file",
-                    ),
-                    html.Div(id="eras_status", children=["No reporting periods"]),
-                    html.Div(id="eras_loaded_meta"),
-                    html.Div(id="eras_parsed_meta"),
-                ],
-            ),
             html.Div(
                 className="ds_column shadow",
                 children=[
@@ -268,6 +210,68 @@ layout = (
                     ),
                 ],
             ),
+            html.Div(
+                className="ds_column shadow",
+                children=[
+                    html.H3("Accounts", className="col_heading", id="atree_heading"),
+                    dcc.Upload(
+                        id="atree_file",
+                        className="upload_target",
+                        children=[
+                            html.Div(
+                                id="atree_filename",
+                                className="filename",
+                                children="No account file",
+                            ),
+                            html.A(id="atree_select", children="Drop or Select a file"),
+                        ],
+                    ),
+                    dcc.Input(
+                        className="url_input",
+                        id="atree_url",
+                        persistence=True,
+                        persistence_type="memory",
+                        type="url",
+                        placeholder="URL for account csv file",
+                    ),
+                    html.Div(id="atree_status", children=["No accounts"]),
+                    html.Div(id="atree_loaded_meta"),
+                    html.Div(id="atree_parsed_meta"),
+                ],
+            ),
+            html.Div(
+                className="ds_column shadow",
+                children=[
+                    html.H3(
+                        "Custom Reporting Periods",
+                        className="col_heading",
+                        id="eras_heading",
+                    ),
+                    dcc.Upload(
+                        id="eras_file",
+                        className="upload_target",
+                        children=[
+                            html.Div(
+                                id="eras_filename",
+                                className="filename",
+                                children="No custom reporting period file",
+                            ),
+                            html.A(id="eras_select", children="Drop or Select a file"),
+                        ],
+                    ),
+                    dcc.Input(
+                        className="url_input",
+                        id="eras_url",
+                        persistence=True,
+                        persistence_type="memory",
+                        type="url",
+                        placeholder="URL for report era csv file",
+                    ),
+                    html.Div(id="eras_status", children=["No reporting periods"]),
+                    html.Div(id="eras_loaded_meta"),
+                    html.Div(id="eras_parsed_meta"),
+                ],
+            ),
         ],
     ),
 )
@@ -290,11 +294,8 @@ layout = (
     [Input("param_urlnode", "children")],
 )
 def url_params_to_ui(param_urlnode: str):
-    if param_urlnode and len(param_urlnode) > 0:
-        params = Params.from_json(param_urlnode)
-    else:
-        raise PreventUpdate
-
+    require_or_raise(param_urlnode)
+    params = Params.from_json(param_urlnode)
     return [
         params.account_label,
         params.amount_label,
@@ -343,38 +344,21 @@ def apply_settings(
     which in turn will update the param store, for use during
     load
     """
+
     params: Params = Params(
-        account_label,
-        amount_label,
-        date_label,
-        desc_label,
-        fan_label,
-        ds_data_title,
-        ds_delimiter,
-        unit,
-        ds_label,
-        bs_label,
-        ex_label,
+        account_label=account_label,
+        amount_label=amount_label,
+        date_label=date_label,
+        desc_label=desc_label,
+        fan_label=fan_label,
+        ds_data_title=ds_data_title,
+        ds_delimiter=ds_delimiter,
+        unit=unit,
+        ds_label=ds_label,
+        bs_label=bs_label,
+        ex_label=ex_label,
     )
     return [params.to_json()]
-
-
-# @app.callback(
-#     [
-#         Input("trans_filename", "children"),
-#         Input("trans_file_node", "children"),
-#         Input("trans_loaded_meta", "children"),
-#         Input("trans_select", "children"),
-#     ],
-#     [
-#         Input("trans_file", "filename"),
-#         Input("trans_file", "contents"),
-#         Input("trans_url", "n_submit"),
-#     ],
-#     state=[State("trans_url", "value")],
-# )
-# def thingie(filename: str, content, submit: int, url: str) -> Iterable:
-#     pass
 
 
 @app.callback(
@@ -480,6 +464,47 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         ]
 
 
+@app.callback(
+    [
+        Output("account_row_1", "children"),
+        Output("amount_row_1", "children"),
+        Output("date_row_1", "children"),
+        Output("desc_row_1", "children"),
+        Output("fan_row_1", "children"),
+        Output("parent_row_1", "children"),
+        Output("account_row_2", "children"),
+        Output("amount_row_2", "children"),
+        Output("date_row_2", "children"),
+        Output("desc_row_2", "children"),
+        Output("fan_row_2", "children"),
+        Output("parent_row_2", "children"),
+        Output("trans_status", "children")
+    ],
+    [Input("data_store", "children")],
+    state=[State("param_store", "children")]
+)
+def update_status_on_tab(data_store: str, param_store: str):
+    """ When the loaded files change, and the data source tab is open,
+    then presumably the files changed because of user input to the
+    tab controls, so show feedback.  If the loaded files change
+    through the URL mechanism, and the data source tab isn't open,
+    then this callback should be ignored. """
+
+    require_or_raise(data_store)
+    datastore: Datastore() = Datastore.from_json(data_store)
+    params = Params.from_json(param_store)
+
+    trans: pd.DataFrame = datastore.trans
+    require_or_raise(trans)
+    trans_filename = params.ds_data_title
+    c1: pd.DataFrame = trans.iloc[0]
+    c2: pd.DataFrame = trans.iloc[-1]
+    r1: list = [c1.account, c1.amount, c1.date, c1.get('desc'), c1.get('full account name'), c1.get('parent account')]
+    r2: list = [c2.account, c2.amount, c2.date, c2.get('desc'), c2.get('full account name'), c2.get('parent account')]
+    trans_status: str = f'File: {trans_filename} loaded, with {len(trans)} transactions'
+    return r1 + r2 + [trans_status]
+
+
 # @app.callback([Output('trans_status', 'children'),
 #                Output('atree_status', 'children'),
 #                Output('eras_status', 'children'),
@@ -489,12 +514,6 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
 #               [Input('files_status', 'children')],
 #               state=[State('data_store', 'children')])
 # def update_load_status(files_status, data_store):
-#     """ When the loaded files change, and the data source tab is open,
-#     then presumably the files changed because of user input to the
-#     tab controls, so show feedback.  If the loaded files change
-#     through the URL mechanism, and the data source tab isn't open,
-#     then this callback should be ignored. """
-
 #     earliest_trans: np.datetime64 = trans['date'].min()
 #     latest_trans: np.datetime64 = trans['date'].max()
 

@@ -15,15 +15,21 @@ class Datastore:
     trans: pd.DataFrame = pd.DataFrame
     eras: pd.DataFrame = pd.DataFrame
     account_tree: ATree = ATree()
-    trans_filename: str = ''
-    eras_filename: str = ''
-    account_filename: str = ''
+    trans_filename: str = ""
+    eras_filename: str = ""
+    account_filename: str = ""
     earliest_trans: datetime64 = None
     latest_trans: datetime64 = None
 
     def to_json(self):
         """ Convert data to JSON via dict structure """
         return json.dumps(self, default=lambda x: x.__dict__)
+
+    def __len__(self):
+        """Trans is the essential part of datastore so return that length.
+        This is implemented so that require_or_raise works without a special
+        case for datastore."""
+        return len(self.trans)
 
     @classmethod
     def from_json(cls, json_data, filter: list = []):
@@ -81,9 +87,9 @@ class Datastore:
             eras["date_start"] = eras["date_start"].astype("datetime64[ms]")
             eras["date_end"] = eras["date_end"].astype("datetime64[ms]")
 
-        trans_filename = 'placeholder'
-        eras_filename = 'placeholder'
-        account_filename = 'placeholder'
+        trans_filename = data.get("trans_filename")
+        eras_filename = "placeholder"
+        account_filename = "placeholder"
         earliest_trans: datetime64 = trans["date"].min()
         latest_trans: datetime64 = trans["date"].max()
 

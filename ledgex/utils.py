@@ -1,5 +1,4 @@
 import calendar
-import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 
@@ -21,6 +20,13 @@ pd.options.mode.chained_assignment = (
 
 class LError(Exception):
     """ Base class for package errors"""
+
+
+class LoadError(LError):
+    """ Errors during transaction, Account Tree, and Eras data load """
+
+    def __init__(self, message):
+        self.message = message
 
 
 disc_colors = px.colors.qualitative.D3
@@ -258,6 +264,19 @@ trans_table_format = dict(
 )
 
 
+def require_or_raise(field: object):
+    """ Shorthand to halt callbacks if data missing"""
+    if isinstance(field, pd.DataFrame):
+        if len(field) == 0:
+            raise PreventUpdate
+    elif not field:
+        raise PreventUpdate
+    elif len(field) == 0:
+        raise PreventUpdate
+    else:
+        return
+
+
 def make_bar(
     trans: pd.DataFrame,
     account_tree: ATree,
@@ -267,6 +286,7 @@ def make_bar(
     eras: pd.DataFrame,
     color_num: int = 0,
     deep: bool = False,
+    unit: str = CONST['unit'],
 ) -> go.Bar:
     """returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts."""
@@ -327,7 +347,7 @@ def make_bar(
             texttemplate=bin_amounts.texttemplate,
             textposition="auto",
             opacity=0.9,
-            hovertemplate="%{x}<br>%{customdata}:<br>%{y:$,.0f}<br>",
+            hovertemplate="%{x}<br>%{customdata}:<br>%{y:$,.0f}<br>",  # TODO: pass in unit for $
             marker_color=marker_color,
         )
     elif trace_type == "era":
@@ -343,10 +363,19 @@ def make_bar(
         else:
             # otherwise, lose its label, leaving its start as the final boundary of the previous
             bin_labels = bin_labels[0:-1]
-
-        tba["bin"] = pd.cut(
-            x=tba.index, bins=bin_boundary_dates, labels=bin_labels, duplicates="drop"
-        )
+        try:
+            tba["bin"] = pd.cut(
+                x=tba.index,
+                bins=bin_boundary_dates,
+                labels=bin_labels,
+                duplicates="drop",
+            )
+        except ValueError as E:
+            app.logger.warning(
+                "An error making the bins for eras.  Probably because of design errors"
+                + f" in how eras are parsed and loaded: {E}"
+            )
+            return None
         bin_amounts = pd.DataFrame(
             {
                 "date": bin_boundary_dates[0:-1],
@@ -383,12 +412,12 @@ def make_bar(
             text=bin_amounts.text,
             textposition="auto",
             opacity=0.9,
-            texttemplate="%{text}<br>%{value:$,.0f}",
-            hovertemplate="%{customdata}<br>%{value:$,.0f}",
+            texttemplate="%{text}<br>%{value:$,.0f}",    # TODO: pass in unit for $
+            hovertemplate="%{customdata}<br>%{value:$,.0f}",    # TODO: pass in unit for $
             marker_color=marker_color,
         )
     else:
-        PreventUpdate
+        return None
     return trace
 
 
@@ -421,7 +450,7 @@ def make_cum_area(
         mode="lines+markers",
         marker={"symbol": "circle", "opacity": 1, "color": marker_color},
         customdata=bin_amounts["label"],
-        hovertemplate="%{customdata}<br>%{y:$,.0f}<br>%{x}<extra></extra>",
+        hovertemplate="%{customdata}<br>%{y:$,.0f}<br>%{x}<extra></extra>",    # TODO: pass in unit for $
         line={"width": 0.5, "color": marker_color},
         hoverlabel={"namelength": 15},
         stackgroup="one",
@@ -475,6 +504,14 @@ def make_sunburst(
         1, "M"
     )
     sel_trans = trans[(trans["date"] >= date_start) & (trans["date"] <= date_end)]
+    # TODO: if the time series has, e.g., income and expenses,
+    # positizing this way effectively removes the expenses, because
+    # they are negative.  Might be better to show both in the
+    # sunburst, even though this puts positive values next to reversed
+    # negative values (e.g., earn 20, spend 10, net is 10, but
+    # sunburst shows (10 + -(-20) = 30?!), because more data would be browsable that
+    # way.  Could reverse with flip_negative CONST, and color coding
+    # the reversed negatives to reduce confusion ??
     sel_trans = positize(sel_trans)
 
     def make_subtotal_tree(trans, prorate_months):
@@ -776,7 +813,9 @@ def trans_to_burst(
     ts_label = CONST["time_span_lookup"].get(time_span)["label"]
 
     if len(trans) == 0:
-        raise PreventUpdate  # TODO: don't raise this in functions; return an error and handle it upstairs
+        raise LError(
+            "Tried to make burst figure from transactions, but no transactions provided."
+        )
 
     colormap = {}
     if figure:
@@ -808,15 +847,13 @@ def trans_to_burst(
                     .loc[trans["date"] >= period_start]
                     .loc[trans["date"] <= period_end]
                 )
-
                 if len(filtered_trans) > 0:
                     filtered_trans = filtered_trans.append(new_trans)
                 else:
                     filtered_trans = new_trans
-
-    # If no transactions are ultimately selected, show all accounts
     filtered_count = len(filtered_trans)
-    if filtered_count > 0:
+    # If there are some transactions selected, show them
+    if filtered_count > 0 and len(sel_accounts) > 0:
         # TODO: desc_account_count is still wrong.
         sel_accounts_content = pretty_account_label(
             sel_accounts,

@@ -6,13 +6,14 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
 from ledgex.apps import balance_sheet, data_source, explorer, hometab
 from ledgex.loading import LoadError, convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
+from ledgex.utils import require_or_raise
 
 server = app.server
 
@@ -29,6 +30,8 @@ app.layout = html.Div(
         html.Div(id="param_urlnode", className="hidden"),
         html.Div(id="data_store", className="hidden"),
         html.Div(id="param_store", className="hidden"),
+        html.Div(id="param_store_for_tab_labels", className="hidden"),
+        html.Div(id="ex_tab_trigger", className="hidden"),
         html.Div(id="trans_file_node", className="hidden"),
         html.Div(id="atree_file_node", className="hidden"),
         html.Div(id="eras_file_node", className="hidden"),
@@ -54,10 +57,7 @@ app.layout = html.Div(
                 html.Div(
                     id="infodex",
                     children=[
-                        dcc.Markdown(
-                            "[Report an issue](https://github.com/saufrecht/"
-                            + "ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)"
-                        )
+                        dcc.Markdown(CONST["bug_report_md"]),
                     ],
                 ),
             ],
@@ -110,7 +110,6 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
             app.logger.warning(
                 f"change_tab callback was triggered, but by {trigger_id}, which is unexpected."
             )
-
     if desired_tab and len(desired_tab) > 0 and isinstance(desired_tab, str):
         if desired_tab == "bs":
             return [balance_sheet.layout]
@@ -124,21 +123,17 @@ def change_tab(clicked_tab: str, node_tab: str) -> list:
             app.logger.warning(
                 f"attempted to change tab to {desired_tab}, which is not a valid choice."
             )
-
     raise PreventUpdate
 
 
 @app.callback(
     [Output("ex_tab", "label"), Output("bs_tab", "label"), Output("ds_tab", "label")],
-    [Input("param_store", "children")],
+    [Input("param_store_for_tab_labels", "children")],
 )
 def relabel_tab(param_store: str):
     """ If the setttings have any renaming for tab labels, apply them """
-    if param_store and len(param_store) > 0:
-        params = Params(**json.loads(param_store))
-    else:
-        raise PreventUpdate
-
+    require_or_raise(param_store)
+    params = Params(**json.loads(param_store))
     return [params.ex_label, params.bs_label, params.ds_label]
 
 
@@ -207,7 +202,9 @@ def parse_url_search(search: str):
     [
         Output("data_store", "children"),
         Output("param_store", "children"),
+        Output("param_store_for_tab_labels", "children"),
         Output("files_status", "children"),
+        Output("ex_tab_trigger", "children"),
     ],
     [
         Input("trans_file_node", "children"),
@@ -216,8 +213,8 @@ def parse_url_search(search: str):
         Input("trans_urlfile_node", "children"),
         Input("atree_urlfile_node", "children"),
         Input("eras_urlfile_node", "children"),
-    ],
-    state=[State("param_urlnode", "children"), State("param_node", "children")],
+        Input("param_urlnode", "children"),
+        Input("param_node", "children")]
 )
 def load_and_transform(
     trans_file_node: str,
@@ -230,13 +227,7 @@ def load_and_transform(
     param_node: str,
 ):
     """When any of the input files changes in interim storage, reload
-    all the data.  The param store is a state input, so changing
-    params does not trigger a reload; only changing one of the input
-    files does that.  Tt is implemented this way because param data
-    is already an Input for something else.  If that turns out to be
-    annoying, split the param_store into a params portion and a
-    tab-name portion, or add a reload button.
-    """
+    all the data."""
     ctx = dash.callback_context
     if ctx.triggered:
         trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -296,20 +287,25 @@ def load_and_transform(
             trans, atree, eras = convert_raw_data(
                 trans_data, atree_data, eras_data, params
             )
-            data = json.dumps({"trans": trans.to_json(), "eras": eras.to_json()})
+            data = json.dumps(
+                {
+                    "trans": trans.to_json(),
+                    "eras": eras.to_json(),
+                }
+            )
             params_j = params.to_json()
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
-            status = f"{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras."
+            status = html.Div(
+                children=[
+                    f"{len(trans)} transactions, {len(atree)} accounts, {len(eras)} reporting eras"
+                ]
+            )
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-    return [data, params_j, status]
+    return [data, params_j, params_j, status, 'True']
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(
-    #     level=logging.DEBUG,
-    #     format='%(asctime)s %(levelname)-8s %(message)s',
-    #     datefmt='%Y-%m-%d %H:%M:%S %z')
     app.config["suppress_callback_exceptions"] = True
     app.run_server(debug=True, host="0.0.0.0", port="8081")
 else:

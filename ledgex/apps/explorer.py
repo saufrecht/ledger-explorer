@@ -15,6 +15,8 @@ from ledgex.utils import (
     ex_trans_table,
     make_bar,
     trans_to_burst,
+    require_or_raise,
+    LError
 )
 from ledgex.data_store import Datastore
 
@@ -88,15 +90,14 @@ layout = html.Div(
         Output("ex_time_series_resolution", "options"),
         Output("ex_time_series_span", "value"),
     ],
-    [Input("param_store", "children")],
-    state=[State("data_store", "children")],
+    [Input("ex_tab_trigger", "children")],
+    state=[State("data_store", "children"),
+           State("param_store", "children")]
 )
-def load_ex_params(param_store: str, data_store: str):
+def load_ex_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
-    if param_store and len(param_store) > 0:
-        params = Params(**json.loads(param_store))
-    else:
-        raise PreventUpdate
+    require_or_raise(param_store)
+    params = Params(**json.loads(param_store))
 
     options = CONST["time_res_options"]
     datastore: Datastore() = Datastore.from_json(data_store)
@@ -119,10 +120,7 @@ def ex_make_time_series(
     time_resolution: int, time_span: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
-
-    if not data_store:
-        raise PreventUpdate
-
+    require_or_raise(data_store)
     params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
@@ -132,9 +130,7 @@ def ex_make_time_series(
 
     try:
         tr_label = CONST["time_res_lookup"][time_resolution]["label"]  # e.g., 'by Era'
-        ts_label = CONST["time_span_lookup"][time_span][
-            "label"
-        ]  # e.g., 'Annual' or 'Monthly'
+        ts_label = CONST["time_span_lookup"][time_span]["label"]  # e.g., 'Annual' or 'Monthly'
     except KeyError as E:
         app.logger.warning(
             f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
@@ -154,8 +150,7 @@ def ex_make_time_series(
     selected_accounts = account_tree.get_children(root_account_id)
 
     for i, account in enumerate(selected_accounts):
-        chart_fig.add_trace(
-            make_bar(
+        bar = make_bar(
                 trans,
                 account_tree,
                 account,
@@ -164,8 +159,10 @@ def ex_make_time_series(
                 eras,
                 i,
                 deep=True,
+                unit=unit,
             )
-        )
+        if bar:
+            chart_fig.add_trace(bar)
 
     ts_title = f"Average {ts_label} {unit}, by {tr_label} "
     chart_fig.update_layout(
@@ -174,7 +171,6 @@ def ex_make_time_series(
         yaxis={"showgrid": True},
         barmode="relative",
     )
-
     return [chart_fig]
 
 
@@ -188,9 +184,9 @@ def ex_make_time_series(
     [
         Input("ex_master_time_series", "figure"),
         Input("ex_master_time_series", "selectedData"),
-        Input("data_store", "children"),
     ],
     state=[
+        State("data_store", "children"),
         State("ex_time_series_resolution", "value"),
         State("ex_time_series_span", "value"),
         State("param_store", "value"),
@@ -202,33 +198,31 @@ def apply_selection_from_time_series(
     """
     Selecting specific points from the time series chart updates the
     account burst and the detail labels.
-
     Reminder to self: When you think selectedData input is broken, remember
     that unaltered default action in the graph is to zoom, not to select.
-
     Note: all of the necessary information is in figure but that doesn't seem
     to trigger reliably.  Adding selectedData as a second Input causes reliable
     triggering.
-
     """
+    datastore: Datastore() = Datastore.from_json(data_store)
+    require_or_raise(datastore)
     params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
         time_span = params.init_time_span
-
-    datastore: Datastore() = Datastore.from_json(data_store)
-    if not datastore:
-        raise PreventUpdate
-
     trans = datastore.trans
     eras = datastore.eras
     account_tree = datastore.account_tree
     unit = params.unit
 
-    return trans_to_burst(
-        account_tree, eras, figure, time_resolution, time_span, trans, unit
-    )
+    try:
+        return trans_to_burst(
+            account_tree, eras, figure, time_resolution, time_span, trans, unit
+        )
+    except LError as E:
+        app.logger.warning(f'Failed to generate sunburst.  Error: {E}')
+        raise PreventUpdate
 
 
 @app.callback(
@@ -239,22 +233,21 @@ def apply_selection_from_time_series(
     ],
     [
         Input("ex_account_burst", "clickData"),
+        Input("ex_account_burst", "figure"),
 
     ],
     state=[State("ex_time_series_selection_info", "data"),
            State("data_store", "children")]
 )
-def apply_burst_click(burst_clickData, time_series_info, data_store):
+def apply_burst_click(burst_clickData, burst_figure, time_series_info, data_store):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
-    TODO: maybe check for input safety?
+    Burst_figure is not used for anything but is present to guarantee a trigger on initial page load.
     """
-    if not data_store or len(data_store) == 0:
-        raise PreventUpdate
     datastore: Datastore() = Datastore.from_json(data_store)
+    require_or_raise(datastore)
     trans = datastore.trans
-    if not isinstance(trans, pd.DataFrame) or len(trans) == 0:
-        raise PreventUpdate
+    require_or_raise(trans)
     account_tree = datastore.account_tree
     earliest_trans = datastore.earliest_trans
     latest_trans = datastore.latest_trans

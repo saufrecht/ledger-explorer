@@ -22,6 +22,8 @@ CONST = {
     "leaf_suffix": " [Leaf]",
     "other_prefix": "Other ",
     "subtotal_suffix": " [Subtotal]",
+    "bug_report_md": "[Report an issue](https://github.com/saufrecht/"\
+    + "ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)",
     "root_accounts": [
         {"id": "Assets", "flip_negative": False},
         {"id": "Equity", "flip_negative": True},
@@ -137,7 +139,7 @@ class Params:
         if not self.init_time_span:
             self.init_time_span = "monthly"
         if not self.init_time_res:
-            self.init_time_res = "annual"
+            self.init_time_res = "year"
         if not self.ds_data_title:
             self.ds_data_title = "Ledger"
         if not self.ds_delimiter:

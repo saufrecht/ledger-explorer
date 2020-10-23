@@ -3,11 +3,10 @@ import dash_html_components as html
 import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import chart_fig_layout, make_cum_area
+from ledgex.utils import chart_fig_layout, make_cum_area, require_or_raise
 from ledgex.data_store import Datastore
 
 layout: html = html.Div(
@@ -37,11 +36,10 @@ layout: html = html.Div(
     [Output("bs_time_series_resolution", "value")], [Input("param_store", "children")]
 )
 def load_bs_params(param_store: str):
-    if param_store and len(param_store) > 0:
-        params = Params.from_json(param_store)
-    else:
-        raise PreventUpdate
-
+    """Load time series resolution from the store; this also starts the
+    callback cascade on this tab"""
+    require_or_raise(param_store)
+    params = Params.from_json(param_store)
     return [params.init_time_res]
 
 
@@ -52,19 +50,23 @@ def load_bs_params(param_store: str):
 )
 def bs_make_time_series(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
-    if not data_store:
-        raise PreventUpdate
+    breakpoint()
+    require_or_raise(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     datastore: Datastore() = Datastore.from_json(data_store, params.bs_account_filter)
     trans: pd.DataFrame = datastore.trans
     account_tree: ATree = datastore.account_tree
+    if len(params.bs_account_filter) > 0:
+        account_list = params.bs_account_filter
+    else:
+        account_list = [account_tree.root]
     unit: str = params.unit
     data_title = params.ds_data_title
     result: list = []
     # make one chart for each item in the Balance Sheet account filter
-    for i, account in enumerate(params.bs_account_filter):
+    for i, account in enumerate(account_list):
         fig: go.Figure = go.Figure(layout=chart_fig_layout)
         fig.update_layout(
             title={"text": f"{data_title} {account}: Cumulative {unit}"},
@@ -85,11 +87,9 @@ def bs_make_time_series(time_resolution, data_store, param_store):
             tba = trans[trans["account"].isin(sub_desc)]
             if len(tba) > 0:
                 fig.add_trace(make_cum_area(tba, subaccount, j, time_resolution))
-
         output = dcc.Graph(id=f"{account}{j}", figure=fig)
         if len(result) > 0:
             result.append(output)
         else:
             result = [output]
-
     return [result]
