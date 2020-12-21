@@ -282,7 +282,7 @@ def load_and_transform(
             elif param_urlnode and len(param_urlnode) > 0:
                 c_source = json.loads(param_urlnode)
             else:
-                c_source = None
+                c_source = {}
             params = Params(**c_source)
             trans, atree, eras = convert_raw_data(
                 trans_data, atree_data, eras_data, params

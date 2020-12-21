@@ -186,14 +186,14 @@ def ex_make_time_series(
         Input("ex_master_time_series", "selectedData"),
     ],
     state=[
-        State("data_store", "children"),
         State("ex_time_series_resolution", "value"),
         State("ex_time_series_span", "value"),
+        State("data_store", "children"),
         State("param_store", "value"),
     ],
 )
 def apply_selection_from_time_series(
-    figure, selectedData, data_store, time_resolution, time_span, param_store
+    figure, selectedData, time_resolution, time_span, data_store, param_store
 ):
     """
     Selecting specific points from the time series chart updates the

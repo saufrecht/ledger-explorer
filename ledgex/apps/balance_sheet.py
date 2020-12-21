@@ -50,7 +50,6 @@ def load_bs_params(param_store: str):
 )
 def bs_make_time_series(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
-    breakpoint()
     require_or_raise(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:

@@ -67,12 +67,11 @@ layout = (
                 children=[
                     html.H3("Columns"),
                     html.Fieldset(
-                        className="field_grid field_grid4",
+                        className="field_grid field_grid3",
                         children=[
                             html.H4("Required Field"),
                             html.H4("Column Name"),
                             html.H4(id="first_row", children="First Row"),
-                            html.H4(id="second_row", children="Last Row"),
                             html.Label(htmlFor="account_name_col", children="Account"),
                             dcc.Input(
                                 id="account_name_col",
@@ -82,7 +81,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="account_row_1"),
-                            html.Div(className="code", id="account_row_2"),
                             html.Label(htmlFor="amount_col", children=" Amount"),
                             dcc.Input(
                                 id="amount_col",
@@ -92,7 +90,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="amount_row_1"),
-                            html.Div(className="code", id="amount_row_2"),
                             html.Label(htmlFor="date_col", children=" Date"),
                             dcc.Input(
                                 id="date_col",
@@ -102,7 +99,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="date_row_1"),
-                            html.Div(className="code", id="date_row_2"),
                             html.Label(htmlFor="desc_col", children=" Description"),
                             dcc.Input(
                                 id="desc_col",
@@ -113,7 +109,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="desc_row_1"),
-                            html.Div(className="code", id="desc_row_2"),
                             html.Label(
                                 htmlFor="full_account_name_col",
                                 children="Full Account Name",
@@ -126,7 +121,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="fan_row_1"),
-                            html.Div(className="code", id="fan_row_2"),
                             html.Label(
                                 htmlFor="parent_col", children=" Parent Account"
                             ),
@@ -138,7 +132,6 @@ layout = (
                                 debounce=True,
                             ),
                             html.Div(className="code", id="parent_row_1"),
-                            html.Div(className="code", id="parent_row_2"),
                         ],
                     ),
                 ],
@@ -480,12 +473,6 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         Output("desc_row_1", "children"),
         Output("fan_row_1", "children"),
         Output("parent_row_1", "children"),
-        Output("account_row_2", "children"),
-        Output("amount_row_2", "children"),
-        Output("date_row_2", "children"),
-        Output("desc_row_2", "children"),
-        Output("fan_row_2", "children"),
-        Output("parent_row_2", "children"),
         Output('trans_status', 'children'),
         Output('atree_status', 'children'),
         Output('atree_display', 'children'),
@@ -507,9 +494,7 @@ def update_status_on_tab(data_store: str, param_store: str):
     require_or_raise(trans)
     trans_filename = params.ds_data_title
     c1: pd.DataFrame = trans.iloc[0]
-    c2: pd.DataFrame = trans.iloc[-1]
     r1: list = [c1.account, c1.amount, c1.date, c1.get('desc'), c1.get('full account name'), c1.get('parent account')]
-    r2: list = [c2.account, c2.amount, c2.date, c2.get('desc'), c2.get('full account name'), c2.get('parent account')]
 
     # As quick hack to get linebreaks in Dash for pre-formatted text, generate status info as lists,
     # then render lists into Divs
@@ -531,4 +516,4 @@ def update_status_on_tab(data_store: str, param_store: str):
     if len(eras) > 0:
         eras_summary: str = f'{len(eras)} reporting eras'
 
-    return r1 + r2 + [trans_summary, atree_summary, atree_display, eras_summary]
+    return r1 + [trans_summary, atree_summary, atree_display, eras_summary]
