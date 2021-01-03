@@ -83,7 +83,7 @@ def rename_columns(data: pd.DataFrame, parameters: Params) -> pd.DataFrame:
     return data
 
 
-def load_input_file(input_file, url: str, filename: str) -> Iterable:
+def load_input_file(input_file=None, url=None, filename=None) -> Iterable:
     """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
     data: pd.DataFrame() = pd.DataFrame()
     result_meta: str = ''
@@ -94,14 +94,18 @@ def load_input_file(input_file, url: str, filename: str) -> Iterable:
             result_meta = f"File {filename} loaded, {len(data)} records."
             new_filename = filename
         except urllib.error.HTTPError as E:
-            result_meta = f"Error loading {filename}: {E}"
-    elif url:
+            result_meta = f"Error loading file {filename}: {E}"
+        except pd.errors.ParserError as E:
+            result_meta = f"Error parsing file {filename}: {E}"
+    elif isinstance(url, str):
         try:
             data = pd.read_csv(url, thousands=",", low_memory=False)
             result_meta = f"{url} loaded, {len(data)} records."
             new_filename = url
         except (urllib.error.URLError, FileNotFoundError) as E:
-            result_meta = f"Error loading {url}: {E}"
+            result_meta = f"Error loading URL {url}: {E}"
+        except pd.errors.ParserError as E:
+            result_meta = f"Error parsing file {filename}: {E}"
 
     return [new_filename, data, result_meta]
 
@@ -113,7 +117,7 @@ def load_transactions(data: pd.DataFrame):
     CONST['fan_col'], 'Date', 'Amount Num.'
     """
     if len(data) == 0:
-        raise LError("No data in file")
+        raise LoadError("No data in file")
 
     # try to parse date.  TODO: Maybe move this to a function so it can be re-used in era parsing
     try:

@@ -15,7 +15,7 @@ from ledgex.utils import (
     ex_trans_table,
     make_bar,
     trans_to_burst,
-    require_or_raise,
+    preventupdate_if_empty,
     LError
 )
 from ledgex.data_store import Datastore
@@ -96,9 +96,8 @@ layout = html.Div(
 )
 def load_ex_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
-    require_or_raise(param_store)
+    preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
-
     options = CONST["time_res_options"]
     datastore: Datastore() = Datastore.from_json(data_store)
     eras = datastore.eras
@@ -120,7 +119,7 @@ def ex_make_time_series(
     time_resolution: int, time_span: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
-    require_or_raise(data_store)
+    preventupdate_if_empty(data_store)
     params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
@@ -137,7 +136,7 @@ def ex_make_time_series(
         )
         raise PreventUpdate
 
-    datastore: Datastore() = Datastore.from_json(data_store, params.ex_account_filter)
+    datastore: Datastore() = Datastore.from_json(data_store, params.ex_roots)
     trans: pd.DataFrame = datastore.trans
     eras: pd.DataFrame = datastore.eras
     if time_resolution == "era" and len(eras) == 0:
@@ -189,7 +188,7 @@ def ex_make_time_series(
         State("ex_time_series_resolution", "value"),
         State("ex_time_series_span", "value"),
         State("data_store", "children"),
-        State("param_store", "value"),
+        State("param_store", "children"),
     ],
 )
 def apply_selection_from_time_series(
@@ -205,7 +204,7 @@ def apply_selection_from_time_series(
     triggering.
     """
     datastore: Datastore() = Datastore.from_json(data_store)
-    require_or_raise(datastore)
+    preventupdate_if_empty(datastore)
     params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
@@ -245,9 +244,9 @@ def apply_burst_click(burst_clickData, burst_figure, time_series_info, data_stor
     Burst_figure is not used for anything but is present to guarantee a trigger on initial page load.
     """
     datastore: Datastore() = Datastore.from_json(data_store)
-    require_or_raise(datastore)
+    preventupdate_if_empty(datastore)
     trans = datastore.trans
-    require_or_raise(trans)
+    preventupdate_if_empty(trans)
     account_tree = datastore.account_tree
     earliest_trans = datastore.earliest_trans
     latest_trans = datastore.latest_trans

@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output, State
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import chart_fig_layout, make_cum_area, require_or_raise
+from ledgex.utils import chart_fig_layout, make_cum_area, preventupdate_if_empty
 from ledgex.data_store import Datastore
 
 layout: html = html.Div(
@@ -38,7 +38,7 @@ layout: html = html.Div(
 def load_bs_params(param_store: str):
     """Load time series resolution from the store; this also starts the
     callback cascade on this tab"""
-    require_or_raise(param_store)
+    preventupdate_if_empty(param_store)
     params = Params.from_json(param_store)
     return [params.init_time_res]
 
@@ -50,15 +50,15 @@ def load_bs_params(param_store: str):
 )
 def bs_make_time_series(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
-    require_or_raise(data_store)
+    preventupdate_if_empty(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
-    datastore: Datastore() = Datastore.from_json(data_store, params.bs_account_filter)
+    datastore: Datastore() = Datastore.from_json(data_store, params.bs_roots)
     trans: pd.DataFrame = datastore.trans
     account_tree: ATree = datastore.account_tree
-    if len(params.bs_account_filter) > 0:
-        account_list = params.bs_account_filter
+    if len(params.bs_roots) > 0:
+        account_list = params.bs_roots
     else:
         account_list = [account_tree.root]
     unit: str = params.unit

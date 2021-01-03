@@ -1,19 +1,19 @@
 import json
 import logging
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
 from ledgex.apps import balance_sheet, data_source, explorer, hometab
 from ledgex.loading import LoadError, convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
-from ledgex.utils import require_or_raise
+from ledgex.utils import preventupdate_if_empty
 
 server = app.server
 
@@ -24,21 +24,6 @@ app.layout = html.Div(
     id="page-content",
     className="tabs_container",
     children=[
-        dcc.Location(id="url_reader", refresh=False),
-        html.Div(id="change_tabs_node", className="hidden"),
-        html.Div(id="param_node", className="hidden"),
-        html.Div(id="param_urlnode", className="hidden"),
-        html.Div(id="data_store", className="hidden"),
-        html.Div(id="param_store", className="hidden"),
-        html.Div(id="param_store_for_tab_labels", className="hidden"),
-        html.Div(id="ex_tab_trigger", className="hidden"),
-        html.Div(id="trans_file_node", className="hidden"),
-        html.Div(id="atree_file_node", className="hidden"),
-        html.Div(id="eras_file_node", className="hidden"),
-        html.Div(id="trans_urlfile_node", className="hidden"),
-        html.Div(id="atree_urlfile_node", className="hidden"),
-        html.Div(id="eras_urlfile_node", className="hidden"),
-        html.Div(id="tab_draw_trigger", className="hidden"),
         html.Div(
             className="custom_tabbar_container",
             children=[
@@ -53,16 +38,35 @@ app.layout = html.Div(
                         dcc.Tab(label=CONST["ds_label"], id="ds_tab", value="ds"),
                     ],
                 ),
-                html.Div(id="files_status", children=[]),
                 html.Div(
                     id="infodex",
                     children=[
+                        html.Div(id="files_status", children=[]),
                         dcc.Markdown(CONST["bug_report_md"]),
+                        dcc.Location(id="url_reader", refresh=False),
+                        dcc.Location(id="url_writer", refresh=False),
+                        html.H5("ui_inputs"),
+                        html.Div(id="ui_inputs", className="xhidden"),
+                        html.H5("api_inputs"),
+                        html.Div(id="api_inputs", className="xhidden"),
+                        html.Div(id="ex_tab_trigger", className="hidden"),
+                        html.Div(id="ui_trans_node", className="hidden"),
+                        html.Div(id="ui_atree_node", className="hidden"),
+                        html.Div(id="ui_eras_node", className="hidden"),
+                        html.Div(id="api_trans_node", className="hidden"),
+                        html.Div(id="api_atree_node", className="hidden"),
+                        html.Div(id="api_eras_node", className="hidden"),
+                        html.Div(id="data_store", className="hidden"),
+                        html.H5("param_store"),
+                        html.Div(id="param_store", className="xhidden"),
+                        html.H5("tab store"),
+                        html.Div(id="tab_store", className="xhidden"),
+                        html.Div(id="tab_node", className="hidden"),
                     ],
                 ),
             ],
         ),
-        html.Div(id="tab-content", className="tab_content"),
+        html.Div(id="tab_content", className="tab_content"),
     ],
 )
 
@@ -91,199 +95,195 @@ def parse_url_path(path: str):
 
 
 @app.callback(
-    [Output("tab-content", "children")],
-    [Input("tabs", "value"), Input("change_tabs_node", "children")],
+    [Output("tab_content", "children"),
+     Output("tab_node", "children")],
+    [Input("tabs", "value")],
 )
-def change_tab(clicked_tab: str, node_tab: str) -> list:
+def change_tab(clicked_tab: str) -> list:
     """From a click on the tabbar, or a change
-    in the intermediate node, change the currently shown tab."""
-
-    desired_tab = "le"  # default to home tab
-    ctx = dash.callback_context
-    if ctx.triggered:
-        trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        if trigger_id == "tabs":
-            desired_tab = clicked_tab
-        elif trigger_id == "change_tabs_node":
-            desired_tab = node_tab
-        else:
-            app.logger.warning(
-                f"change_tab callback was triggered, but by {trigger_id}, which is unexpected."
-            )
-    if desired_tab and len(desired_tab) > 0 and isinstance(desired_tab, str):
-        if desired_tab == "bs":
-            return [balance_sheet.layout]
-        elif desired_tab == "ex":
-            return [explorer.layout]
-        elif desired_tab == "ds":
-            return [data_source.layout]
-        elif desired_tab == "le":
-            return [hometab.layout]
-        else:
-            app.logger.warning(
-                f"attempted to change tab to {desired_tab}, which is not a valid choice."
-            )
+    from the url, change the currently shown tab."""
+    if clicked_tab == "bs":
+        return [balance_sheet.layout, "bs"]
+    elif clicked_tab == "ex":
+        return [explorer.layout, "ex"]
+    elif clicked_tab == "ds":
+        return [data_source.layout, "ds"]
+    elif clicked_tab == "le":
+        return [hometab.layout, "le"]
+    else:
+        app.logger.warning(
+            f"attempted to change tab to {clicked_tab}, which is not a valid choice."
+        )
     raise PreventUpdate
 
 
 @app.callback(
-    [Output("ex_tab", "label"), Output("bs_tab", "label"), Output("ds_tab", "label")],
-    [Input("param_store_for_tab_labels", "children")],
+    [Output("ex_tab", "label"),
+     Output("bs_tab", "label"),
+     Output("ds_tab", "label")],
+    [Input("tab_store", "children")],
 )
-def relabel_tab(param_store: str):
+def relabel_tab(tab_store: str):
     """ If the setttings have any renaming for tab labels, apply them """
-    require_or_raise(param_store)
-    params = Params(**json.loads(param_store))
+    preventupdate_if_empty(tab_store)
+    params = Params(**json.loads(tab_store))
+    params.fill_defaults()
+
     return [params.ex_label, params.bs_label, params.ds_label]
 
 
 @app.callback(
-    [
-        Output("param_urlnode", "children"),
-        Output("trans_urlfile_node", "children"),
-        Output("atree_urlfile_node", "children"),
-        Output("eras_urlfile_node", "children"),
-    ],
+    [Output("api_trans_node", "children"),
+     Output("api_atree_node", "children"),
+     Output("api_eras_node", "children"),
+     Output("api_inputs", "children")],
     [Input("url_reader", "search")],
 )
 def parse_url_search(search: str):
-    """ Process the search portion of any input URL and store it to an intermediate location """
+    preventupdate_if_empty(search)
+    """ Process the search portion of any input URL and store it to an
+    intermediate location.  If one or more data source URLs are
+    provided via the input URL, load them here in the index.
+    Otherwise, incoming links that provide data source URLs wouldn't
+    work until after the user browsed to the Data Source tab.  """
+
+    search = search.lstrip("?")
     if not search or not isinstance(search, str) or not len(search) > 0:
         raise PreventUpdate
-    search = search.lstrip("?")
-    inputs = parse_qs(search)
-    c_data = {}
-    for key, value in vars(Params()).items():
-        try:
-            input_list: list = inputs.get(key, [])
-            input_value: str = input_list[0]
-            if input_value and len(input_value) > 0 and isinstance(input_value, str):
-                if key in ["ex_account_filter", "bs_account_filter"]:
-                    input_value = Params.parse_account_string(input_value)
-                c_data[key] = input_value
-        except (IndexError, TypeError):
-            pass
-        except Exception as E:
-            app.logger.warning(
-                f"failed to parse url input key: {key}, value: {value}.  Error {E}"
-            )
-    params_j = Params(**c_data).to_json()
+    inputs = parse_qs(search, keep_blank_values=True, max_num_fields=50)  # 50 is arbitrary, for DoS prevention
     trans_j = None
+    atree_j = None
+    eras_j = None
+    api_input_j = json.dumps(inputs)
     trans_input = inputs.get("transu", None)
     if trans_input:
-        try:
-            transu = trans_input[0]
-            if isinstance(transu, str):
-                filename, t_data, text = load_input_file("", transu, "")
-                if len(t_data) > 0:
-                    trans_j = t_data.to_json()
-        except Exception as E:
-            app.logger.warning(f"Failed to load {transu} because {E}")
-    atree_j = None
+        filename, t_data, text = load_input_file(url=trans_input[0])
+        if len(t_data) > 0:
+            trans_j = t_data.to_json()
+
     atree_input = inputs.get("atreeu", None)
     if atree_input:
-        atreeu = atree_input[0]
-        if isinstance(atreeu, str):
-            filename, t_data, text = load_input_file("", atreeu, "")
-            if len(t_data) > 0:
-                atree_j = t_data.to_json()
-    eras_j = None
+        filename, a_data, text = load_input_file(url=atree_input[0])
+        if len(t_data) > 0:
+            atree_j = t_data.to_json()
+
     eras_input = inputs.get("erasu", None)
     if eras_input:
-        erasu = eras_input[0]
-        if isinstance(erasu, str):
-            filename, t_data, text = load_input_file("", erasu, "")
-            if len(t_data) > 0:
-                eras_j = t_data.to_json()
-    return [params_j, trans_j, atree_j, eras_j]
+        filename, a_data, text = load_input_file(url=eras_input[0])
+        if len(t_data) > 0:
+            eras_j = t_data.to_json()
+
+    return [trans_j, atree_j, eras_j, api_input_j]
+
+    #     try:
+    #         input_list: list = inputs.get(key, [])
+    #         input_value: str = input_list[0]
+    #         if input_value and len(input_value) > 0 and isinstance(input_value, str):
+    #             c_data[key] = input_value
+    #     except (IndexError, TypeError):
+    #         pass
 
 
 @app.callback(
     [
         Output("data_store", "children"),
         Output("param_store", "children"),
-        Output("param_store_for_tab_labels", "children"),
         Output("files_status", "children"),
         Output("ex_tab_trigger", "children"),
+        Output("url_writer", "pathname"),
     ],
     [
-        Input("trans_file_node", "children"),
-        Input("atree_file_node", "children"),
-        Input("eras_file_node", "children"),
-        Input("trans_urlfile_node", "children"),
-        Input("atree_urlfile_node", "children"),
-        Input("eras_urlfile_node", "children"),
-        Input("param_urlnode", "children"),
-        Input("param_node", "children")]
+        Input("ui_trans_node", "children"),
+        Input("ui_atree_node", "children"),
+        Input("ui_eras_node", "children"),
+        Input("api_trans_node", "children"),
+        Input("api_atree_node", "children"),
+        Input("api_eras_node", "children"),
+        Input("ui_inputs", "children"),
+        Input("api_inputs", "children"),
+        Input("tab_node", "children"),
+    ],
 )
 def load_and_transform(
-    trans_file_node: str,
-    atree_file_node: str,
-    eras_file_node: str,
-    trans_urlfile_node: str,
-    atree_urlfile_node: str,
-    eras_urlfile_node: str,
-    param_urlnode: str,
-    param_node: str,
+    ui_trans_node: str,
+    ui_atree_node: str,
+    ui_eras_node: str,
+    api_trans_node: str,
+    api_atree_node: str,
+    api_eras_node: str,
+    ui_inputs: str,
+    api_inputs: str,
+    tab_node: str,
 ):
-    """When any of the input files changes in interim storage, reload
-    all the data."""
+    """When any of the parameters or input files changes, reload
+    all the data and refresh the page url.
+    The api_*_nodes will contain data loaded directly from the API (i.e.,
+    from URL search parameters), and the ui_*_nodes will contain data
+    loaded from the data_source tab, so ui should trump api.
+    """
     ctx = dash.callback_context
     if ctx.triggered:
         trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     else:
         trigger_id = None
-    # look for fresh input, then file upload, then url upload.  This
+    # look for UI input, then file upload, then url upload.  This
     # way, user uploads by file or url will override anything loaded
     # from the Ledger Explorer url.
     data: str = ""
     params_j: str = ""
     status: str = ""
     t_source: str = ""
-    if trigger_id == "trans_file_node":
-        t_source = trans_file_node
-    elif trigger_id == "trans_urlfile_node":
-        t_source = trans_urlfile_node
-    elif trans_file_node and len(trans_file_node) > 0:
-        t_source = trans_file_node
-    elif trans_urlfile_node and len(trans_urlfile_node) > 0:
-        t_source = trans_urlfile_node
+    permalink: str = ""
+    if trigger_id == "ui_trans_node":
+        t_source = ui_trans_node
+    elif trigger_id == "api_trans_node":
+        t_source = api_trans_node
+    elif ui_trans_node and len(ui_trans_node) > 0:
+        t_source = ui_trans_node
+    elif api_trans_node and len(api_trans_node) > 0:
+        t_source = api_trans_node
     else:
         status = "No transaction data loaded."
+    if ui_inputs and len(ui_inputs) > 0:
+        ui_source = json.loads(ui_inputs)
+    else:
+        ui_source = {}
+
+    # ui_source is for stuff the user has explicitly input, so it may
+    # be very sparse. params is for the full set of possible
+    # parameters, with defaults if necessary. Be careful not to reify
+    # the defaults by putting them into the UI or the URL
+    params = Params.from_dict(ui_source)
+    params.fill_defaults()
+    params_j = params.to_json()
+
     if t_source and len(t_source) > 0:
         try:
             trans_data = pd.read_json(t_source)
             atree_data: pd.DataFrame = pd.DataFrame()
             a_source = None
-            if trigger_id == "atree_file_node":
-                a_source = atree_file_node
-            elif trigger_id == "atree_urlfile_node":
-                a_source = atree_urlfile_node
-            elif atree_file_node and len(atree_file_node) > 0:
-                a_source = atree_file_node
-            elif atree_urlfile_node and len(atree_urlfile_node) > 0:
-                a_source = atree_urlfile_node
+            if trigger_id == "ui_atree_node":
+                a_source = ui_atree_node
+            elif trigger_id == "api_atree_node":
+                a_source = api_atree_node
+            elif ui_atree_node and len(ui_atree_node) > 0:
+                a_source = ui_atree_node
+            elif api_atree_node and len(api_atree_node) > 0:
+                a_source = api_atree_node
             if a_source:
                 atree_data = pd.read_json(a_source)
             eras_data: pd.DataFrame = pd.DataFrame()
             e_source = None
-            if trigger_id == "eras_file_node":
-                e_source = eras_file_node
-            elif trigger_id == "eras_urlfile_node":
-                e_source = eras_urlfile_node
-            elif eras_file_node and len(eras_file_node) > 0:
-                e_source = eras_file_node
-            elif eras_urlfile_node and len(eras_urlfile_node) > 0:
-                e_source = eras_urlfile_node
+            if trigger_id == "ui_eras_node":
+                e_source = ui_eras_node
+            elif trigger_id == "api_eras_node":
+                e_source = api_eras_node
+            elif ui_eras_node and len(ui_eras_node) > 0:
+                e_source = ui_eras_node
+            elif api_eras_node and len(api_eras_node) > 0:
+                e_source = api_eras_node
             if e_source:
                 eras_data = pd.read_json(e_source)
-            if param_node and len(param_node) > 0:
-                c_source = json.loads(param_node)
-            elif param_urlnode and len(param_urlnode) > 0:
-                c_source = json.loads(param_urlnode)
-            else:
-                c_source = {}
-            params = Params(**c_source)
             trans, atree, eras = convert_raw_data(
                 trans_data, atree_data, eras_data, params
             )
@@ -293,7 +293,6 @@ def load_and_transform(
                     "eras": eras.to_json(),
                 }
             )
-            params_j = params.to_json()
             # Generate status info.  TODO: clean up this hack with a Jinja2 template, or at least another function
             status = html.Div(
                 children=[
@@ -302,7 +301,12 @@ def load_and_transform(
             )
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-    return [data, params_j, params_j, status, 'True']
+
+    if tab_node:
+        permalink = f'/{tab_node}/'
+    if ui_source:
+        permalink = f'{permalink}?{urlencode(ui_source)}'
+    return [data, params_j, status, 'True', permalink]
 
 
 if __name__ == "__main__":

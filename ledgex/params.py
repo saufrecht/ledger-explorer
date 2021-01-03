@@ -1,6 +1,8 @@
 import json
 from dataclasses import dataclass
+import inspect
 from typing import Iterable
+from urllib.parse import urlencode
 
 CONST = {
     "parent_col": "parent account",  # TODO: move the column names into Trans class
@@ -96,8 +98,8 @@ class Params:
     ds_label: str = None
     bs_label: str = None
     ex_label: str = None
-    ex_account_filter: Iterable[str] = ()
-    bs_account_filter: Iterable[str] = ()
+    ex_roots: Iterable[str] = None
+    bs_roots: Iterable[str] = None
 
     @classmethod
     def parse_account_string(cls, input: str):
@@ -113,19 +115,30 @@ class Params:
         """ Convert parameters to JSON via dict structure """
         return json.dumps(self, default=lambda x: x.__dict__)
 
+    def to_query_string(self):
+        """ Convert parameters to query string"""
+        field_dict = vars(self)
+        field_string = urlencode(field_dict, doseq=True)
+        return f'?{field_string}'
+
+    @classmethod
+    def from_dict(cls, env):
+        return cls(**{
+            k: v for k, v in env.items()
+            if k in inspect.signature(cls).parameters
+        })
+
     @classmethod
     def from_json(cls, json_data: str):
         """ Convert parameters from JSON via dict structure """
         if json_data and isinstance(json_data, str) and len(json_data) > 0:
-            body = json.loads(json_data, object_hook=lambda d: Params(**d))
-            return body
-        else:
-            return Params()
+            dict = json.loads(json_data)
+            return Params.from_dict(dict)
 
-    def __post_init__(self):
-        """Quick hack to address the case where Nones are input, when we
-        really want any Nones to be replaced with Default.
-        Use gnucash account labels as defaults"""
+    def fill_defaults(self):
+        """If there is any user input, we should use it.  If user input is None,
+        treat that as 'use the default' and use the default.  For transaction import table,
+        use gnucash account labels as defaults.  For root account lists, parse to tuples."""
         if not self.account_label:
             self.account_label = "Account Name"
         if not self.amount_label:
@@ -152,7 +165,13 @@ class Params:
             self.bs_label = CONST["bs_label"]
         if not self.ex_label:
             self.ex_label = CONST["ex_label"]
-        if not self.ex_account_filter:
-            self.ex_account_filter = ()
-        if not self.bs_account_filter:
-            self.bs_account_filter = ()
+
+    def __post_init__(self):
+        if isinstance(self.ex_roots, str):
+            self.ex_roots = self.parse_account_string(self.ex_roots)
+        elif not self.ex_roots:
+            self.ex_roots = ()
+        if isinstance(self.bs_roots, str):
+            self.bs_roots = self.parse_account_string(self.bs_roots)
+        elif not self.bs_roots:
+            self.bs_roots = ()
