@@ -127,6 +127,7 @@ class ATree(Tree):
         if (not account_id) or (len(account_id) == 0):
             return []
         try:
+            # TODO: make this comparison case-insensitive
             subtree_nodes = self.subtree(account_id).all_nodes()
             descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]
         except tle.NodeIDAbsentError:

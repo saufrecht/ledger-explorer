@@ -97,10 +97,12 @@ h1 {
 
 h2 {
   font-size: 160%;
+  padding-bottom: 0.5rem;
 }
 
 h3 {
   font-size: 130%;
+  padding-bottom: 0.3rem;
 }
 
 h4 {
@@ -179,7 +181,6 @@ a:visited {
 .ds_column {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 4rem;
   grid-row-gap: 1rem;
   align-items: start;
   align-content: start;
@@ -338,6 +339,15 @@ input {
   box-shadow: var(--box-shadow)!important;
   font-family: var(--mono);
   height: 1.2rem;
+}
+
+input#ds_delimiter {
+  width: 1rem;
+}
+
+input.url_input {
+  margin-left: 2rem;
+  margin-right: 2rem;
 }
 
 label {

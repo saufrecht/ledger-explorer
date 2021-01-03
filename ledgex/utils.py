@@ -264,7 +264,7 @@ trans_table_format = dict(
 )
 
 
-def require_or_raise(field: object):
+def preventupdate_if_empty(field: object):
     """ Shorthand to halt callbacks if data missing"""
     if isinstance(field, pd.DataFrame):
         if len(field) == 0:

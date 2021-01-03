@@ -26,9 +26,10 @@ class Datastore:
         return json.dumps(self, default=lambda x: x.__dict__)
 
     def __len__(self):
-        """Trans is the essential part of datastore so return that length.
-        This is implemented so that require_or_raise works without a special
-        case for datastore."""
+        """Trans is the essential part of datastore, so use its length
+        as the length of the whole datastore.  This works with
+        preventupdate_if_empty so that a datastore with transactions
+        but nothing else still passes the test."""
         return len(self.trans)
 
     @classmethod
