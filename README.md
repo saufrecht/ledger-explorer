@@ -22,8 +22,8 @@ Yes, many.  In particular:
 # Roadmap
 
 1. Complete unit testing (currently 1% coverage)
-1. Verify running in gunicorn
-1. Publish somewhere as a free service
+1. Verify running in gunicorn - DONE
+1. Publish somewhere as a free service - DONE
 1. Implement night mode using Dash's native commands
 1. Add ability to import at least 1 public data set, maybe national budget?
    1. Add ability to save and load settings, including data sources.
