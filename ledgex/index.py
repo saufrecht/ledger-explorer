@@ -32,10 +32,10 @@ app.layout = html.Div(
                     value="le",
                     vertical=True,
                     children=[
-                        dcc.Tab(label="Home", id="le_tab", value="le"),
                         dcc.Tab(label=CONST["ex_label"], id="ex_tab", value="ex"),
                         dcc.Tab(label=CONST["bs_label"], id="bs_tab", value="bs"),
                         dcc.Tab(label=CONST["ds_label"], id="ds_tab", value="ds"),
+                        dcc.Tab(label="About", id="le_tab", value="le"),
                     ],
                 ),
                 html.Div(
@@ -315,3 +315,8 @@ else:
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
     external_stylesheets = ["https://ledge.uprightconsulting.com/s/dash_layout.css"]
+
+#TODO: daily and weekly
+#TODO: make the tab labels work
+#TODO: change the $
+

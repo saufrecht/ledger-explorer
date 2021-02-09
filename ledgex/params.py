@@ -17,7 +17,7 @@ CONST = {
     ],  # defaults for gnucash
     "ex_label": "Cash Flow",
     "bs_label": "Balance Sheet",
-    "ds_label": "Files",
+    "ds_label": "Settings",
     "delim": ":",
     "max_slices": 7,
     "unit": "$",
