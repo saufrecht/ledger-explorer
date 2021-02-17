@@ -342,7 +342,10 @@ def url_inputs_to_ui(api_inputs: str):
 """
     preventupdate_if_empty(api_inputs)
     inputs = json.loads(api_inputs)
-    inputs = {k: v[0] for k, v in inputs.items()}
+    # turn lists back to comma-delimited strings to fill in the UI controls
+    for key, value in inputs.items():
+        if isinstance(value, list):
+            inputs[key] = ','.join(value)
     return [
         inputs.get("account_label", None),
         inputs.get("amount_label", None),

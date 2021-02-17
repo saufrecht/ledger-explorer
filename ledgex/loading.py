@@ -104,7 +104,7 @@ def load_input_file(input_file=None, url=None, filename=None) -> Iterable:
             new_filename = url
         except (urllib.error.URLError, FileNotFoundError) as E:
             result_meta = f"Error loading URL {url}: {E}"
-        except pd.errors.ParserError as E:
+        except (pd.errors.ParserError, ImportError) as E:
             result_meta = f"Error parsing file {filename}: {E}"
 
     return [new_filename, data, result_meta]

@@ -1,8 +1,11 @@
+import logging
+
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
@@ -48,8 +51,9 @@ def load_bs_params(param_store: str):
     [Input("bs_time_series_resolution", "value")],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def bs_make_time_series(time_resolution, data_store, param_store):
+def bs_make_time_serieses(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
+
     preventupdate_if_empty(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:
@@ -65,7 +69,12 @@ def bs_make_time_series(time_resolution, data_store, param_store):
     data_title = params.ds_data_title
     result: list = []
     # make one chart for each item in the Balance Sheet account filter
-    for i, account in enumerate(account_list):
+
+    if not isinstance(account_list, list):
+        logging.warning(f"Account list should be a list but isn't: {account_list}")
+        raise PreventUpdate
+    # breakpoint()
+    for account in account_list:
         fig: go.Figure = go.Figure(layout=chart_fig_layout)
         fig.update_layout(
             title={"text": f"{data_title} {account}: Cumulative {unit}"},

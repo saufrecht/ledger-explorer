@@ -109,7 +109,8 @@ class Params:
             return ()
         input_list = input.split(",")
         stripped_list = [x.strip() for x in input_list]
-        return tuple(stripped_list)
+        string_list = [x for x in stripped_list if isinstance(x, str)]
+        return tuple(string_list)
 
     def to_json(self):
         """ Convert parameters to JSON via dict structure """
@@ -123,6 +124,8 @@ class Params:
 
     @classmethod
     def from_dict(cls, env):
+        """Return a dict of all environment key:value pairs where the key
+matches the name of a class parameter"""
         return cls(**{
             k: v for k, v in env.items()
             if k in inspect.signature(cls).parameters
