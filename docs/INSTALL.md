@@ -103,7 +103,42 @@ A production-ready setup, using Nginx and GUnicorn.
    1. `sudo emacs /etc/systemd/system/ledge.service`
 3. `sudo systemctl enable ledge.service`
 4. `sudo systemctl start ledge.service`
-5. Verify that the service is running correctly with `systemctl status ledge` (TODO: what should good and bad results look like?)
+5. Verify that the service is running correctly with `systemctl status ledge`
+Example of a good result:
+```21:26:05 root@murano:/var/www/html/le# systemctl status ledge
+● ledge.service - Gunicorn instance to serve Ledger Explorer
+     Loaded: loaded (/etc/systemd/system/ledge.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2021-02-09 21:26:05 PST; 1s ago
+   Main PID: 20987 (gunicorn)
+      Tasks: 7 (limit: 4487)
+     Memory: 122.6M
+     CGroup: /system.slice/ledge.service
+             ├─20987 /home/ledge/.venv_le/bin/python3 /home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 ledgex>
+             ├─21003 /home/ledge/.venv_le/bin/python3 /home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 ledgex>
+             ├─21004 /home/ledge/.venv_le/bin/python3 /home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 ledgex>
+             └─21005 /home/ledge/.venv_le/bin/python3 /home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 ledgex>
+
+Feb 09 21:26:05 murano systemd[1]: Started Gunicorn instance to serve Ledger Explorer.
+Feb 09 21:26:05 murano gunicorn[20987]: [2021-02-09 21:26:05 -0800] [20987] [INFO] Starting gunicorn 20.0.4
+Feb 09 21:26:05 murano gunicorn[20987]: [2021-02-09 21:26:05 -0800] [20987] [INFO] Listening at: unix:ledge.sock (20987)
+Feb 09 21:26:05 murano gunicorn[20987]: [2021-02-09 21:26:05 -0800] [20987] [INFO] Using worker: sync
+Feb 09 21:26:05 murano gunicorn[21003]: [2021-02-09 21:26:05 -0800] [21003] [INFO] Booting worker with pid: 21003
+Feb 09 21:26:05 murano gunicorn[21004]: [2021-02-09 21:26:05 -0800] [21004] [INFO] Booting worker with pid: 21004
+Feb 09 21:26:05 murano gunicorn[21005]: [2021-02-09 21:26:05 -0800] [21005] [INFO] Booting worker with pid: 21005
+```
+
+Example of a bad result:
+```# systemctl status ledge
+● ledge.service - Gunicorn instance to serve Ledger Explorer
+     Loaded: loaded (/etc/systemd/system/ledge.service; enabled; vendor preset: enabled)
+     Active: failed (Result: exit-code) since Tue 2021-02-09 21:20:51 PST; 8s ago
+    Process: 20651 ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server (code=exited, stat>
+   Main PID: 20651 (code=exited, status=1/FAILURE)
+```
+
+
+
+ (TODO: what should good and bad results look like?)
 
 ### Contents of ledge.service
 
@@ -116,14 +151,13 @@ After=network.target
 User=s
 Group=www-data
 
-WorkingDirectory=/home/ledge/ledger-explorer/ledgex
+WorkingDirectory=/home/ledge/ledger-explorer
 Environment="PATH=/home/ledge/.venv_le/bin/"
-ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock -m 007 index:server
+ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock ledgex.index:server
 
 [Install]
 WantedBy=multi-user.target
 ```
-
 
 ## Configure Nginx as a proxy server for Gunicorn
 1. Edit the nginx site configuration file for ledge (this file should already exist from initial setup and certbot)
@@ -137,13 +171,13 @@ server {
 
         server_name your.server.name www.your.server.name;
 
-        location /s/ {
+        location /ledge/ {
                  root /var/www/ledge/html/;
         }
 
         location / {
                  include proxy_params;
-                 proxy_pass http://unix:/home/ledge/ledger-explorer/ledgex/ledge.sock;
+                 proxy_pass http://unix:/home/ledge/ledger-explorer/ledge.sock;
         }
 
         
