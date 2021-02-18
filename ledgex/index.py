@@ -202,14 +202,14 @@ def parse_url_search(search: str):
     atree_input = inputs.get("atreeu", None)
     if atree_input:
         filename, a_data, text = load_input_file(url=atree_input[0])
-        if len(t_data) > 0:
-            atree_j = t_data.to_json()
+        if len(a_data) > 0:
+            atree_j = a_data.to_json()
 
     eras_input = inputs.get("erasu", None)
     if eras_input:
-        filename, a_data, text = load_input_file(url=eras_input[0])
-        if len(t_data) > 0:
-            eras_j = t_data.to_json()
+        filename, e_data, text = load_input_file(url=eras_input[0])
+        if len(e_data) > 0:
+            eras_j = e_data.to_json()
 
     return [trans_j, atree_j, eras_j, api_input_j]
 
