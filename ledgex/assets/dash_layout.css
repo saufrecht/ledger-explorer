@@ -220,6 +220,11 @@ a:visited {
   grid-row: 1 / 2 ;
 }
 
+.detail_time_series_box {
+  grid-column: 1 / 3;
+  grid-row: 3 / 4 ;
+}
+
 
 .account_burst_box {
   grid-column: 1 / 2;

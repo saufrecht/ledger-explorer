@@ -16,7 +16,7 @@ from ledgex.utils import (
     make_bar,
     trans_to_burst,
     preventupdate_if_empty,
-    LError
+    LError,
 )
 from ledgex.data_store import Datastore
 
@@ -74,6 +74,12 @@ layout = html.Div(
             ],
         ),
         html.Div(
+            className="detail_time_series_box",
+            children=[
+                dcc.Graph(id="ex_detail_time_series"),
+            ],
+        ),
+        html.Div(
             className="trans_table_box",
             children=[
                 html.Div(id="ex_trans_table_text", children=""),
@@ -91,18 +97,18 @@ layout = html.Div(
         Output("ex_time_series_span", "value"),
     ],
     [Input("ex_tab_trigger", "children")],
-    state=[State("data_store", "children"),
-           State("param_store", "children")]
+    state=[State("data_store", "children"), State("param_store", "children")],
 )
 def load_ex_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
     preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
     options = CONST["time_res_options"]
-    datastore: Datastore() = Datastore.from_json(data_store)
-    eras = datastore.eras
-    if len(eras) > 0:
-        options = [CONST["time_res_era_option"]] + options
+    if data_store:
+        data: Datastore() = Datastore.from_json(data_store)
+        eras = data.eras
+        if len(eras) > 0:
+            options = [CONST["time_res_era_option"]] + options
 
     return [params.init_time_res, options, params.init_time_span]
 
@@ -129,7 +135,9 @@ def ex_make_time_series(
 
     try:
         tr_label = CONST["time_res_lookup"][time_resolution]["label"]  # e.g., 'by Era'
-        ts_label = CONST["time_span_lookup"][time_span]["label"]  # e.g., 'Annual' or 'Monthly'
+        ts_label = CONST["time_span_lookup"][time_span][
+            "label"
+        ]  # e.g., 'Annual' or 'Monthly'
     except KeyError as E:
         app.logger.warning(
             f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
@@ -150,16 +158,16 @@ def ex_make_time_series(
 
     for i, account in enumerate(selected_accounts):
         bar = make_bar(
-                trans,
-                account_tree,
-                account,
-                time_resolution,
-                time_span,
-                eras,
-                i,
-                deep=True,
-                unit=unit,
-            )
+            trans,
+            account_tree,
+            account,
+            time_resolution,
+            time_span,
+            eras,
+            i,
+            deep=True,
+            unit=unit,
+        )
         if bar:
             chart_fig.add_trace(bar)
 
@@ -202,6 +210,8 @@ def apply_selection_from_time_series(
     Note: all of the necessary information is in figure but that doesn't seem
     to trigger reliably.  Adding selectedData as a second Input causes reliable
     triggering.
+    TODO: BUG: The starting point of an Era- or Decade-wide object is not applied when clicked on
+
     """
     datastore: Datastore() = Datastore.from_json(data_store)
     preventupdate_if_empty(datastore)
@@ -220,7 +230,7 @@ def apply_selection_from_time_series(
             account_tree, eras, figure, time_resolution, time_span, trans, unit
         )
     except LError as E:
-        app.logger.warning(f'Failed to generate sunburst.  Error: {E}')
+        app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
         raise PreventUpdate
 
 
@@ -229,19 +239,32 @@ def apply_selection_from_time_series(
         Output("ex_trans_table", "data"),
         Output("ex_selected_account_text", "children"),
         Output("ex_trans_table_text", "children"),
+        Output("ex_detail_time_series", "figure"),
     ],
     [
         Input("ex_account_burst", "clickData"),
         Input("ex_account_burst", "figure"),
-
     ],
-    state=[State("ex_time_series_selection_info", "data"),
-           State("data_store", "children")]
+    state=[
+        State("ex_time_series_selection_info", "data"),
+        State("data_store", "children"),
+        State("param_store", "children"),
+        State("ex_time_series_resolution", "value"),
+        State("ex_time_series_span", "value"),
+    ],
 )
-def apply_burst_click(burst_clickData, burst_figure, time_series_info, data_store):
+def apply_burst_click(
+    burst_clickData,
+    burst_figure,
+    time_series_info,
+    data_store: str,
+    param_store: str,
+    time_resolution: int,
+    time_span: str,
+):
     """
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
-    Burst_figure is not used for anything but is present to guarantee a trigger on initial page load.
+    burst_figure Input is used only to guarantee a trigger on initial page load.
     """
     datastore: Datastore() = Datastore.from_json(data_store)
     preventupdate_if_empty(datastore)
@@ -261,30 +284,71 @@ def apply_burst_click(burst_clickData, burst_figure, time_series_info, data_stor
 
     # Figure out which account(s) were selected in the sunburst click
     if burst_clickData:
-        click_account = burst_clickData["points"][0]["id"]
+        raw_click_account = burst_clickData["points"][0]["id"]
         # strip any SUFFFIXes from the label that were added in the sunburst hack
-        if CONST["leaf_suffix"] in click_account:
-            revised_id = click_account.replace(CONST["leaf_suffix"], "")
-        elif CONST["subtotal_suffix"] in click_account:
-            revised_id = click_account.replace(CONST["subtotal_suffix"], "")
+        if CONST["leaf_suffix"] in raw_click_account:
+            click_account = raw_click_account.replace(CONST["leaf_suffix"], "")
+        elif CONST["subtotal_suffix"] in raw_click_account:
+            click_account = raw_click_account.replace(CONST["subtotal_suffix"], "")
         else:
-            revised_id = click_account
+            click_account = raw_click_account
     else:
-        revised_id = []
+        click_account = []
 
-    # if any accounts are selected, get those transactions.  Otherwise, get all transactions.
-
-    if revised_id:
+    # if an accounts was clicked, get a ledger of those transactions, and a detailed time series
+    # chart of the clicked account.  Otherwise, get all transactions, and an empty chart.
+    detail_fig: go.Figure = go.Figure(layout=chart_fig_layout)
+    if click_account:
         # Add any sub-accounts
-        sub_accounts = account_tree.get_descendents(revised_id)
-        filter_accounts = [revised_id] + sub_accounts
+        sub_accounts = account_tree.get_descendents(click_account)
+        filter_accounts = [click_account] + sub_accounts
         sel_trans = trans[trans["account"].isin(filter_accounts)]
         if (len_sub := len(sub_accounts)) > 0:
-            account_text = f"{revised_id} and {len_sub} sub-accounts selected"
+            account_text = f"{click_account} and {len_sub} sub-accounts selected"
         else:
-            account_text = f"{revised_id} selected"
-    else:
+            account_text = f"{click_account} selected"
 
+        # also, build the detail chart for the primarily selected account
+        params: Params() = Params.from_json(param_store)
+        if not time_resolution:
+            time_resolution = params.init_time_res
+        if not time_span:
+            time_span = params.init_time_span
+        unit = params.unit
+        eras: pd.DataFrame = datastore.eras
+        try:
+            tr_label = CONST["time_res_lookup"][time_resolution][
+                "label"
+            ]  # e.g., 'by Era'
+            ts_label = CONST["time_span_lookup"][time_span][
+                "label"
+            ]  # e.g., 'Annual' or 'Monthly'
+        except KeyError as E:
+            app.logger.warning(
+                f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
+            )
+            raise PreventUpdate
+        bar = make_bar(
+            trans,
+            account_tree,
+            click_account,
+            time_resolution,
+            time_span,
+            eras,
+            0,
+            deep=True,
+            unit=unit,
+        )
+        if bar:
+            detail_fig.add_trace(bar)
+            ts_title = f"Average {ts_label} {click_account} {unit}, by {tr_label} "
+            detail_fig.update_layout(
+                title={"text": ts_title},
+                xaxis={"showgrid": True, "nticks": 20},
+                yaxis={"showgrid": True},
+                barmode="relative",
+            )
+    else:
         sel_trans = trans
         account_text = f"Click a pie slice to filter from {max_trans_count} records"
 
@@ -298,4 +362,5 @@ def apply_burst_click(burst_clickData, burst_figure, time_series_info, data_stor
     sel_trans = sel_trans.sort_values(["date"])
 
     ex_trans_table_text: str = f"{len(sel_trans)} records"
-    return [sel_trans.to_dict("records"), account_text, ex_trans_table_text]
+
+    return [sel_trans.to_dict("records"), account_text, ex_trans_table_text, detail_fig]

@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
-from ledgex.apps import balance_sheet, data_source, explorer, hometab
+from ledgex.apps import balance_sheet, data_source, explorer, hometab, flow, compare
 from ledgex.loading import LoadError, convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
 from ledgex.utils import preventupdate_if_empty
@@ -34,6 +34,8 @@ app.layout = html.Div(
                     children=[
                         dcc.Tab(label=CONST["ex_label"], id="ex_tab", value="ex"),
                         dcc.Tab(label=CONST["bs_label"], id="bs_tab", value="bs"),
+                        dcc.Tab(label=CONST["fl_label"], id="fl_tab", value="fl"),
+                        dcc.Tab(label=CONST["co_label"], id="co_tab", value="co"),
                         dcc.Tab(label=CONST["ds_label"], id="ds_tab", value="ds"),
                         dcc.Tab(label="About", id="le_tab", value="le"),
                     ],
@@ -44,10 +46,8 @@ app.layout = html.Div(
                         html.Div(id="files_status", children=[]),
                         html.A("Permalink", id="permalink", href=""),
                         dcc.Markdown(CONST["bug_report_md"]),
-                        html.Div("—DEBUGGING—"),
                         dcc.Location(id="url_reader", refresh=False),
-                        html.Div("—UI Inputs"),
-                        html.Div(id="ui_inputs", className="unhidden"),
+                        html.Div(id="ui_inputs", className="hidden"),
                         html.Div(id="api_inputs", className="hidden"),
                         html.Div(id="ex_tab_trigger", className="hidden"),
                         html.Div(id="ui_trans_node", className="hidden"),
@@ -57,8 +57,7 @@ app.layout = html.Div(
                         html.Div(id="api_atree_node", className="hidden"),
                         html.Div(id="api_eras_node", className="hidden"),
                         html.Div(id="data_store", className="hidden"),
-                        html.Div("—Param Store"),
-                        html.Div(id="param_store", className="unhidden"),
+                        html.Div(id="param_store", className="hidden"),
                         html.Div(id="tab_store", className="hidden"),
                         html.Div(id="tab_node", className="hidden"),
                     ],
@@ -94,8 +93,7 @@ def parse_url_path(path: str):
 
 
 @app.callback(
-    [Output("tab_content", "children"),
-     Output("tab_node", "children")],
+    [Output("tab_content", "children"), Output("tab_node", "children")],
     [Input("tabs", "value")],
 )
 def change_tab(clicked_tab: str) -> list:
@@ -107,6 +105,10 @@ def change_tab(clicked_tab: str) -> list:
         return [explorer.layout, "ex"]
     elif clicked_tab == "ds":
         return [data_source.layout, "ds"]
+    elif clicked_tab == "fl":
+        return [flow.layout, "fl"]
+    elif clicked_tab == "co":
+        return [compare.layout, "co"]
     elif clicked_tab == "le":
         return [hometab.layout, "le"]
     else:
@@ -117,9 +119,13 @@ def change_tab(clicked_tab: str) -> list:
 
 
 @app.callback(
-    [Output("ex_tab", "label"),
-     Output("bs_tab", "label"),
-     Output("ds_tab", "label")],
+    [
+        Output("ex_tab", "label"),
+        Output("bs_tab", "label"),
+        Output("ds_tab", "label"),
+        Output("fl_tab", "label"),
+        Output("co_tab", "label"),
+    ],
     [Input("tab_store", "children")],
 )
 def relabel_tab(tab_store: str):
@@ -128,39 +134,50 @@ def relabel_tab(tab_store: str):
     params = Params(**json.loads(tab_store))
     params.fill_defaults()
 
-    return [params.ex_label, params.bs_label, params.ds_label]
+    return [
+        params.ex_label,
+        params.bs_label,
+        params.ds_label,
+        params.fl_label,
+        params.co_label,
+    ]
 
 
 @app.callback(
-    [Output("api_trans_node", "children"),
-     Output("api_atree_node", "children"),
-     Output("api_eras_node", "children"),
-     Output("api_inputs", "children")],
+    [
+        Output("api_trans_node", "children"),
+        Output("api_atree_node", "children"),
+        Output("api_eras_node", "children"),
+        Output("api_inputs", "children"),
+    ],
     [Input("url_reader", "search")],
 )
 def parse_url_search(search: str):
-    """ Process the search portion of any input URL and store it to an
+    """Process the search portion of any input URL and store it to an
     intermediate location.  If one or more data source URLs are
     provided via the input URL, load them here in the index.
     This is necessary in order for incoming links that provide data source URLs
     to load everything; otherwise they wouldn't work right until after
-    the user browsed to the Data Source tab.  """
+    the user browsed to the Data Source tab."""
 
     preventupdate_if_empty(search)
 
     def le_parse_qs(search: str):
-        """ Do some extra cleanup on url string over and above what the
+        """Do some extra cleanup on url string over and above what the
         built-in parser does.  Specifically:
-        1. Parser returns x=1,2 as {'x': '1, 2'}, but we want {'x': ['1', '2']} """
+        1. Parser returns x=1,2 as {'x': '1, 2'}, but we want {'x': ['1', '2']}"""
         parsed_params = {}
-        raw_qs = parse_qs(search, max_num_fields=50)  # 50 is arbitrary, for DoS prevention
+        raw_qs = parse_qs(
+            search, max_num_fields=50
+        )  # 50 is arbitrary, for DoS prevention
         for key, value_list in raw_qs.items():
             key_list = []
+
             for value in value_list:
                 if (not isinstance(value, str)) or (not len(value) > 0):
                     pass
-                if ',' in value:
-                    for sub_val in value.split(','):
+                if "," in value:
+                    for sub_val in value.split(","):
                         if isinstance(sub_val, str) and len(sub_val) > 0:
                             key_list.append(sub_val)
                 else:
@@ -234,20 +251,22 @@ def load_and_transform(
     from URL search parameters), and the ui_*_nodes will contain data
     loaded from the data_source tab, so ui should trump api.
     """
-
     ctx = dash.callback_context
     if ctx.triggered:
         trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     else:
         trigger_id = None
-    # look for UI input, then file upload, then url upload.  This
-    # way, user uploads by file or url will override anything loaded
-    # from the Ledger Explorer url.
+    # Work through the possible triggers to make sure that behavior is as expected:
+    #   1. If on the data_store tab, and UI input was the trigger, use UI. Else:
+    #   2. If the API was the trigger, use API. Else:
+    #   3. If UI is present, use UI.  Else:
+    #   4. If API is present, use it.
+    #   This order ensures that user input will always trump paths in the URL
     data: str = ""
     params_j: str = ""
     status: str = ""
     t_source: str = ""
-    if trigger_id == "ui_trans_node":
+    if tab_node == "ds" and trigger_id == "ui_trans_node":
         t_source = ui_trans_node
     elif trigger_id == "api_trans_node":
         t_source = api_trans_node
@@ -258,20 +277,24 @@ def load_and_transform(
     else:
         status = "No transaction data loaded."
     ui_source = {}
-    if ui_inputs and len(ui_inputs) > 0:
+    if tab_node == "ds" and ui_inputs and len(ui_inputs) > 0:
         ui_source = json.loads(ui_inputs)
-
     api_source = {}
     if api_inputs and len(api_inputs) > 0:
         api_source = json.loads(api_inputs)
-
+    # combine api_source and ui_source, with ui_source having
+    # precedence
     merged_source = {**api_source, **ui_source}
-    logging.warning(f'merged_source is {merged_source}')
-
-    permalink = urlencode(merged_source)
+    # and strip params back down to simple strings;
+    # otherwise, each round through will add another layer of []s
     params = Params.from_dict(merged_source)
     params.fill_defaults()
     params_j = params.to_json()
+    for key, value in merged_source.items():
+        if isinstance(value, list):
+            merged_source[key] = ','.join(value)
+
+    permalink = urlencode(merged_source)
 
     if t_source and len(t_source) > 0:
         try:
@@ -317,21 +340,20 @@ def load_and_transform(
             )
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-
-    return [data, params_j, status, 'True', f'?{permalink}']
+    return [data, params_j, status, "True", f"/{tab_node}?{permalink}"]
 
 
 if __name__ == "__main__":
+    # This block runs when index.py is called from the command line, i.e., in development mode
     app.config["suppress_callback_exceptions"] = True
+    app.logger.setLevel(logging.DEBUG)
     app.run_server(debug=True, host="0.0.0.0", port="8200")
+
 else:
-    # Logging flows all the way to gunicorn.
+    # This block runs when index.py is called from gunicorn.  Logging
+    # is passed on to gunicorn logger, whatever that may be, instead of the console.
     # (from https://trstringer.com/logging-flask-gunicorn-the-manageable-way/)
     gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
     external_stylesheets = ["https://ledge.uprightconsulting.com/s/dash_layout.css"]
-
-# TODO: daily and weekly
-# TODO: make the tab labels work
-# TODO: change the $

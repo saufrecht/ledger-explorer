@@ -18,6 +18,8 @@ CONST = {
     "ex_label": "Cash Flow",
     "bs_label": "Balance Sheet",
     "ds_label": "Settings",
+    "fl_label": "Flow",
+    "co_label": "Compare",
     "delim": ":",
     "max_slices": 7,
     "unit": "$",
@@ -102,15 +104,17 @@ class Params:
     bs_roots: Iterable[str] = None
 
     @classmethod
-    def parse_account_string(cls, input: str):
-        """Take a string which is a list of account names, separated by commas,
-        and return it as a tuple"""
-        if not isinstance(input, str):
-            return ()
-        input_list = input.split(",")
-        stripped_list = [x.strip() for x in input_list]
-        string_list = [x for x in stripped_list if isinstance(x, str)]
-        return tuple(string_list)
+    def cleanse_account_list_input(cls, input: str):
+        """ Handle input that may come directly from parsed URL and
+        ensure that it comes back a tuple of strings, with no leading or
+        trailing whitespace """
+        if isinstance(input, str):
+            input = input.split(",")
+        if isinstance(input, list):
+            stripped_list = [x.strip() for x in input]
+            string_list = [x for x in stripped_list if isinstance(x, str)]
+            return string_list
+        return ()
 
     def to_json(self):
         """ Convert parameters to JSON via dict structure """
@@ -170,11 +174,5 @@ matches the name of a class parameter"""
             self.ex_label = CONST["ex_label"]
 
     def __post_init__(self):
-        if isinstance(self.ex_roots, str):
-            self.ex_roots = self.parse_account_string(self.ex_roots)
-        elif not self.ex_roots:
-            self.ex_roots = ()
-        if isinstance(self.bs_roots, str):
-            self.bs_roots = self.parse_account_string(self.bs_roots)
-        elif not self.bs_roots:
-            self.bs_roots = ()
+        self.ex_roots = self.cleanse_account_list_input(self.ex_roots)
+        self.bs_roots = self.cleanse_account_list_input(self.bs_roots)

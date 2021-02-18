@@ -53,7 +53,6 @@ def load_bs_params(param_store: str):
 )
 def bs_make_time_serieses(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
-
     preventupdate_if_empty(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:
@@ -73,7 +72,6 @@ def bs_make_time_serieses(time_resolution, data_store, param_store):
     if not isinstance(account_list, list):
         logging.warning(f"Account list should be a list but isn't: {account_list}")
         raise PreventUpdate
-    # breakpoint()
     for account in account_list:
         fig: go.Figure = go.Figure(layout=chart_fig_layout)
         fig.update_layout(
@@ -92,6 +90,7 @@ def bs_make_time_serieses(time_resolution, data_store, param_store):
         subaccounts: iter = account_tree.get_children(account)
         for j, subaccount in enumerate(subaccounts):
             sub_desc = account_tree.get_descendents(subaccount)
+            sub_desc.append(subaccount)
             tba = trans[trans["account"].isin(sub_desc)]
             if len(tba) > 0:
                 fig.add_trace(make_cum_area(tba, subaccount, j, time_resolution))
