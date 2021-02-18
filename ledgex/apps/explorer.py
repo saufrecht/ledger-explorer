@@ -202,20 +202,30 @@ def ex_make_time_series(
 def apply_selection_from_time_series(
     figure, selectedData, time_resolution, time_span, data_store, param_store
 ):
-    """
-    Selecting specific points from the time series chart updates the
-    account burst and the detail labels.
-    Reminder to self: When you think selectedData input is broken, remember
-    that unaltered default action in the graph is to zoom, not to select.
-    Note: all of the necessary information is in figure but that doesn't seem
-    to trigger reliably.  Adding selectedData as a second Input causes reliable
-    triggering.
-    TODO: BUG: The starting point of an Era- or Decade-wide object is not applied when clicked on
+    """Selecting specific points from the time series chart updates the
+    account burst and the detail labels.  Reminder to self: When you
+    think selectedData input is broken, remember that unaltered
+    default action in the graph is to zoom, not to select.  Note: all
+    of the necessary information is in figure but that doesn't seem to
+    trigger reliably.  Adding selectedData as a second Input causes
+    reliable triggering.
+
+    TODO: BUG: The starting point of an Era- or Decade-wide object is
+    not applied when clicked on
+
+    TODO: UX BUG: By default, the sunburst has little to no Expenses,
+    because Expenses is by default negative value.  The only way to
+    see negative expenses in the sunburst is to select a net-negative
+    set of data, in which case (this) sunburst flips sign.  I.e., the
+    user must first click on an Expenses column in the time series,
+    which will cause the burst to be net-negative, which will flip it
+    to positive, which will cause it to display as expected.  Possible
+    solution: limit the burst to a single parent account (not root)?
 
     """
-    datastore: Datastore() = Datastore.from_json(data_store)
-    preventupdate_if_empty(datastore)
     params: Params() = Params.from_json(param_store)
+    datastore: Datastore() = Datastore.from_json(data_store, params.ex_roots)
+    preventupdate_if_empty(datastore)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
