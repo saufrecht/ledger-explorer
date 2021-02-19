@@ -6,7 +6,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
@@ -231,8 +231,8 @@ def parse_url_search(search: str):
         Input("api_eras_node", "children"),
         Input("ui_inputs", "children"),
         Input("api_inputs", "children"),
-        Input("tab_node", "children"),
     ],
+    state=[State("tab_node", "children")],
 )
 def load_and_transform(
     ui_trans_node: str,

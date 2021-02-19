@@ -88,6 +88,7 @@ def load_input_file(input_file=None, url=None, filename=None) -> Iterable:
     data: pd.DataFrame() = pd.DataFrame()
     result_meta: str = ''
     new_filename: str = ''
+    # TODO: trim whitespace from column titles
     if input_file:
         try:
             data = parse_base64_file(input_file, filename)
@@ -191,10 +192,11 @@ def convert_raw_data(
         trans: pd.DataFrame = load_transactions(raw_trans)
     except Exception as E:
         raise LoadError(f"Could not import the transactions because: {type(E)}, {E}")
-
     atree: Tree = ATree()
-    # look for account tree in separate tree file.  Apply renaming, if any.
+
+    # look for account tree in separate tree file.
     if len(raw_tree) > 0:
+        # apply column renaming parameters before loading
         raw_tree = rename_columns(raw_tree, parameters)
         if CONST["fan_col"] in raw_tree.columns:
             atree = ATree.from_names(
@@ -206,9 +208,8 @@ def convert_raw_data(
             atree = ATree.from_parents(
                 raw_tree[[CONST["account_col"], CONST["parent_col"]]]
             )
-
-    # if we don't have a viable atree from an external file,
-    # try to get it from the trans file.
+    # Or, if we don't have a viable atree from an external file,
+    # try to get it from the trans file
     if len(atree) == 0:
         if "full account name" in trans.columns:
             atree = ATree.from_names(trans[CONST["fan_col"]], parameters.ds_delimiter)
@@ -222,8 +223,11 @@ def convert_raw_data(
     if len(atree) > 0:
         trans = ATree.stuff_tree_into_trans(trans, atree)
 
-    # Special case for Gnucash and other ledger data.  TODO: generalize
-    # mangle amounts signs for known account types, to make graphs least surprising
+    # Special case for Gnucash and other ledger data.
+    # TODO: generalize mangle amounts signs for known account types, to make graphs
+    # least surprising Maybe use the account type field from GnuCash to determine
+    # what to flip.
+
     for account in [ra for ra in CONST["root_accounts"] if ra["flip_negative"] is True]:
         if atree.get_node(account["id"]):
             trans["amount"] = np.where(

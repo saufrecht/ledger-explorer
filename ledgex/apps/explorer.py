@@ -216,11 +216,12 @@ def apply_selection_from_time_series(
     TODO: UX BUG: By default, the sunburst has little to no Expenses,
     because Expenses is by default negative value.  The only way to
     see negative expenses in the sunburst is to select a net-negative
-    set of data, in which case (this) sunburst flips sign.  I.e., the
-    user must first click on an Expenses column in the time series,
-    which will cause the burst to be net-negative, which will flip it
-    to positive, which will cause it to display as expected.  Possible
-    solution: limit the burst to a single parent account (not root)?
+    set of data, in which case (the Ledger Explorer implementation of)
+    sunburst flips sign.  I.e., the user must first click on an
+    Expenses column in the time series, which will cause the burst to
+    be net-negative, which will flip it to positive, which will cause
+    it to display as expected.  Possible solution: limit the burst to
+    a single parent account (not root)?
 
     """
     params: Params() = Params.from_json(param_store)

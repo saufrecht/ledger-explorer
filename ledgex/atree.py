@@ -159,13 +159,15 @@ class ATree(Tree):
                 # TODO: write some bad sample data to see what errors we should catch here.
                 #  presumably: account not a list; branch in account not a string
                 continue
-
         # second pass, to get orphaned nodes in the right place
         for row in clean_list.itertuples(index=False):
             try:
                 name = row[0]
                 parent = row[1]
-                tree.move_node(name, parent)
+                if name == parent:
+                    app.logger.info(f'Cannot move {name} to be child of {parent}.  Skipping.')
+                else:
+                    tree.move_node(name, parent)
             except tle.NodeIDAbsentError as E:
                 app.logger.warning(f"Error moving node: {E}")
                 # TODO: write some bad sample data to see what errors we should catch here.
