@@ -10,14 +10,14 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
-from ledgex.apps import balance_sheet, data_source, explorer, hometab, flow, compare
+from ledgex.apps import compare, cumulative, data_source, explore, periodic, hometab, sankey
 from ledgex.loading import LoadError, convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
 from ledgex.utils import preventupdate_if_empty
 
 server = app.server
 
-app.title = "Ledger Explorer"
+app.title = "Ledger Periodic"
 
 
 app.layout = html.Div(
@@ -33,8 +33,9 @@ app.layout = html.Div(
                     vertical=True,
                     children=[
                         dcc.Tab(label=CONST["ex_label"], id="ex_tab", value="ex"),
-                        dcc.Tab(label=CONST["bs_label"], id="bs_tab", value="bs"),
-                        dcc.Tab(label=CONST["fl_label"], id="fl_tab", value="fl"),
+                        dcc.Tab(label=CONST["pe_label"], id="pe_tab", value="pe"),
+                        dcc.Tab(label=CONST["cu_label"], id="cu_tab", value="cu"),
+                        dcc.Tab(label=CONST["sa_label"], id="sa_tab", value="sa"),
                         dcc.Tab(label=CONST["co_label"], id="co_tab", value="co"),
                         dcc.Tab(label=CONST["ds_label"], id="ds_tab", value="ds"),
                         dcc.Tab(label="About", id="le_tab", value="le"),
@@ -47,9 +48,10 @@ app.layout = html.Div(
                         html.A("Permalink", id="permalink", href=""),
                         dcc.Markdown(CONST["bug_report_md"]),
                         dcc.Location(id="url_reader", refresh=False),
-                        html.Div(id="ui_inputs", className="hidden"),
+                        html.Div(id="ui_node", className="hidden"),
+                        html.Div(id="api_node", className="hidden"),
                         html.Div(id="api_inputs", className="hidden"),
-                        html.Div(id="ex_tab_trigger", className="hidden"),
+                        html.Div(id="pe_tab_trigger", className="hidden"),
                         html.Div(id="ui_trans_node", className="hidden"),
                         html.Div(id="ui_atree_node", className="hidden"),
                         html.Div(id="ui_eras_node", className="hidden"),
@@ -58,7 +60,7 @@ app.layout = html.Div(
                         html.Div(id="api_eras_node", className="hidden"),
                         html.Div(id="data_store", className="hidden"),
                         html.Div(id="param_store", className="hidden"),
-                        html.Div(id="tab_store", className="hidden"),
+                        html.Div(id="tab_label_store", className="hidden"),
                         html.Div(id="tab_node", className="hidden"),
                     ],
                 ),
@@ -72,9 +74,9 @@ app.layout = html.Div(
 app.validation_layout = html.Div(
     children=[
         app.layout,
-        balance_sheet.layout,
+        cumulative.layout,
         data_source.layout,
-        explorer.layout,
+        periodic.layout,
         hometab.layout,
     ]
 )
@@ -99,16 +101,18 @@ def parse_url_path(path: str):
 def change_tab(clicked_tab: str) -> list:
     """From a click on the tabbar, or a change
     from the url, change the currently shown tab."""
-    if clicked_tab == "bs":
-        return [balance_sheet.layout, "bs"]
-    elif clicked_tab == "ex":
-        return [explorer.layout, "ex"]
+    if clicked_tab == "co":
+        return [compare.layout, "co"]
+    elif clicked_tab == "cu":
+        return [cumulative.layout, "cu"]
     elif clicked_tab == "ds":
         return [data_source.layout, "ds"]
-    elif clicked_tab == "fl":
-        return [flow.layout, "fl"]
-    elif clicked_tab == "co":
-        return [compare.layout, "co"]
+    elif clicked_tab == "ex":
+        return [explore.layout, "ex"]
+    elif clicked_tab == "pe":
+        return [periodic.layout, "pe"]
+    elif clicked_tab == "sa":
+        return [sankey.layout, "sa"]
     elif clicked_tab == "le":
         return [hometab.layout, "le"]
     else:
@@ -120,26 +124,28 @@ def change_tab(clicked_tab: str) -> list:
 
 @app.callback(
     [
-        Output("ex_tab", "label"),
-        Output("bs_tab", "label"),
-        Output("ds_tab", "label"),
-        Output("fl_tab", "label"),
         Output("co_tab", "label"),
+        Output("cu_tab", "label"),
+        Output("ds_tab", "label"),
+        Output("ex_tab", "label"),
+        Output("pe_tab", "label"),
+        Output("sa_tab", "label"),
     ],
-    [Input("tab_store", "children")],
+    [Input("tab_label_store", "children")],
 )
-def relabel_tab(tab_store: str):
+def relabel_tab(tab_label_store: str):
     """ If the setttings have any renaming for tab labels, apply them """
-    preventupdate_if_empty(tab_store)
-    params = Params(**json.loads(tab_store))
+    preventupdate_if_empty(tab_label_store)
+    params = Params(**json.loads(tab_label_store))
     params.fill_defaults()
 
     return [
-        params.ex_label,
-        params.bs_label,
-        params.ds_label,
-        params.fl_label,
         params.co_label,
+        params.cu_label,
+        params.ds_label,
+        params.ex_label,
+        params.pe_label,
+        params.sa_label,
     ]
 
 
@@ -148,6 +154,7 @@ def relabel_tab(tab_store: str):
         Output("api_trans_node", "children"),
         Output("api_atree_node", "children"),
         Output("api_eras_node", "children"),
+        Output("api_node", "children"),
         Output("api_inputs", "children"),
     ],
     [Input("url_reader", "search")],
@@ -211,15 +218,16 @@ def parse_url_search(search: str):
         if len(e_data) > 0:
             eras_j = e_data.to_json()
 
-    return [trans_j, atree_j, eras_j, api_input_j]
+    return [trans_j, atree_j, eras_j, api_input_j, api_input_j]
 
 
 @app.callback(
     [
         Output("data_store", "children"),
         Output("param_store", "children"),
+        Output("tab_label_store", "children"),
         Output("files_status", "children"),
-        Output("ex_tab_trigger", "children"),
+        Output("pe_tab_trigger", "children"),
         Output("permalink", "href"),
     ],
     [
@@ -229,8 +237,8 @@ def parse_url_search(search: str):
         Input("api_trans_node", "children"),
         Input("api_atree_node", "children"),
         Input("api_eras_node", "children"),
-        Input("ui_inputs", "children"),
-        Input("api_inputs", "children"),
+        Input("ui_node", "children"),
+        Input("api_node", "children"),
     ],
     state=[State("tab_node", "children")],
 )
@@ -241,8 +249,8 @@ def load_and_transform(
     api_trans_node: str,
     api_atree_node: str,
     api_eras_node: str,
-    ui_inputs: str,
-    api_inputs: str,
+    ui_node: str,
+    api_node: str,
     tab_node: str,
 ):
     """When any of the parameters or input files changes, reload
@@ -277,11 +285,11 @@ def load_and_transform(
     else:
         status = "No transaction data loaded."
     ui_source = {}
-    if tab_node == "ds" and ui_inputs and len(ui_inputs) > 0:
-        ui_source = json.loads(ui_inputs)
+    if tab_node == "ds" and ui_node and len(ui_node) > 0:
+        ui_source = json.loads(ui_node)
     api_source = {}
-    if api_inputs and len(api_inputs) > 0:
-        api_source = json.loads(api_inputs)
+    if api_node and len(api_node) > 0:
+        api_source = json.loads(api_node)
     # combine api_source and ui_source, with ui_source having
     # precedence
     merged_source = {**api_source, **ui_source}
@@ -340,7 +348,7 @@ def load_and_transform(
             )
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-    return [data, params_j, status, "True", f"/{tab_node}?{permalink}"]
+    return [data, params_j, params_j, status, "True", f"/{tab_node}?{permalink}"]
 
 
 if __name__ == "__main__":

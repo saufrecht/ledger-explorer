@@ -148,46 +148,112 @@ layout = (
                                 placeholder="Custom name for the Data Source tab",
                                 debounce=True,
                             ),
+
                             html.Label(
-                                htmlFor="bs_label", children="Balance Sheet Tab Label"
+                                htmlFor="pe_label", children="Periodic Tab Label"
                             ),
                             dcc.Input(
-                                id="bs_label",
+                                id="pe_label",
                                 persistence=True,
                                 persistence_type="memory",
-                                placeholder="Custom name for the Balance Sheet tab",
+                                placeholder="Custom name for the Periodic tab",
                                 debounce=True,
                             ),
                             html.Label(
-                                htmlFor="bs_roots", children="Balance Sheet Root Accounts"
+                                htmlFor="pe_roots", children="Periodic Root Accounts"
                             ),
                             dcc.Input(
-                                id="bs_roots",
+                                id="pe_roots",
                                 persistence=True,
                                 persistence_type="memory",
-                                placeholder="list of root accounts to include in Balance Sheet",
+                                placeholder="list of root accounts to include in Periodic",
+                                debounce=True,
+                            ),
+
+                            html.Label(
+                                htmlFor="cu_label", children="Cumulative Tab Label"
+                            ),
+                            dcc.Input(
+                                id="cu_label",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="Custom name for the Cumulative Sheet tab",
                                 debounce=True,
                             ),
                             html.Label(
-                                htmlFor="ex_label", children="Cash Flow Tab Label"
+                                htmlFor="bs_roots", children="Cumulative Root Accounts"
+                            ),
+                            dcc.Input(
+                                id="cu_roots",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="list of root accounts to include in Cumulative",
+                                debounce=True,
+                            ),
+
+                            html.Label(
+                                htmlFor="ex_label", children="Explore Tab Label"
                             ),
                             dcc.Input(
                                 id="ex_label",
                                 persistence=True,
                                 persistence_type="memory",
-                                placeholder="Custom name for the Cash Flow tab",
+                                placeholder="Custom name for the Explore tab",
                                 debounce=True,
                             ),
                             html.Label(
-                                htmlFor="ex_roots", children="Cash Flow Root Accounts"
+                                htmlFor="ex_roots", children="Explore Root Accounts"
                             ),
                             dcc.Input(
                                 id="ex_roots",
                                 persistence=True,
                                 persistence_type="memory",
-                                placeholder="list of root accounts to include in Cash Flow",
+                                placeholder="list of root accounts to include in Explore",
                                 debounce=True,
                             ),
+
+                            html.Label(
+                                htmlFor="co_label", children="Compare Tab Label"
+                            ),
+                            dcc.Input(
+                                id="co_label",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="Custom name for the Compare tab",
+                                debounce=True,
+                            ),
+                            html.Label(
+                                htmlFor="co_roots", children="Compare Root Accounts"
+                            ),
+                            dcc.Input(
+                                id="co_roots",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="list of root accounts to include in Compare",
+                                debounce=True,
+                            ),
+
+                            html.Label(
+                                htmlFor="sa_label", children="Sankey Tab Label"
+                            ),
+                            dcc.Input(
+                                id="sa_label",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="Custom name for the Sankey tab",
+                                debounce=True,
+                            ),
+                            html.Label(
+                                htmlFor="sa_roots", children="Sankey Root Accounts"
+                            ),
+                            dcc.Input(
+                                id="sa_roots",
+                                persistence=True,
+                                persistence_type="memory",
+                                placeholder="list of root accounts to include in Sankey",
+                                debounce=True,
+                            ),
+
                         ],
                     ),
                 ],
@@ -325,11 +391,17 @@ layout = (
         Output("data_title", "value"),
         Output("ds_delimiter", "value"),
         Output("unit", "value"),
+        Output("co_label", "value"),
+        Output("co_roots", "value"),
+        Output("cu_label", "value"),
+        Output("cu_roots", "value"),
         Output("ds_label", "value"),
-        Output("bs_label", "value"),
         Output("ex_label", "value"),
-        Output("bs_roots", "value"),
         Output("ex_roots", "value"),
+        Output("pe_label", "value"),
+        Output("pe_roots", "value"),
+        Output("sa_label", "value"),
+        Output("sa_roots", "value"),
         Output("trans_url", "value"),
         Output("atree_url", "value"),
         Output("eras_url", "value"),
@@ -355,11 +427,17 @@ def url_inputs_to_ui(api_inputs: str):
         inputs.get("ds_data_title", None),
         inputs.get("ds_delimiter", None),
         inputs.get("unit", None),
+        inputs.get("co_label", None),
+        inputs.get("co_roots", None),
+        inputs.get("cu_label", None),
+        inputs.get("cu_roots", None),
         inputs.get("ds_label", None),
-        inputs.get("bs_label", None),
         inputs.get("ex_label", None),
-        inputs.get("bs_roots", None),
         inputs.get("ex_roots", None),
+        inputs.get("pe_label", None),
+        inputs.get("pe_roots", None),
+        inputs.get("sa_label", None),
+        inputs.get("sa_roots", None),
         inputs.get("transu", None),
         inputs.get("atreeu", None),
         inputs.get("erasu", None),
@@ -367,7 +445,7 @@ def url_inputs_to_ui(api_inputs: str):
 
 
 @app.callback(
-    [Output("ui_inputs", "children")],
+    [Output("ui_node", "children")],
     [
         Input("account_name_col", "value"),
         Input("amount_col", "value"),
@@ -377,17 +455,23 @@ def url_inputs_to_ui(api_inputs: str):
         Input("data_title", "value"),
         Input("ds_delimiter", "value"),
         Input("unit", "value"),
+        Input("co_label", "value"),
+        Input("co_roots", "value"),
+        Input("cu_label", "value"),
+        Input("cu_roots", "value"),
         Input("ds_label", "value"),
-        Input("bs_label", "value"),
         Input("ex_label", "value"),
-        Input("bs_roots", "value"),
         Input("ex_roots", "value"),
+        Input("pe_label", "value"),
+        Input("pe_roots", "value"),
+        Input("sa_label", "value"),
+        Input("sa_roots", "value"),
         Input("trans_url_node", "children"),
         Input("atree_url_node", "children"),
         Input("eras_url_node", "children"),
     ],
 )
-def apply_inputs(
+def save_ui_input_to_node(
     account_label: str,
     amount_label: str,
     date_label: str,
@@ -396,19 +480,26 @@ def apply_inputs(
     ds_data_title: str,
     ds_delimiter: str,
     unit: str,
+    co_label: str,
+    co_roots: str,
+    cu_label: str,
+    cu_roots: str,
     ds_label: str,
-    bs_label: str,
     ex_label: str,
-    bs_roots: str,
     ex_roots: str,
+    pe_label: str,
+    pe_roots: str,
+    sa_label: str,
+    sa_roots: str,
     transu: str,
     atreeu: str,
     erasu: str,
 ) -> str:
-    """Store all manually entered information into the ui_inputs node.
+    """Store all manually entered information into the ui node.
     """
     input_dict = {key: value for key, value in vars().items() if value is not None and len(value) > 0}
-    return [json.dumps(input_dict)]
+
+    return [json.dumps(input_dict), ]
 
 
 @app.callback(
@@ -536,7 +627,7 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
     ],
     [Input("data_store", "children")],
     state=[State("param_store", "children")])
-def update_status_on_tab(data_store: str, param_store: str):
+def update_status_on_ds_tab_content(data_store: str, param_store: str):
     """ When the loaded files change, and the data source tab is open,
     then presumably the files changed because of user input to the
     tab controls. So, show feedback.  If the loaded files change

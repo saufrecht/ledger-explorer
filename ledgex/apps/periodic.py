@@ -96,7 +96,7 @@ layout = html.Div(
         Output("ex_time_series_resolution", "options"),
         Output("ex_time_series_span", "value"),
     ],
-    [Input("ex_tab_trigger", "children")],
+    [Input("pe_tab_trigger", "children")],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
 def load_ex_params(trigger: str, data_store: str, param_store: str):

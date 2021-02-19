@@ -15,11 +15,13 @@ CONST = {
         ("amount num.", "amount"),
         ("account name", "account"),
     ],  # defaults for gnucash
-    "ex_label": "Cash Flow",
-    "bs_label": "Balance Sheet",
-    "ds_label": "Settings",
-    "fl_label": "Flow",
     "co_label": "Compare",
+    "cu_label": "Cumulative",  # Balance Sheet
+    "ds_label": "Settings",
+    "ex_label": "Explore",
+    # "li_label": "Line Items" # or Transactions or Drill
+    "pe_label": "Periodic",  # cash flow
+    "sa_label": "Sankey",  # flow
     "delim": ":",
     "max_slices": 7,
     "unit": "$",
@@ -97,11 +99,17 @@ class Params:
     ds_data_title: str = None
     ds_delimiter: str = None
     unit: str = None
+    co_label: str = None
+    cu_label: str = None
     ds_label: str = None
-    bs_label: str = None
     ex_label: str = None
+    pe_label: str = None
+    sa_label: str = None
+    co_roots: Iterable[str] = None
+    cu_roots: Iterable[str] = None
     ex_roots: Iterable[str] = None
-    bs_roots: Iterable[str] = None
+    pe_roots: Iterable[str] = None
+    sa_roots: Iterable[str] = None
 
     @classmethod
     def cleanse_account_list_input(cls, input: str):
@@ -166,13 +174,22 @@ matches the name of a class parameter"""
             self.ds_delimiter = CONST["delim"]
         if not self.unit:
             self.unit = CONST["unit"]
+        if not self.co_label:
+            self.co_label = CONST["co_label"]
+        if not self.cu_label:
+            self.cu_label = CONST["cu_label"]
         if not self.ds_label:
             self.ds_label = CONST["ds_label"]
-        if not self.bs_label:
-            self.bs_label = CONST["bs_label"]
         if not self.ex_label:
             self.ex_label = CONST["ex_label"]
+        if not self.pe_label:
+            self.pe_label = CONST["pe_label"]
+        if not self.sa_label:
+            self.sa_label = CONST["sa_label"]
 
     def __post_init__(self):
+        self.co_roots = self.cleanse_account_list_input(self.co_roots)
+        self.cu_roots = self.cleanse_account_list_input(self.cu_roots)
         self.ex_roots = self.cleanse_account_list_input(self.ex_roots)
-        self.bs_roots = self.cleanse_account_list_input(self.bs_roots)
+        self.pe_roots = self.cleanse_account_list_input(self.pe_roots)
+        self.sa_roots = self.cleanse_account_list_input(self.sa_roots)

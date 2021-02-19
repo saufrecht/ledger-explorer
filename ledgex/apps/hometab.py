@@ -22,7 +22,7 @@ Quickly navigate through flow and balance charts as line charts, drill down into
    * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
    * ![Screenshot](/assets/screenshot_cash_flow_transdata.png)
 
-* **Example #2:** [Greenhouse Gas emissions by country over time](/bs/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual&ds_data_title=Annual_CO₂_Emissions&ds_label=Our%20World%20In%20Data:%20CO₂&bs_label=Cumulative&ex_label=Annual&ex_roots=root&bs_roots=root&unit=Mt·CO₂)
+* **Example #2:** [Greenhouse Gas emissions by country over time](/bs/?transu={owid_co2_url}&atreeu=https://ledge.uprightconsulting.com/s/co2_test_tree_full.csv&account_label=entity&amount_label=Annual%20CO2%20emissions&date_label=year&desc_label=entity&fan_label=entity&init_time_res=year&init_time_span=annual&ds_data_title=Annual_CO₂_Emissions&ds_label=Our%20World%20In%20Data:%20CO₂&cu_label=Cumulative&pe_label=Annual&ex_roots=root&bs_roots=root&unit=Mt·CO₂)
    * loads data directly from external source [Our World in Data](https://ourworldindata.org/co2-and-other-greenhouse-gas-emissions)
    * [Custom account tree](https://ledge.uprightconsulting.com/s/co2_test_tree_parent.csv)
    * ![Screenshot](/assets/screenshot_balance_sheet_co2data.png)

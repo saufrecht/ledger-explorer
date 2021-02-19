@@ -23,7 +23,7 @@ layout: html = html.Div(
                     children=[
                         html.Span(children="Group By "),
                         dcc.RadioItems(
-                            id="bs_time_series_resolution",
+                            id="cu_time_series_resolution",
                             options=CONST["time_res_options"],
                         ),
                     ],
@@ -36,9 +36,9 @@ layout: html = html.Div(
 
 
 @app.callback(
-    [Output("bs_time_series_resolution", "value")], [Input("param_store", "children")]
+    [Output("cu_time_series_resolution", "value")], [Input("param_store", "children")]
 )
-def load_bs_params(param_store: str):
+def load_cu_params(param_store: str):
     """Load time series resolution from the store; this also starts the
     callback cascade on this tab"""
     preventupdate_if_empty(param_store)
@@ -48,26 +48,26 @@ def load_bs_params(param_store: str):
 
 @app.callback(
     [Output("time_serieses", "children")],
-    [Input("bs_time_series_resolution", "value")],
+    [Input("cu_time_series_resolution", "value")],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def bs_make_time_serieses(time_resolution, data_store, param_store):
+def cu_make_time_serieses(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
     preventupdate_if_empty(data_store)
     params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
-    datastore: Datastore() = Datastore.from_json(data_store, params.bs_roots)
+    datastore: Datastore() = Datastore.from_json(data_store, params.cu_roots)
     trans: pd.DataFrame = datastore.trans
     account_tree: ATree = datastore.account_tree
-    if len(params.bs_roots) > 0:
-        account_list = params.bs_roots
+    if len(params.cu_roots) > 0:
+        account_list = params.cu_roots
     else:
         account_list = [account_tree.root]
     unit: str = params.unit
     data_title = params.ds_data_title
     result: list = []
-    # make one chart for each item in the Balance Sheet account filter
+    # make one chart for each item in the Cumulative account filter
 
     if not isinstance(account_list, list):
         logging.warning(f"Account list should be a list but isn't: {account_list}")
