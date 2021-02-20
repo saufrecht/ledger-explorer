@@ -28,7 +28,7 @@ CONST = {
     "leaf_suffix": " [Leaf]",
     "other_prefix": "Other ",
     "subtotal_suffix": " [Subtotal]",
-    "bug_report_md": "[Report an issue](https://github.com/saufrecht/"\
+    "bug_report_md": "[Report an issue](https://github.com/saufrecht/"
     + "ledger-explorer/issues/new?assignees=saufrecht&labels=bug&template=issue.md&title=)",
     "root_accounts": [
         {"id": "Assets", "flip_negative": False},
@@ -89,6 +89,7 @@ CONST = {
 @dataclass
 class Params:
     """ Class to hold everything to do with settings & parameters """
+
     account_label: str = None
     amount_label: str = None
     date_label: str = None
@@ -113,9 +114,9 @@ class Params:
 
     @classmethod
     def cleanse_account_list_input(cls, input: str):
-        """ Handle input that may come directly from parsed URL and
+        """Handle input that may come directly from parsed URL and
         ensure that it comes back a tuple of strings, with no leading or
-        trailing whitespace """
+        trailing whitespace"""
         if isinstance(input, str):
             input = input.split(",")
         if isinstance(input, list):
@@ -132,16 +133,15 @@ class Params:
         """ Convert parameters to query string"""
         field_dict = vars(self)
         field_string = urlencode(field_dict, doseq=True)
-        return f'?{field_string}'
+        return f"?{field_string}"
 
     @classmethod
     def from_dict(cls, env):
         """Return a dict of all environment key:value pairs where the key
-matches the name of a class parameter"""
-        return cls(**{
-            k: v for k, v in env.items()
-            if k in inspect.signature(cls).parameters
-        })
+        matches the name of a class parameter"""
+        return cls(
+            **{k: v for k, v in env.items() if k in inspect.signature(cls).parameters}
+        )
 
     @classmethod
     def from_json(cls, json_data: str):

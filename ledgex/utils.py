@@ -1,6 +1,4 @@
-import calendar
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import dash_table
 import numpy as np
@@ -31,14 +29,14 @@ class LoadError(LError):
 
 disc_colors = px.colors.qualitative.D3
 
-big_font = dict(family="IBM Plex Sans Medium", size=24)
-
-medium_font = dict(family="IBM Plex Sans Light", size=20)
-
-small_font = dict(family="IBM Plex Light", size=12)
+fonts = dict(
+    big=dict(family="IBM Plex Sans Medium", size=24),
+    medium=dict(family="IBM Plex Sans Light", size=20),
+    small=dict(family="IBM Plex Light", size=12),
+)
 
 time_series_layout = dict(
-    legend={"x": 0, "y": 1}, font=small_font, titlefont=medium_font
+    legend={"x": 0, "y": 1}, font=fonts["small"], titlefont=fonts["medium"]
 )
 
 chart_fig_layout = dict(
@@ -47,8 +45,8 @@ chart_fig_layout = dict(
     margin=dict(l=10, r=10, t=10, b=10),  # NOQA
     height=350,
     showlegend=False,
-    title=dict(font=big_font, x=0.1, y=0.9),
-    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)", font=medium_font),
+    title=dict(font=fonts["big"], x=0.1, y=0.9),
+    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)", font=fonts["medium"]),
 )
 
 
@@ -159,8 +157,8 @@ bs_trans_table = dash_table.DataTable(
 )
 
 
-ex_trans_table = dash_table.DataTable(
-    id="ex_trans_table",
+pe_trans_table = dash_table.DataTable(
+    id="pe_trans_table",
     columns=[
         dict(id="date", name="Date", type="datetime"),
         dict(id=CONST["account_col"], name="Account"),
@@ -264,6 +262,11 @@ trans_table_format = dict(
 )
 
 
+def pretty_date(date: np.datetime64) -> str:
+    """ convert Numpy datetime64 to 'YYYY-MMM-DD' """
+    return pd.to_datetime(str(date)).strftime("%Y-%m-%d")
+
+
 def preventupdate_if_empty(field: object):
     """ Shorthand to halt callbacks if data missing"""
     if isinstance(field, pd.DataFrame):
@@ -286,7 +289,7 @@ def make_bar(
     eras: pd.DataFrame,
     color_num: int = 0,
     deep: bool = False,
-    unit: str = CONST['unit'],
+    unit: str = CONST["unit"],
 ) -> go.Bar:
     """returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts."""
@@ -412,8 +415,8 @@ def make_bar(
             text=bin_amounts.text,
             textposition="auto",
             opacity=0.9,
-            texttemplate="%{text}<br>%{value:$,.0f}",    # TODO: pass in unit for $
-            hovertemplate="%{customdata}<br>%{value:$,.0f}",    # TODO: pass in unit for $
+            texttemplate="%{text}<br>%{value:$,.0f}",  # TODO: pass in unit for $
+            hovertemplate="%{customdata}<br>%{value:$,.0f}",  # TODO: pass in unit for $
             marker_color=marker_color,
         )
     else:
@@ -450,7 +453,7 @@ def make_cum_area(
         mode="lines+markers",
         marker={"symbol": "circle", "opacity": 1, "color": marker_color},
         customdata=bin_amounts["label"],
-        hovertemplate="%{customdata}<br>%{y:$,.0f}<br>%{x}<extra></extra>",    # TODO: pass in unit for $
+        hovertemplate="%{customdata}<br>%{y:$,.0f}<br>%{x}<extra></extra>",  # TODO: pass in unit for $
         line={"width": 0.5, "color": marker_color},
         hoverlabel={"namelength": 15},
         stackgroup="one",
@@ -704,7 +707,7 @@ def make_sunburst(
     )
 
     figure.update_layout(
-        font=big_font,
+        font=fonts["big"],
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(t=10, l=5, r=5, b=5),  # NOQA
@@ -735,159 +738,3 @@ def pretty_records(trans: pd.DataFrame) -> list:
             for key in row.keys():
                 output = output + [f"{key}={row[key]}"]
     return output
-
-
-def pretty_date(date: np.datetime64) -> str:
-    """ convert Numpy datetime64 to 'YYYY-MMM-DD' """
-    return pd.to_datetime(str(date)).strftime("%Y-%m-%d")
-
-
-def date_range_from_period(
-    tr_label: str, ts_label: str, period: str, eras: pd.DataFrame
-) -> Tuple[np.datetime64, np.datetime64]:
-
-    # Convert period label to tuple of start and end dates, based on tr_label
-
-    def _month_end(date: np.datetime64) -> np.datetime64:
-        # return the date of the last day of the month of the input date
-        year = date.year
-        month = date.month
-        last_day = calendar.monthrange(year, month)[1]
-        end_date = np.datetime64(datetime(year=year, month=month, day=last_day))
-        return end_date
-
-    if tr_label == "Era":
-        era = eras.loc[(eras["date_start"] < period) & (eras["date_end"] > period)]
-        period_start = era["date_start"][0]
-        period_end = era["date_end"][0]
-    if tr_label == "Decade":
-        period_start = datetime(int(period.year / 10) * 10, 1, 1)
-        period_end = datetime(int(((period.year / 10) + 1) * 10) - 1, 12, 31)
-    elif tr_label == "Year":
-        period_start = datetime(int(period), 1, 1)
-        period_end = datetime(int(period), 12, 31)
-    elif tr_label == "Quarter":
-        try:
-            year: int = int(period[0:4])
-        except ValueError:
-            raise PreventUpdate  # probably PreventUpdate should only be in the UI pages, so redo this
-        try:
-            Q: int = int(period[6:7])
-        except ValueError:
-            raise PreventUpdate  # ibid
-        start_month: int = (Q * 3) - 2
-        period_start = datetime(year, start_month, 1)
-        period_end = _month_end(period_start + timedelta(days=63))
-    elif tr_label == "Month":
-        period_start = datetime.strptime(period + "-01", "%Y-%b-%d")
-        period_end = _month_end(period_start)
-    else:
-        raise PreventUpdate  # ibid
-    return (np.datetime64(period_start), np.datetime64(period_end))
-
-
-def pretty_account_label(sel_accounts, desc_account_count, start, end, trans_count):
-    """ Make label for sunburst """
-    if desc_account_count > 0:
-        desc_text = f"and {desc_account_count:,d} subaccounts"
-    else:
-        desc_text = ""
-    date_range_content = f"between {pretty_date(start)} {pretty_date(end)}"
-    result = f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
-    return result
-
-
-def trans_to_burst(
-    account_tree, eras, figure, time_resolution, time_span, trans, unit
-) -> tuple:
-    """Apply filtering to data store and return a sunburst and associated labels
-    TODO: This should be reworked until it's not so completely entangled with page displays
-
-    """
-    min_period_start: np.datetime64 = None
-    max_period_end: np.datetime64 = None
-    sel_accounts = []
-    filtered_trans = pd.DataFrame()
-    desc_account_count = 0
-    tr_label = CONST["time_res_lookup"].get(time_resolution)["label"]
-    ts_label = CONST["time_span_lookup"].get(time_span)["label"]
-
-    if len(trans) == 0:
-        raise LError(
-            "Tried to make burst figure from transactions, but no transactions provided."
-        )
-
-    colormap = {}
-    if figure:
-        for trace in figure.get("data"):
-            account = trace.get("name")
-            points = trace.get("selectedpoints")
-            colormap[account] = trace.get("marker").get("color")
-            if not points:
-                continue
-            sel_accounts.append(account)
-            for point in points:
-                point_x = trace["x"][point]
-                period_start, period_end = date_range_from_period(
-                    tr_label, ts_label, point_x, eras
-                )
-                if min_period_start is None:
-                    min_period_start = period_start
-                else:
-                    min_period_start = min(min_period_start, period_start)
-                if max_period_end is None:
-                    max_period_end = period_end
-                else:
-                    max_period_end = max(max_period_end, period_end)
-                desc_accounts = account_tree.get_descendents(account)
-                desc_account_count = desc_account_count + len(desc_accounts)
-                subtree_accounts = [account] + desc_accounts
-                new_trans = (
-                    trans.loc[trans["account"].isin(subtree_accounts)]
-                    .loc[trans["date"] >= period_start]
-                    .loc[trans["date"] <= period_end]
-                )
-                if len(filtered_trans) > 0:
-                    filtered_trans = filtered_trans.append(new_trans)
-                else:
-                    filtered_trans = new_trans
-    filtered_count = len(filtered_trans)
-    # If there are some transactions selected, show them
-    if filtered_count > 0 and len(sel_accounts) > 0:
-        # TODO: desc_account_count is still wrong.
-        sel_accounts_content = pretty_account_label(
-            sel_accounts,
-            desc_account_count,
-            min_period_start,
-            max_period_end,
-            filtered_count,
-        )
-    else:
-        # If no trans are selected, show everything.  Note that we
-        # could logically get here even if valid accounts are
-        # seleceted, in which case it would be confusing to get back
-        # all trans instead of none, but this should never happen haha
-        # because any clickable bar must have $$, and so, trans
-        sel_accounts_content = (
-            f"Click a bar in the graph to filter from {len(trans):,d} records"
-        )
-        filtered_trans = trans
-        min_period_start = trans["date"].min()
-        max_period_end = trans["date"].max()
-
-    time_series_selection_info = {
-        "start": min_period_start,
-        "end": max_period_end,
-        "count": len(filtered_trans),
-    }
-    title = f"Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}"
-    sun_fig = make_sunburst(
-        filtered_trans,
-        time_span,
-        min_period_start,
-        max_period_end,
-        CONST["subtotal_suffix"],
-        colormap,
-    )
-
-    return (sel_accounts_content, time_series_selection_info, sun_fig, title)

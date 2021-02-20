@@ -1,5 +1,3 @@
-import logging
-
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
@@ -70,7 +68,7 @@ def cu_make_time_serieses(time_resolution, data_store, param_store):
     # make one chart for each item in the Cumulative account filter
 
     if not isinstance(account_list, list):
-        logging.warning(f"Account list should be a list but isn't: {account_list}")
+        app.logger.warning(f"Account list should be a list but isn't: {account_list}")
         raise PreventUpdate
     for account in account_list:
         fig: go.Figure = go.Figure(layout=chart_fig_layout)

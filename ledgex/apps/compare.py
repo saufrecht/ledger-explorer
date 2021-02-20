@@ -18,9 +18,9 @@ layout: html = html.Div(
         html.Div(
             className="time_series_box",
             children=[
-                html.Div(id="flow_diagram", className="flex_down"),
+                html.H2("Stub for comparing two different things side by side"),
+                html.Div(id="comparison", className="flex_down"),
             ],
         ),
     ],
 )
-

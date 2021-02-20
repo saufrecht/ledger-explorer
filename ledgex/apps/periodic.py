@@ -9,12 +9,12 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
+from ledgex.burst import Burst
 from ledgex.params import CONST, Params
 from ledgex.utils import (
     chart_fig_layout,
-    ex_trans_table,
+    pe_trans_table,
     make_bar,
-    trans_to_burst,
     preventupdate_if_empty,
     LError,
 )
@@ -27,29 +27,29 @@ layout = html.Div(
         html.Div(
             className="time_series_box",
             children=[
-                dcc.Graph(id="ex_master_time_series"),
+                dcc.Graph(id="pe_master_time_series"),
                 html.Div(
                     className="control_bar",
                     children=[
                         dcc.Store(
-                            id="ex_time_series_selection_info", storage_type="memory"
+                            id="pe_time_series_selection_info", storage_type="memory"
                         ),
-                        html.Div(id="ex_selected_trans_display", children=None),
+                        html.Div(id="pe_selected_trans_display", children=None),
                         html.Fieldset(
-                            className="flex_forward radio",
+                            className="flpe_forward radio",
                             children=[
                                 html.Span(children="Group By "),
                                 dcc.RadioItems(
-                                    id="ex_time_series_resolution",
+                                    id="pe_time_series_resolution",
                                     options=CONST["time_res_options"],
                                 ),
                             ],
                         ),
                         html.Fieldset(
-                            className="flex_forward radio",
+                            className="flpe_forward radio",
                             children=[
                                 dcc.RadioItems(
-                                    id="ex_time_series_span",
+                                    id="pe_time_series_span",
                                     options=CONST["time_span_options"],
                                 ),
                             ],
@@ -63,27 +63,27 @@ layout = html.Div(
             children=[
                 html.Div(
                     [
-                        html.H3(id="ex_burst_title", children=""),
+                        html.H3(id="pe_burst_title", children=""),
                         html.Div(
-                            id="ex_selected_account_text",
+                            id="pe_selected_account_text",
                             children="Click a pie slice to filter records",
                         ),
                     ]
                 ),
-                dcc.Graph(id="ex_account_burst"),
+                dcc.Graph(id="pe_account_burst"),
             ],
         ),
         html.Div(
             className="detail_time_series_box",
             children=[
-                dcc.Graph(id="ex_detail_time_series"),
+                dcc.Graph(id="pe_detail_time_series"),
             ],
         ),
         html.Div(
             className="trans_table_box",
             children=[
-                html.Div(id="ex_trans_table_text", children=""),
-                ex_trans_table,
+                html.Div(id="pe_trans_table_text", children=""),
+                pe_trans_table,
             ],
         ),
     ],
@@ -92,14 +92,14 @@ layout = html.Div(
 
 @app.callback(
     [
-        Output("ex_time_series_resolution", "value"),
-        Output("ex_time_series_resolution", "options"),
-        Output("ex_time_series_span", "value"),
+        Output("pe_time_series_resolution", "value"),
+        Output("pe_time_series_resolution", "options"),
+        Output("pe_time_series_span", "value"),
     ],
     [Input("pe_tab_trigger", "children")],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def load_ex_params(trigger: str, data_store: str, param_store: str):
+def load_pe_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
     preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
@@ -114,14 +114,14 @@ def load_ex_params(trigger: str, data_store: str, param_store: str):
 
 
 @app.callback(
-    [Output("ex_master_time_series", "figure")],
+    [Output("pe_master_time_series", "figure")],
     [
-        Input("ex_time_series_resolution", "value"),
-        Input("ex_time_series_span", "value"),
+        Input("pe_time_series_resolution", "value"),
+        Input("pe_time_series_span", "value"),
     ],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def ex_make_time_series(
+def pe_make_time_series(
     time_resolution: int, time_span: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
@@ -144,7 +144,7 @@ def ex_make_time_series(
         )
         raise PreventUpdate
 
-    datastore: Datastore() = Datastore.from_json(data_store, params.ex_roots)
+    datastore: Datastore() = Datastore.from_json(data_store, params.pe_roots)
     trans: pd.DataFrame = datastore.trans
     eras: pd.DataFrame = datastore.eras
     if time_resolution == "era" and len(eras) == 0:
@@ -183,18 +183,18 @@ def ex_make_time_series(
 
 @app.callback(
     [
-        Output("ex_selected_trans_display", "children"),
-        Output("ex_time_series_selection_info", "data"),
-        Output("ex_account_burst", "figure"),
-        Output("ex_burst_title", "children"),
+        Output("pe_selected_trans_display", "children"),
+        Output("pe_time_series_selection_info", "data"),
+        Output("pe_account_burst", "figure"),
+        Output("pe_burst_title", "children"),
     ],
     [
-        Input("ex_master_time_series", "figure"),
-        Input("ex_master_time_series", "selectedData"),
+        Input("pe_master_time_series", "figure"),
+        Input("pe_master_time_series", "selectedData"),
     ],
     state=[
-        State("ex_time_series_resolution", "value"),
-        State("ex_time_series_span", "value"),
+        State("pe_time_series_resolution", "value"),
+        State("pe_time_series_span", "value"),
         State("data_store", "children"),
         State("param_store", "children"),
     ],
@@ -225,7 +225,7 @@ def apply_selection_from_time_series(
 
     """
     params: Params() = Params.from_json(param_store)
-    datastore: Datastore() = Datastore.from_json(data_store, params.ex_roots)
+    datastore: Datastore() = Datastore.from_json(data_store, params.pe_roots)
     preventupdate_if_empty(datastore)
     if not time_resolution:
         time_resolution = params.init_time_res
@@ -237,7 +237,7 @@ def apply_selection_from_time_series(
     unit = params.unit
 
     try:
-        return trans_to_burst(
+        return Burst.trans_to_burst(
             account_tree, eras, figure, time_resolution, time_span, trans, unit
         )
     except LError as E:
@@ -247,21 +247,21 @@ def apply_selection_from_time_series(
 
 @app.callback(
     [
-        Output("ex_trans_table", "data"),
-        Output("ex_selected_account_text", "children"),
-        Output("ex_trans_table_text", "children"),
-        Output("ex_detail_time_series", "figure"),
+        Output("pe_trans_table", "data"),
+        Output("pe_selected_account_text", "children"),
+        Output("pe_trans_table_text", "children"),
+        Output("pe_detail_time_series", "figure"),
     ],
     [
-        Input("ex_account_burst", "clickData"),
-        Input("ex_account_burst", "figure"),
+        Input("pe_account_burst", "clickData"),
+        Input("pe_account_burst", "figure"),
     ],
     state=[
-        State("ex_time_series_selection_info", "data"),
+        State("pe_time_series_selection_info", "data"),
         State("data_store", "children"),
         State("param_store", "children"),
-        State("ex_time_series_resolution", "value"),
-        State("ex_time_series_span", "value"),
+        State("pe_time_series_resolution", "value"),
+        State("pe_time_series_span", "value"),
     ],
 )
 def apply_burst_click(
@@ -279,6 +279,7 @@ def apply_burst_click(
     """
     datastore: Datastore() = Datastore.from_json(data_store)
     preventupdate_if_empty(datastore)
+    preventupdate_if_empty(time_series_info)
     trans = datastore.trans
     preventupdate_if_empty(trans)
     account_tree = datastore.account_tree
@@ -372,6 +373,6 @@ def apply_burst_click(
     sel_trans["date"] = pd.DatetimeIndex(sel_trans["date"]).strftime("%Y-%m-%d")
     sel_trans = sel_trans.sort_values(["date"])
 
-    ex_trans_table_text: str = f"{len(sel_trans)} records"
+    pe_trans_table_text: str = f"{len(sel_trans)} records"
 
-    return [sel_trans.to_dict("records"), account_text, ex_trans_table_text, detail_fig]
+    return [sel_trans.to_dict("records"), account_text, pe_trans_table_text, detail_fig]
