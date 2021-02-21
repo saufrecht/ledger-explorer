@@ -15,10 +15,12 @@ from ledgex.utils import (
     chart_fig_layout,
     pe_trans_table,
     make_bar,
+    period_to_date_range,
+    pretty_date,
     preventupdate_if_empty,
     LError,
 )
-from ledgex.data_store import Datastore
+from ledgex.datastore import Datastore
 
 
 layout = html.Div(
@@ -144,12 +146,12 @@ def pe_make_time_series(
         )
         raise PreventUpdate
 
-    datastore: Datastore() = Datastore.from_json(data_store, params.pe_roots)
-    trans: pd.DataFrame = datastore.trans
-    eras: pd.DataFrame = datastore.eras
+    data_store: Datastore() = Datastore.from_json(data_store, params.pe_roots)
+    trans: pd.DataFrame = data_store.trans
+    eras: pd.DataFrame = data_store.eras
     if time_resolution == "era" and len(eras) == 0:
         raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
-    account_tree: ATree = datastore.account_tree
+    account_tree: ATree = data_store.account_tree
     unit = params.unit
 
     chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
@@ -183,10 +185,10 @@ def pe_make_time_series(
 
 @app.callback(
     [
-        Output("pe_selected_trans_display", "children"),
-        Output("pe_time_series_selection_info", "data"),
         Output("pe_account_burst", "figure"),
         Output("pe_burst_title", "children"),
+        Output("pe_selected_trans_display", "children"),
+        Output("pe_time_series_selection_info", "data"),
     ],
     [
         Input("pe_master_time_series", "figure"),
@@ -199,16 +201,17 @@ def pe_make_time_series(
         State("param_store", "children"),
     ],
 )
-def apply_selection_from_time_series(
+def pe_time_series_selection_to_sunburst_and_transaction_table(
     figure, selectedData, time_resolution, time_span, data_store, param_store
 ):
     """Selecting specific points from the time series chart updates the
     account burst and the detail labels.  Reminder to self: When you
     think selectedData input is broken, remember that unaltered
-    default action in the graph is to zoom, not to select.  Note: all
-    of the necessary information is in figure but that doesn't seem to
-    trigger reliably.  Adding selectedData as a second Input causes
-    reliable triggering.
+    default action in the graph is to zoom, not to select.
+
+    Note: all of the necessary information is in figure but that
+    doesn't seem to trigger reliably.  Adding selectedData as a second
+    Input causes reliable triggering.
 
     TODO: BUG: The starting point of an Era- or Decade-wide object is
     not applied when clicked on
@@ -225,24 +228,103 @@ def apply_selection_from_time_series(
 
     """
     params: Params() = Params.from_json(param_store)
-    datastore: Datastore() = Datastore.from_json(data_store, params.pe_roots)
-    preventupdate_if_empty(datastore)
+    data_store: Datastore() = Datastore.from_json(data_store, params.pe_roots)
+    preventupdate_if_empty(data_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
         time_span = params.init_time_span
-    trans = datastore.trans
-    eras = datastore.eras
-    account_tree = datastore.account_tree
+    trans = data_store.trans
+    if len(trans) == 0:
+        app.logger.error("Tried to make burst figure from transactions, but no transactions provided.")
+        raise PreventUpdate()
+    eras = data_store.eras
+    account_tree = data_store.account_tree
     unit = params.unit
 
-    try:
-        return Burst.trans_to_burst(
-            account_tree, eras, figure, time_resolution, time_span, trans, unit
+    tr_label = CONST["time_res_lookup"].get(time_resolution)["label"]
+    ts_label = CONST["time_span_lookup"].get(time_span)["label"]
+    min_period_start: np.datetime64 = None
+    max_period_end: np.datetime64 = None
+    selected_accounts = []
+    selected_trans = pd.DataFrame()
+    desc_account_count = 0
+    colormap = {}
+
+    # Get the names and colors of all accounts in the Input figure.
+    # If anything is clicked, set the selection dates, accounts, and transactions.
+    if figure:
+        for trace in figure.get("data"):
+            account = trace.get("name")
+            points = trace.get("selectedpoints")
+            colormap[account] = trace.get("marker").get("color")
+            if not points:
+                continue
+            selected_accounts.append(account)
+            for point in points:
+                point_x = trace["x"][point]
+                period_start, period_end = period_to_date_range(
+                    tr_label, ts_label, point_x, eras
+                )
+                if min_period_start is None:
+                    min_period_start = period_start
+                else:
+                    min_period_start = min(min_period_start, period_start)
+                if max_period_end is None:
+                    max_period_end = period_end
+                else:
+                    max_period_end = max(max_period_end, period_end)
+                desc_accounts = account_tree.get_descendents(account)
+                desc_account_count = desc_account_count + len(desc_accounts)
+                subtree_accounts = [account] + desc_accounts
+                new_trans = (
+                    trans.loc[trans["account"].isin(subtree_accounts)]
+                    .loc[trans["date"] >= period_start]
+                    .loc[trans["date"] <= period_end]
+                )
+                if len(selected_trans) > 0:
+                    selected_trans = selected_trans.append(new_trans)
+                else:
+                    selected_trans = new_trans
+    selected_count = len(selected_trans)
+
+    if selected_count > 0 and len(selected_accounts) > 0:
+        # If there are selected data, describe the contents of the sunburst
+        # TODO: desc_account_count is still wrong.
+        description = Burst.pretty_account_label(
+            selected_accounts,
+            desc_account_count,
+            min_period_start,
+            max_period_end,
+            selected_count,
         )
+    else:
+        # If no trans are selected, show everything.  Note that we
+        # could logically get here even if valid accounts are
+        # seleceted, in which case it would be confusing to get back
+        # all trans instead of none, but this should never happen haha
+        # because any clickable bar must have $$, and so, trans
+        description = (
+            f"Click a bar in the graph to filter from {len(trans):,d} records"
+        )
+        selected_trans = trans
+        min_period_start = trans["date"].min()
+        max_period_end = trans["date"].max()
+
+    title = f"Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}"
+    time_series_selection_info = {
+        "start": min_period_start,
+        "end": max_period_end,
+        "count": len(selected_trans),
+    }
+
+    try:
+        sun_fig = Burst.from_trans(trans, time_span, colormap)
     except LError as E:
         app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
         raise PreventUpdate
+
+    return (sun_fig, title, description, time_series_selection_info)
 
 
 @app.callback(
@@ -277,14 +359,14 @@ def apply_burst_click(
     Clicking on a slice in the Sunburst updates the transaction list with matching transactions
     burst_figure Input is used only to guarantee a trigger on initial page load.
     """
-    datastore: Datastore() = Datastore.from_json(data_store)
-    preventupdate_if_empty(datastore)
+    data_store: Datastore() = Datastore.from_json(data_store)
+    preventupdate_if_empty(data_store)
     preventupdate_if_empty(time_series_info)
-    trans = datastore.trans
+    trans = data_store.trans
     preventupdate_if_empty(trans)
-    account_tree = datastore.account_tree
-    earliest_trans = datastore.earliest_trans
-    latest_trans = datastore.latest_trans
+    account_tree = data_store.account_tree
+    earliest_trans = data_store.earliest_trans
+    latest_trans = data_store.latest_trans
 
     date_start: np.datetime64 = pd.to_datetime(
         time_series_info.get("start", earliest_trans)
@@ -327,7 +409,7 @@ def apply_burst_click(
         if not time_span:
             time_span = params.init_time_span
         unit = params.unit
-        eras: pd.DataFrame = datastore.eras
+        eras: pd.DataFrame = data_store.eras
         try:
             tr_label = CONST["time_res_lookup"][time_resolution][
                 "label"

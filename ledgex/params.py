@@ -76,10 +76,12 @@ CONST = {
     ],
     "time_res_era_option": {"value": "era", "label": "Era"},
     "time_span_lookup": {
+        "total": {"label": "Total"},
         "annual": {"label": "Annualized", "abbrev": " ⁄y", "months": 12},
         "monthly": {"label": "Monthly", "abbrev": " ⁄mo", "months": 1},
     },
     "time_span_options": [
+        {"value": "total", "label": "Total"},
         {"value": "annual", "label": "Annualized"},
         {"value": "monthly", "label": "Monthly"},
     ],

@@ -265,7 +265,7 @@ def load_and_transform(
     else:
         trigger_id = None
     # Work through the possible triggers to make sure that behavior is as expected:
-    #   1. If on the data_store tab, and UI input was the trigger, use UI. Else:
+    #   1. If on the data_source tab, and UI input was the trigger, use UI. Else:
     #   2. If the API was the trigger, use API. Else:
     #   3. If UI is present, use UI.  Else:
     #   4. If API is present, use it.

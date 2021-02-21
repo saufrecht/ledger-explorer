@@ -10,7 +10,7 @@ from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
 from ledgex.utils import chart_fig_layout, make_cum_area, preventupdate_if_empty
-from ledgex.data_store import Datastore
+from ledgex.datastore import Datastore
 
 layout: html = html.Div(
     className="layout_box",

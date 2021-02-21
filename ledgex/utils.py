@@ -1,4 +1,7 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
+
+from datetime import datetime, timedelta
+import calendar
 
 import dash_table
 import numpy as np
@@ -260,6 +263,52 @@ trans_table_format = dict(
     style_as_list_view=True,
     page_size=20,
 )
+
+
+def period_to_date_range(
+    tr_label: str, ts_label: str, period: str, eras: pd.DataFrame
+) -> Tuple[np.datetime64, np.datetime64]:
+
+    # Convert period label to tuple of start and end dates, based on tr_label
+
+    def _month_end(date: np.datetime64) -> np.datetime64:
+        # return the date of the last day of the month of the input date
+        year = date.year
+        month = date.month
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = np.datetime64(datetime(year=year, month=month, day=last_day))
+        return end_date
+
+    if tr_label == "Era":
+        era = eras.loc[(eras["date_start"] < period) & (eras["date_end"] > period)]
+        period_start = era["date_start"][0]
+        period_end = era["date_end"][0]
+    if tr_label == "Decade":
+        period_start = datetime(int(period.year / 10) * 10, 1, 1)
+        period_end = datetime(int(((period.year / 10) + 1) * 10) - 1, 12, 31)
+    elif tr_label == "Year":
+        period_start = datetime(int(period), 1, 1)
+        period_end = datetime(int(period), 12, 31)
+    elif tr_label == "Quarter":
+        try:
+            year: int = int(period[0:4])
+        except ValueError:
+            raise LError("Internal error while trying to convert year to date.")
+        try:
+            Q: int = int(period[6:7])
+        except ValueError:
+            raise LError("Internal error while trying to convert quarter to date.")
+        start_month: int = (Q * 3) - 2
+        period_start = datetime(year, start_month, 1)
+        period_end = _month_end(period_start + timedelta(days=63))
+    elif tr_label == "Month":
+        period_start = datetime.strptime(period + "-01", "%Y-%b-%d")
+        period_end = _month_end(period_start)
+    else:
+        raise LError(
+            "Internal error: {tr_label} is not Era, Decade, Year, Quarter, or Month"
+        )
+    return (np.datetime64(period_start), np.datetime64(period_end))
 
 
 def pretty_date(date: np.datetime64) -> str:
@@ -575,7 +624,7 @@ def make_sunburst(
         Assumption: No negative leaf values
 
         Uses 'leaf_total' for all transactions that belong to this node's account,
-        and 'total' for the final value for the node, including descendants.
+        and 'total' for the final value for the node, including descendents.
         """
         nonlocal _sun_tree
         node_id = node.identifier

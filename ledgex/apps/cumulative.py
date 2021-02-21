@@ -8,7 +8,7 @@ from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
 from ledgex.utils import chart_fig_layout, make_cum_area, preventupdate_if_empty
-from ledgex.data_store import Datastore
+from ledgex.datastore import Datastore
 
 layout: html = html.Div(
     className="layout_box",
@@ -55,9 +55,9 @@ def cu_make_time_serieses(time_resolution, data_store, param_store):
     params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
-    datastore: Datastore() = Datastore.from_json(data_store, params.cu_roots)
-    trans: pd.DataFrame = datastore.trans
-    account_tree: ATree = datastore.account_tree
+    data_store: Datastore() = Datastore.from_json(data_store, params.cu_roots)
+    trans: pd.DataFrame = data_store.trans
+    account_tree: ATree = data_store.account_tree
     if len(params.cu_roots) > 0:
         account_list = params.cu_roots
     else:

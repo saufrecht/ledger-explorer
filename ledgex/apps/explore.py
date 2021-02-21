@@ -16,7 +16,7 @@ from ledgex.utils import (
     preventupdate_if_empty,
     LError,
 )
-from ledgex.data_store import Datastore
+from ledgex.datastore import Datastore
 
 
 layout: html = html.Div(
@@ -41,7 +41,9 @@ layout: html = html.Div(
 def ex_make_charts(ex_dummy, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """
     preventupdate_if_empty(data_store)
+    breakpoint()
     params: Params = Params.from_json(param_store)
+    data_store: Datastore() = Datastore.from_json(data_store, params.cu_roots)
     trans: pd.DataFrame = data_store.trans
     account_tree: ATree = data_store.account_tree
     account_list = [account_tree.get_children(account_tree.root)]

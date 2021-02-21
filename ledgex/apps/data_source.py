@@ -9,7 +9,7 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.loading import load_input_file
 from ledgex.params import CONST, Params
-from ledgex.data_store import Datastore
+from ledgex.datastore import Datastore
 from ledgex.utils import preventupdate_if_empty, pretty_date
 
 
@@ -635,9 +635,9 @@ def update_status_on_ds_tab_content(data_store: str, param_store: str):
     then this callback is ignored. """
 
     preventupdate_if_empty(data_store)
-    datastore: Datastore() = Datastore.from_json(data_store)
+    data_store: Datastore() = Datastore.from_json(data_store)
     params = Params.from_json(param_store)
-    trans: pd.DataFrame = datastore.trans
+    trans: pd.DataFrame = data_store.trans
     preventupdate_if_empty(trans)
     trans_filename = params.ds_data_title
     c1: pd.DataFrame = trans.iloc[0]
@@ -651,14 +651,14 @@ def update_status_on_ds_tab_content(data_store: str, param_store: str):
 
     trans_summary: list = [f'{trans_filename}: {len(trans)} records loaded, between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}']  # NOQA
 
-    atree = datastore.account_tree
+    atree = data_store.account_tree
     atree_summary: str = None
     atree_display: str = None
     if atree and len(atree) > 0:
         atree_summary: str = f'{len(atree)} accounts loaded, {atree.depth()} levels deep'
         atree_display: str = atree.show_to_string()
 
-    eras = datastore.eras
+    eras = data_store.eras
     eras_summary: str = None
     if len(eras) > 0:
         eras_summary: str = f'{len(eras)} reporting eras'
