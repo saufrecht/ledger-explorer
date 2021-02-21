@@ -52,6 +52,7 @@ app.layout = html.Div(
                         html.Div(id="api_node", className="hidden"),
                         html.Div(id="api_inputs", className="hidden"),
                         html.Div(id="pe_tab_trigger", className="hidden"),
+                        html.Div(id="ex_tab_trigger", className="hidden"),
                         html.Div(id="ui_trans_node", className="hidden"),
                         html.Div(id="ui_atree_node", className="hidden"),
                         html.Div(id="ui_eras_node", className="hidden"),
@@ -228,6 +229,7 @@ def parse_url_search(search: str):
         Output("tab_label_store", "children"),
         Output("files_status", "children"),
         Output("pe_tab_trigger", "children"),
+        Output("ex_tab_trigger", "children"),
         Output("permalink", "href"),
     ],
     [
@@ -348,7 +350,7 @@ def load_and_transform(
             )
         except LoadError as LE:
             status = f"Error loading transaction data: {LE.message}"
-    return [data, params_j, params_j, status, "True", f"/{tab_node}?{permalink}"]
+    return [data, params_j, params_j, status, "True", "True", f"/{tab_node}?{permalink}"]
 
 
 if __name__ == "__main__":

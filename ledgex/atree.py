@@ -186,8 +186,8 @@ class ATree(Tree):
         trans[CONST["fan_col"]] = trans[CONST["account_col"]].map(paths)
         return trans
 
-    @staticmethod
-    def from_trans_with_subtotals(trans: pd.DataFrame, prorate_fraction: int):
+    @classmethod
+    def from_trans_and_make_subtotals(cls, trans: pd.DataFrame, prorate_fraction: int):
         """
         Calculate the subtotal for each node (direct subtotal only, no children) in
         the provided transaction frame, and return it within a new account tree

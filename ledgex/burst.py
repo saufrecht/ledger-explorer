@@ -59,7 +59,7 @@ class Burst:
             prorate_factor = ts_months / duration_m
         trans = Burst.positize(trans)
 
-        sun_tree = ATree.from_trans_with_subtotals(trans, prorate_factor)
+        sun_tree = ATree.from_trans_and_make_subtotals(trans, prorate_factor)
         sun_tree.set_subtotals()
 
         #######################################################################
