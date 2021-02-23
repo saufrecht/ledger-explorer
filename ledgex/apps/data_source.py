@@ -148,7 +148,6 @@ layout = (
                                 placeholder="Custom name for the Data Source tab",
                                 debounce=True,
                             ),
-
                             html.Label(
                                 htmlFor="pe_label", children="Periodic Tab Label"
                             ),
@@ -169,7 +168,6 @@ layout = (
                                 placeholder="list of root accounts to include in Periodic",
                                 debounce=True,
                             ),
-
                             html.Label(
                                 htmlFor="cu_label", children="Cumulative Tab Label"
                             ),
@@ -190,7 +188,6 @@ layout = (
                                 placeholder="list of root accounts to include in Cumulative",
                                 debounce=True,
                             ),
-
                             html.Label(
                                 htmlFor="ex_label", children="Explore Tab Label"
                             ),
@@ -211,7 +208,6 @@ layout = (
                                 placeholder="list of root accounts to include in Explore",
                                 debounce=True,
                             ),
-
                             html.Label(
                                 htmlFor="co_label", children="Compare Tab Label"
                             ),
@@ -232,10 +228,7 @@ layout = (
                                 placeholder="list of root accounts to include in Compare",
                                 debounce=True,
                             ),
-
-                            html.Label(
-                                htmlFor="sa_label", children="Sankey Tab Label"
-                            ),
+                            html.Label(htmlFor="sa_label", children="Sankey Tab Label"),
                             dcc.Input(
                                 id="sa_label",
                                 persistence=True,
@@ -253,7 +246,6 @@ layout = (
                                 placeholder="list of root accounts to include in Sankey",
                                 debounce=True,
                             ),
-
                         ],
                     ),
                 ],
@@ -308,7 +300,9 @@ layout = (
             html.Div(
                 className="ds_column shadow",
                 children=[
-                    html.H2("Account File", className="col_heading", id="atree_heading"),
+                    html.H2(
+                        "Account File", className="col_heading", id="atree_heading"
+                    ),
                     dcc.Upload(
                         id="atree_file",
                         className="upload_target",
@@ -405,19 +399,17 @@ layout = (
         Output("trans_url", "value"),
         Output("atree_url", "value"),
         Output("eras_url", "value"),
-
     ],
     [Input("api_inputs", "children")],
 )
 def url_inputs_to_ui(api_inputs: str):
-    """ Populate the controls with the url parameters, if any
-"""
+    """Populate the controls with the url parameters, if any"""
     preventupdate_if_empty(api_inputs)
     inputs = json.loads(api_inputs)
     # turn lists back to comma-delimited strings to fill in the UI controls
     for key, value in inputs.items():
         if isinstance(value, list):
-            inputs[key] = ','.join(value)
+            inputs[key] = ",".join(value)
     return [
         inputs.get("account_label", None),
         inputs.get("amount_label", None),
@@ -495,11 +487,16 @@ def save_ui_input_to_node(
     atreeu: str,
     erasu: str,
 ) -> str:
-    """Store all manually entered information into the ui node.
-    """
-    input_dict = {key: value for key, value in vars().items() if value is not None and len(value) > 0}
+    """Store all manually entered information into the ui node."""
+    input_dict = {
+        key: value
+        for key, value in vars().items()
+        if value is not None and len(value) > 0
+    }
 
-    return [json.dumps(input_dict), ]
+    return [
+        json.dumps(input_dict),
+    ]
 
 
 @app.callback(
@@ -530,13 +527,7 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     new_filename, data, text = load_input_file(content, url, filename)
     if len(data) > 0:
         text = text + f"Columns: {data.columns}"
-        return [
-            new_filename,
-            data.to_json(),
-            text,
-            " Select a different file",
-            url
-        ]
+        return [new_filename, data.to_json(), text, " Select a different file", url]
     else:
         return [None, None, text, " Select a file", url]
 
@@ -564,13 +555,7 @@ def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
 
     new_filename, data, text = load_input_file(content, url, filename)
     if len(data) > 0:
-        return [
-            new_filename,
-            data.to_json(),
-            text,
-            " Select a different file",
-            url
-        ]
+        return [new_filename, data.to_json(), text, " Select a different file", url]
     else:
         return [None, None, text, " Select a file", url]
 
@@ -601,13 +586,7 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
 
     new_filename, data, text = load_input_file(content, url, filename)
     if len(data) > 0:
-        return [
-            new_filename,
-            data.to_json(),
-            text,
-            " Select a different file",
-            url
-        ]
+        return [new_filename, data.to_json(), text, " Select a different file", url]
     else:
         return [None, None, text, " Select a file", url]
 
@@ -620,19 +599,20 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         Output("desc_row_1", "children"),
         Output("fan_row_1", "children"),
         Output("parent_row_1", "children"),
-        Output('trans_status', 'children'),
-        Output('atree_status', 'children'),
-        Output('atree_display', 'children'),
-        Output('eras_status', 'children'),
+        Output("trans_status", "children"),
+        Output("atree_status", "children"),
+        Output("atree_display", "children"),
+        Output("eras_status", "children"),
     ],
     [Input("data_store", "children")],
-    state=[State("param_store", "children")])
+    state=[State("param_store", "children")],
+)
 def update_status_on_ds_tab_content(data_store: str, param_store: str):
-    """ When the loaded files change, and the data source tab is open,
+    """When the loaded files change, and the data source tab is open,
     then presumably the files changed because of user input to the
     tab controls. So, show feedback.  If the loaded files change
     through the URL mechanism, and the data source tab isn't open,
-    then this callback is ignored. """
+    then this callback is ignored."""
 
     preventupdate_if_empty(data_store)
     data_store: Datastore() = Datastore.from_json(data_store)
@@ -641,26 +621,37 @@ def update_status_on_ds_tab_content(data_store: str, param_store: str):
     preventupdate_if_empty(trans)
     trans_filename = params.ds_data_title
     c1: pd.DataFrame = trans.iloc[0]
-    r1: list = [c1.account, c1.amount, c1.date, c1.get('desc'), c1.get('full account name'), c1.get('parent account')]
+    r1: list = [
+        c1.account,
+        c1.amount,
+        c1.date,
+        c1.get("desc"),
+        c1.get("full account name"),
+        c1.get("parent account"),
+    ]
 
     # As quick hack to get linebreaks in Dash for pre-formatted text, generate status info as lists,
     # then render lists into Divs
 
-    earliest_trans: datetime64 = trans['date'].min()
-    latest_trans: datetime64 = trans['date'].max()
+    earliest_trans: datetime64 = trans["date"].min()
+    latest_trans: datetime64 = trans["date"].max()
 
-    trans_summary: list = [f'{trans_filename}: {len(trans)} records loaded, between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}']  # NOQA
+    trans_summary: list = [
+        f"{trans_filename}: {len(trans)} records loaded, between {pretty_date(earliest_trans)} and {pretty_date(latest_trans)}"
+    ]  # NOQA
 
     atree = data_store.account_tree
     atree_summary: str = None
     atree_display: str = None
     if atree and len(atree) > 0:
-        atree_summary: str = f'{len(atree)} accounts loaded, {atree.depth()} levels deep'
+        atree_summary: str = (
+            f"{len(atree)} accounts loaded, {atree.depth()} levels deep"
+        )
         atree_display: str = atree.show_to_string()
 
     eras = data_store.eras
     eras_summary: str = None
     if len(eras) > 0:
-        eras_summary: str = f'{len(eras)} reporting eras'
+        eras_summary: str = f"{len(eras)} reporting eras"
 
     return r1 + [trans_summary, atree_summary, atree_display, eras_summary]

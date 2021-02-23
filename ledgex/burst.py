@@ -5,6 +5,7 @@ import plotly.express as px
 from ledgex.atree import ATree
 from ledgex.params import CONST
 from ledgex.utils import fonts, pretty_date
+from ledgex.ledger import Ledger
 
 from typing import Dict
 
@@ -22,20 +23,10 @@ class Burst:
         date_range_content = f"between {pretty_date(start)} {pretty_date(end)}"
         return f'{trans_count:,d} records in {", ".join(sel_accounts)} {desc_text} {date_range_content}'
 
-    @staticmethod
-    def positize(trans):
-        """Negative values can't be plotted in sunbursts.  This can't be fixed with absolute value
-        because that would erase the distinction between debits and credits within an account.
-        Simply reversing sign could result in a net-negative sum, which also breaks sunbursts.
-        This function always returns a net-positive sum DataFrame of transactions, suitable for
-        a sunburst."""
-        if trans.sum(numeric_only=True)["amount"] < 0:
-            trans["amount"] = trans["amount"] * -1
-        return trans
-
     @classmethod
     def from_trans(
         cls,
+        tree: ATree,
         trans: pd.DataFrame,
         time_span: str,
         colormap: Dict = {},
@@ -46,6 +37,7 @@ class Burst:
         in the tree, and the value of each node is the subtotal of all
         transactions for that node and any subtree, filtered by date.
         """
+        trans = Ledger.positize(trans)
         date_start = trans["date"].min()
         date_end = pd.Timestamp.now()
         prorate_factor: float = 1
@@ -57,10 +49,11 @@ class Burst:
             ) / np.timedelta64(1, "M")
             # prorate: e.g., annual average over 18 months would be 12 / 18 = .667
             prorate_factor = ts_months / duration_m
-        trans = Burst.positize(trans)
 
-        sun_tree = ATree.from_trans_and_make_subtotals(trans, prorate_factor)
-        sun_tree.set_subtotals()
+        trans = Ledger.positize(trans)
+        tree = tree.append_sums_from_trans(trans, prorate_factor)
+        tree.roll_up_subtotals(prevent_negatives=True)
+        tree = tree.trim_excess_root()
 
         #######################################################################
         # Make the figure
@@ -69,7 +62,7 @@ class Burst:
         sun_frame = pd.DataFrame(
             [
                 (x.identifier, x.tag, x.bpointer, x.data["total"])
-                for x in sun_tree.all_nodes()
+                for x in tree.all_nodes()
             ],
             columns=["id", "name", "parent", "value"],
         )

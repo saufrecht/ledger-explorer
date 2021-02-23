@@ -25,18 +25,28 @@ nodes = dict(
         "Bank C",
         "Cash under mattress 72",
         "Taxes 28",
-
     ],
     color=["gray", "yellow", "lightblue", "skyblue", "beige", "linen", "pink", "ivory"],
-    x=[0, 0,  0.2, 0.4, 0.6, 0.8, 0.9, 0.9],
+    x=[0, 0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.9],
     y=[0, 1, 0.3, 0.3, 0, 0, 0.2, 0.9],
 )
 
 flow_data = dict(
-    source=[0,  1, 2,   2, 2, 3, 3, 4, 4, 5],
-    target=[2,  2, 3,   6, 7, 4, 6, 5, 7, 6],
+    source=[0, 1, 2, 2, 2, 3, 3, 4, 4, 5],
+    target=[2, 2, 3, 6, 7, 4, 6, 5, 7, 6],
     value=[80, 15, 75, 14, 20, 54, 21, 46, 8, 46],
-    color=["gray", "yellow", "lightblue","lightblue","lightblue", "skyblue", "skyblue", "beige", "beige", "linen"],
+    color=[
+        "gray",
+        "yellow",
+        "lightblue",
+        "lightblue",
+        "lightblue",
+        "skyblue",
+        "skyblue",
+        "beige",
+        "beige",
+        "linen",
+    ],
 )
 
 

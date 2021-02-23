@@ -6,6 +6,7 @@ from treelib import exceptions as tle
 
 from ledgex.app import app
 from ledgex.params import CONST
+from ledgex.ledger import Ledger
 
 
 class ATree(Tree):
@@ -13,6 +14,18 @@ class ATree(Tree):
 
     ROOT_TAG = "[Total]"
     ROOT_ID = "root"
+
+    def pp(self, node="root"):  # DEBUG
+        w_node = self[node]
+        try:
+            leaf_total = w_node.data.get("leaf_total")
+        except AttributeError:
+            leaf_total = 0
+        print(
+            f"{self.depth(w_node) * '   '} {w_node.identifier} ({w_node.tag}) {leaf_total}"
+        )
+        for child in self.children(node):
+            self.pp(child.identifier)
 
     @classmethod
     def cast(cls, tree: Tree):
@@ -59,13 +72,7 @@ class ATree(Tree):
         return {x[-1]: ":".join(x) for x in res}
 
     def trim_excess_root(self):
-        """Remove any nodes from the root that have only 1 child.
-        I.e, replace A → B → (C, D) with B → (C, D)
-        It feels like this should be an instance method, but when that was tried,
-        ran into problems with subtleties of subclassing and scope:
-          AttributeError: 'Tree' object has no attribute 'trim_excess_root'
-        Method was in inspect and dir() but not __dir__.  :(
-        """
+        """If root node has only one child, return a tree with that child as the new root."""
         root_id = self.root
         branches = self.children(root_id)
         if len(branches) == 1:
@@ -114,11 +121,17 @@ class ATree(Tree):
         # tree = tree.trim_excess_root()  TODO waiting for trim_excess_root to get fixed
         return tree
 
-    def get_children(self, account_id: int):
+    def get_children_tags(self, account_id: int):
         """
         Return a list of tags of all direct child accounts of the input account.
         """
         return [x.tag for x in self.children(account_id)]
+
+    def get_children_ids(self, account_id: int):
+        """
+        Return a list of tags of all direct child accounts of the input account.
+        """
+        return [x.identifier for x in self.children(account_id)]
 
     def get_descendents(self, account_id: str) -> list:
         """
@@ -178,7 +191,7 @@ class ATree(Tree):
         return tree
 
     @staticmethod
-    def stuff_tree_into_trans(trans: pd.DataFrame, tree: Tree) -> pd.DataFrame:
+    def stuff_tree_into_trans(trans: Ledger, tree: Tree) -> pd.DataFrame:
         """Convert the tree into full account name format and add/update the
         full account field in trans accordingly.
         This should probably be a static method on TransFrame, once that Class exists."""
@@ -186,16 +199,14 @@ class ATree(Tree):
         trans[CONST["fan_col"]] = trans[CONST["account_col"]].map(paths)
         return trans
 
-    @classmethod
-    def from_trans_and_make_subtotals(cls, trans: pd.DataFrame, prorate_fraction: int):
-        """
-        Calculate the subtotal for each node (direct subtotal only, no children) in
-        the provided transaction frame, and return it within a new account tree
+    def append_sums_from_trans(self, trans: Ledger, prorate_fraction: int = 1):
+        """Calculate the subtotal for each node (direct subtotal only, no
+        children) in the tree, based on exactly provided transaction
+        frame, and return it within a new account tree
         """
         trans = trans.reset_index(drop=True).set_index(CONST["account_col"])
-        sel_tree = ATree.from_names(trans[CONST["fan_col"]])
         subtotals = trans.groupby(CONST["account_col"]).sum()["amount"]
-        for node in sel_tree.all_nodes():
+        for node in self.all_nodes():
             try:
                 subtotal = subtotals.loc[node.tag]
             except KeyError:
@@ -203,13 +214,11 @@ class ATree(Tree):
                 # not present in the subtotals DataFrame
                 continue
             try:
-                norm_subtotal = round(subtotal * prorate_fraction)
+                prorated_subtotal = round(subtotal * prorate_fraction)
             except OverflowError:
-                norm_subtotal = 0
-            if norm_subtotal < 0:
-                norm_subtotal = 0
-            node.data = {"leaf_total": norm_subtotal}
-        return sel_tree
+                prorated_subtotal = 0
+            node.data = {"leaf_total": prorated_subtotal}
+        return self
 
     def summarize_to_other(self, node):
         """
@@ -248,24 +257,37 @@ class ATree(Tree):
         for child in children:
             self.summarize_to_other(child)
 
-    def set_subtotals(self):
+    def roll_up_subtotals(self, prevent_negatives: bool = False):
         """Modifies the tree in place, setting a subtotal for all branch
         nodes.
+
+        TODO: Add something that can be passed through to hovertext, for
+        any node that gets * added, to explain the *.  e.g. "This node
+        contains a mix of negative and positive sub-nodes, which cannot
+        be displayed in a sunburst.  Narrow your selection to get more
+        depth."
+
+        TODO: BUG: the numbers don't currently match up between the sunburst
+        and the time series.  Start by looking at the prorate factor.
+
+        Sunburst is very very finicky and wants the subtotals to be
+        exactly correct and never missing, so this builds them
+        directly from the leaf totals, as opposed to generating
+        subtotals from the original dataframe, in order to avoid
+        rounding and other fatal problems.
 
         In order for the tree to be rendered as a hierarchical figure
         with area—like a sunburst or treemap—it may not contain any
         negative values, because that would require taking up a
         negative amount of area on in the figure, which is impossible.
-        So, roll up any negative nodes until a positive parent node is
-        achieved.  Example: A contains A¹=50 and A²=−30.  This
-        function will return A=20 with no children.  TODO:
-        re-figure-out exactly where/how this happens and document.
+        So, wehave the option to roll up any negative nodes until a
+        positive parent node is achieved.  Example: A contains A¹=50
+        and A²=−30.  This function will return A=20 with no children.
 
-        Further, sunburst is very very finicky and wants the subtotals
-        to be exactly correct and never missing, so build them
-        directly from the leaf totals (as opposed to generating
-        subtotals from the original dataframe) to avoid floats,
-        rounding, and other fatal problems.
+        If a node has a total, and has a child with a total, then there
+        is no way to see what the node's total is in isolation.  So,
+        any node that has value, and has children
+
 
         If a leaf_total is moved out of a subtotal, there has to be a
         way to differentiate between clicking on the sub-total and
@@ -285,55 +307,68 @@ class ATree(Tree):
         def set_node_total(tree, node):
             """
 
-            TODO: move the wrapping outside of the class and make this a regular class function.
-
             Recursively set the value of a node as the sum of its descendents' totals.
-            Assumption: No negative leaf values
+            Alters the tree as it goes, making subtotals and leafs where needed for clarity,
+            and fixing unmappable nodes if so flagged.
             Uses 'leaf_total' for all transactions that belong to this node's account,
             and 'total' for the final value for the node, including descendents.
             """
-            node_id = node.identifier
-            tag = node.tag
+            node_id: str = node.identifier
+            tag: str = node.tag
+            leaf_total: int = 0
             try:
                 leaf_total = node.data.get("leaf_total", 0)
             except AttributeError:
                 # in case it doesn't even have a data node
-                leaf_total = 0
-            running_subtotal = leaf_total
-            children = tree.children(node_id)
+                pass
+            running_subtotal: int = leaf_total
+            children: ATree = tree.children(node_id)
+            negative_child: bool = False
             if children:
-                # if it has children, rename it to subtotal, but
-                # don't change the identity.  Don't do this for
-                # the root node, which doesn't need a rename
-                # and will look worse if it gets one
+                # make it a subtotal
                 if node_id != tree.ROOT_ID:
                     subtotal_tag = tag + CONST["subtotal_suffix"]
                     tree.update_node(node_id, tag=subtotal_tag)
-                # If it has its own leaf_total, move that amount
-                # to a new leaf node
-                if leaf_total > 0:
+                for child in children:
+                    # recurse to get subtotals.
+                    child_total = set_node_total(tree, child)
+                    running_subtotal += child_total
+                    if child_total < 0:
+                        negative_child = True
+                node.data = {"total": running_subtotal}
+                if prevent_negatives and negative_child:
+                    # If any of the children are negative, the
+                    # parent's subtotal won't match the sum of its
+                    # children, so prune all the children
+                    for child in children:
+                        try:
+                            tree.remove_node(child.identifier)
+                        except tle.NodeIDAbsentError:
+                            pass
+                    node.tag = node.tag + "*"
+                    negative_child = False
+                elif leaf_total > 0:
+                    # if it's not childless, and has its own value,
+                    # move that value to a leaf
                     new_leaf_id = node_id + CONST["leaf_suffix"]
                     node.data["leaf_total"] = 0
                     tree.create_node(
                         identifier=new_leaf_id,
                         tag=tag,
                         parent=node_id,
-                        data=dict(leaf_total=leaf_total, total=leaf_total),
+                        data=dict(total=leaf_total),
                     )
-                for child in children:
-                    # recurse to get subtotals.  This won't double-count
-                    # the leaf_total from the node because children
-                    # was set before the new synthetic node
-                    child_total = set_node_total(tree, child)
-                    running_subtotal += child_total
-            # Remove zeros, because they look terrible in sunburst.
-            if running_subtotal == 0:
-                tree.remove_node(node_id)
+            if node.data:
+                node.data["total"] = running_subtotal
             else:
-                if node.data:
-                    node.data["total"] = running_subtotal
-                else:
-                    node.data = {"total": running_subtotal}
+                node.data = {"total": running_subtotal}
+            # If this node and descendents total to zero or less, purge
+            if running_subtotal == 0:
+                try:
+                    tree.remove_node(node_id)
+                except tle.NodeIDAbsentError:
+                    pass
+
             return running_subtotal
 
         root = self.get_node(self.root)

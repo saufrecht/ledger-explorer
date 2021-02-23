@@ -156,7 +156,7 @@ def pe_make_time_series(
 
     chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
     root_account_id: str = account_tree.root  # TODO: Stub for controllable design
-    selected_accounts = account_tree.get_children(root_account_id)
+    selected_accounts = account_tree.get_children_ids(root_account_id)
 
     for i, account in enumerate(selected_accounts):
         bar = make_bar(
@@ -236,7 +236,9 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         time_span = params.init_time_span
     trans = data_store.trans
     if len(trans) == 0:
-        app.logger.error("Tried to make burst figure from transactions, but no transactions provided.")
+        app.logger.error(
+            "Tried to make burst figure from transactions, but no transactions provided."
+        )
         raise PreventUpdate()
     eras = data_store.eras
     account_tree = data_store.account_tree
@@ -304,9 +306,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         # seleceted, in which case it would be confusing to get back
         # all trans instead of none, but this should never happen haha
         # because any clickable bar must have $$, and so, trans
-        description = (
-            f"Click a bar in the graph to filter from {len(trans):,d} records"
-        )
+        description = f"Click a bar in the graph to filter from {len(trans):,d} records"
         selected_trans = trans
         min_period_start = trans["date"].min()
         max_period_end = trans["date"].max()
@@ -319,7 +319,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
     }
 
     try:
-        sun_fig = Burst.from_trans(trans, time_span, colormap)
+        sun_fig = Burst.from_trans(account_tree, selected_trans, time_span, colormap)
     except LError as E:
         app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
         raise PreventUpdate

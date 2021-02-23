@@ -85,7 +85,7 @@ def cu_make_time_serieses(time_resolution, data_store, param_store):
             },
             barmode="relative",
         )
-        subaccounts: iter = account_tree.get_children(account)
+        subaccounts: iter = account_tree.get_children_ids(account)
         for j, subaccount in enumerate(subaccounts):
             sub_desc = account_tree.get_descendents(subaccount)
             sub_desc.append(subaccount)
