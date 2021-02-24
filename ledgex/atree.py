@@ -47,7 +47,7 @@ class ATree(Tree):
         try:
             self._Tree__print_backend(func=write)
         except tle.NodeIDAbsentError:
-            print("Tree is empty")
+            app.logger.info("Tree is empty")
 
         return self._reader
 
@@ -261,14 +261,11 @@ class ATree(Tree):
         """Modifies the tree in place, setting a subtotal for all branch
         nodes.
 
-        TODO: Add something that can be passed through to hovertext, for
-        any node that gets * added, to explain the *.  e.g. "This node
-        contains a mix of negative and positive sub-nodes, which cannot
-        be displayed in a sunburst.  Narrow your selection to get more
-        depth."
-
-        TODO: BUG: the numbers don't currently match up between the sunburst
-        and the time series.  Start by looking at the prorate factor.
+        TODO: If there are any negative children, pass back a flag to
+        add warning text to the hovertext/ledgend.  e.g. "One or more
+        nodes show contains a mix of negative and positive sub-nodes,
+        which cannot be displayed in a sunburst.  Narrow your
+        selection to get more depth."
 
         Sunburst is very very finicky and wants the subtotals to be
         exactly correct and never missing, so this builds them
@@ -345,7 +342,7 @@ class ATree(Tree):
                             tree.remove_node(child.identifier)
                         except tle.NodeIDAbsentError:
                             pass
-                    node.tag = node.tag + "*"
+                    # TODO: here's where to add a flag to get passed back
                     negative_child = False
                 elif leaf_total > 0:
                     # if it's not childless, and has its own value,

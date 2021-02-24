@@ -13,22 +13,11 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST
+from ledgex.errors import LError
 
 pd.options.mode.chained_assignment = (
     None  # default='warn'  This suppresses the invalid warning for the .map function
 )
-
-
-class LError(Exception):
-    """ Base class for package errors"""
-
-
-class LoadError(LError):
-    """ Errors during transaction, Account Tree, and Eras data load """
-
-    def __init__(self, message):
-        self.message = message
-
 
 disc_colors = px.colors.qualitative.D3
 
@@ -37,11 +26,6 @@ fonts = dict(
     medium=dict(family="IBM Plex Sans Light", size=20),
     small=dict(family="IBM Plex Light", size=12),
 )
-
-time_series_layout = dict(
-    legend={"x": 0, "y": 1}, font=fonts["small"], titlefont=fonts["medium"]
-)
-
 chart_fig_layout = dict(
     clickmode="event+select",
     dragmode="select",
@@ -50,6 +34,10 @@ chart_fig_layout = dict(
     showlegend=False,
     title=dict(font=fonts["big"], x=0.1, y=0.9),
     hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)", font=fonts["medium"]),
+    legend={"x": 0, "y": 1},
+    font=fonts["small"],
+    titlefont=fonts["medium"],
+    paper_bgcolor="rgba(0, 0, 0, 0)",
 )
 
 trans_table = dash_table.DataTable(
@@ -303,9 +291,15 @@ def period_to_date_range(
     elif tr_label == "Month":
         period_start = datetime.strptime(period + "-01", "%Y-%b-%d")
         period_end = _month_end(period_start)
+    elif tr_label == "Week":
+        period_start = datetime.strptime(period + "-0.23", "%Y-%b-%d")
+        period_end = period_start + timedelta(days=7)
+    elif tr_label == "Day":
+        period_start = datetime.strptime(period + "-0.033", "%Y-%b-%d")
+        period_end = period_start
     else:
         raise LError(
-            "Internal error: {tr_label} is not Era, Decade, Year, Quarter, or Month"
+            "Internal error: {tr_label} is invalid"
         )
     return (np.datetime64(period_start), np.datetime64(period_end))
 
@@ -328,12 +322,12 @@ def preventupdate_if_empty(field: object):
         return
 
 
-def make_bar(
+def periodic_bar(
     trans: pd.DataFrame,
     account_tree: ATree,
     account_id: str,
     time_resolution: str,
-    time_span: str,
+    factor: float,
     eras: pd.DataFrame,
     color_num: int = 0,
     deep: bool = False,
@@ -351,57 +345,32 @@ def make_bar(
         tba = trans[trans[CONST["account_col"]] == account_id]
     tba = tba.set_index("date")
     tr: dict = CONST["time_res_lookup"][time_resolution]
-    tr_hover: str = tr.get("abbrev", None)  # e.g., "Q"
-    tr_label: str = tr.get("label", None)  # e.g., "Quarter"
-    tr_months: int = tr.get("months", None)  # e.g., 3
     tr_format: str = tr.get("format", None)  # e.g., %Y-%m
-
-    ts = CONST["time_span_lookup"][time_span]
-    ts_hover = ts.get("abbrev")  # NOQA  e.g., "y"
-    ts_months = ts.get("months")  # e.g., 12
-
-    trace_type: str = "periodic"
-    if tr_label == "Era":
-        if len(eras) > 0:
-            trace_type = "era"
-        else:
-            trace_type = "total"
-    elif tr_label in ["Decade", "Year", "Quarter", "Month"]:
-        format = tr_format
-    else:
-        raise PreventUpdate  # ibid
-
     try:
         marker_color = disc_colors[color_num]
     except IndexError:
         # don't ever run out of colors
         marker_color = "var(--Cyan)"
-    if trace_type == "periodic":
-        resample_keyword = tr["resample_keyword"]
+
+    if time_resolution in ["decade", "year", "quarter", "month", "week", "day"]:
         bin_amounts = (
-            tba.resample(resample_keyword).sum()["amount"].to_frame(name="value")
+            tba.resample(tr["resample_keyword"]).sum()["amount"].to_frame(name="value")
         )
-        factor = ts_months / tr_months
-        bin_amounts["x"] = bin_amounts.index.to_period().strftime(format)
+        bin_amounts["x"] = bin_amounts.index.to_period().strftime(tr_format)
         bin_amounts["y"] = bin_amounts["value"] * factor
-        bin_amounts["text"] = f"{tr_hover}"
-        bin_amounts["customdata"] = account_id
-        bin_amounts[
-            "texttemplate"
-        ] = "%{customdata}"  # workaround for passing variables through layers of plotly
+        bin_amounts["text"] = tr["abbrev"]
         trace = go.Bar(
             name=account_id,
             x=bin_amounts.x,
             y=bin_amounts.y,
-            customdata=bin_amounts.customdata,
-            text=bin_amounts.text,
-            texttemplate=bin_amounts.texttemplate,
+            text=account_id,
             textposition="auto",
             opacity=0.9,
-            hovertemplate="%{x}<br>%{customdata}:<br>%{y:$,.0f}<br>",  # TODO: pass in unit for $
+            hovertemplate="%{x}<br>%{y:$,.0f}<br>",  # TODO: pass in unit for $
             marker_color=marker_color,
         )
-    elif trace_type == "era":
+    elif time_resolution == "era" and len(eras) > 0:
+        breakpoint()
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
         bins = eras.date_start.sort_values()
@@ -435,14 +404,12 @@ def make_bar(
         )
         bin_amounts["date_start"] = bin_boundary_dates[0:-1]
         bin_amounts["date_end"] = bin_boundary_dates[1:]
-        # Plotly bars want the midpoint and width:
+        # Plotly bars want the midpoint and width:  # TODO this may be fixed in new dash
         bin_amounts["delta"] = bin_amounts["date_end"] - bin_amounts["date_start"]
         bin_amounts["width"] = bin_amounts["delta"] / np.timedelta64(1, "ms")
         bin_amounts["midpoint"] = bin_amounts["date_start"] + bin_amounts["delta"] / 2
         bin_amounts["months"] = bin_amounts["delta"] / np.timedelta64(1, "M")
-        bin_amounts["value"] = bin_amounts["value"] * (
-            ts_months / bin_amounts["months"]
-        )
+        bin_amounts["value"] = bin_amounts["value"] * factor / bin_amounts["months"]
         bin_amounts["text"] = account_id
         bin_amounts["customdata"] = (
             bin_amounts["text"]
@@ -468,7 +435,7 @@ def make_bar(
             marker_color=marker_color,
         )
     else:
-        return None
+        raise LError(f"Invalid keyword for tr_label: {time_resolution}, or eras is specified but empty.")
     return trace
 
 

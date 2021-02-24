@@ -11,7 +11,8 @@ from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
 from ledgex.apps import compare, cumulative, data_source, explore, periodic, hometab, sankey
-from ledgex.loading import LoadError, convert_raw_data, load_input_file
+from ledgex.errors import LoadError
+from ledgex.loading import convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
 from ledgex.utils import preventupdate_if_empty
 
@@ -20,6 +21,7 @@ server = app.server
 app.title = "Ledger Periodic"
 
 
+# TODO: document/clarify/figure out what _trigger, _node, and _store are intending to mean
 app.layout = html.Div(
     id="page-content",
     className="tabs_container",

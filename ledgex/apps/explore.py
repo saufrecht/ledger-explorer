@@ -72,3 +72,58 @@ def ex_make_charts(ex_dummy, trigger, data_store, param_store):
     chart_fig.layout.update(showlegend=False)
 
     return [chart_fig]
+
+    # params: Params() = Params.from_json(param_store)
+    # if not time_resolution:
+    #     time_resolution = params.init_time_res
+    # if not time_span:
+    #     time_span = params.init_time_span
+    # unit = params.unit
+    # eras: pd.DataFrame = data_store.eras
+    # try:
+    #     tr_label = CONST["time_res_lookup"][time_resolution][
+    #         "label"
+    #     ]  # e.g., 'by Era'
+    #     ts_label = CONST["time_span_lookup"][time_span][
+    #         "label"
+    #     ]  # e.g., 'Annual' or 'Monthly'
+    # except KeyError as E:
+    #     app.logger.warning(
+    #         f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
+    #     )
+    #     raise PreventUpdate
+    # bar = make_bar(
+    #     trans,
+    #     account_tree,
+    #     click_account,
+    #     time_resolution,
+    #     time_span,
+    #     eras,
+    #     0,
+    #     deep=True,
+    #     unit=unit,
+    # )
+    # detail_fig: go.Figure = go.Figure(layout=chart_fig_layout)
+    # if bar:
+    #     detail_fig.add_trace(bar)
+    #     ts_title = f"Average {ts_label} {click_account} {unit}, by {tr_label} "
+    #     detail_fig.update_layout(
+    #         title={"text": ts_title},
+    #         xaxis={"showgrid": True, "nticks": 20},
+    #         yaxis={"showgrid": True},
+    #         barmode="relative",
+    #     )
+    # elseif len(sel_accounts) > 0:
+    #     sel_trans = trans[trans["account"]
+    #     account_text = f"Click a pie slice to filter from {max_trans_count} records"
+
+    # try:
+    #     sel_trans = sel_trans[
+    #         (sel_trans["date"] >= date_start) & (sel_trans["date"] <= date_end)
+    #     ]
+    # except (KeyError, TypeError):
+    #     pass
+    # sel_trans["date"] = pd.DatetimeIndex(sel_trans["date"]).strftime("%Y-%m-%d")
+    # sel_trans = sel_trans.sort_values(["date"])
+
+    # pe_trans_table_text: str = f"{len(sel_trans)} records"

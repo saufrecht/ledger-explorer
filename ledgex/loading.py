@@ -10,7 +10,7 @@ from treelib import Tree
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import LoadError
+from ledgex.errors import LoadError
 
 
 def load_eras(data, earliest_date, latest_date):

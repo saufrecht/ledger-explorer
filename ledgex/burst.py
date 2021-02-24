@@ -1,9 +1,7 @@
-import numpy as np
 import pandas as pd
 import plotly.express as px
 
 from ledgex.atree import ATree
-from ledgex.params import CONST
 from ledgex.utils import fonts, pretty_date
 from ledgex.ledger import Ledger
 
@@ -29,6 +27,7 @@ class Burst:
         tree: ATree,
         trans: pd.DataFrame,
         time_span: str,
+        factor: float = 1,
         colormap: Dict = {},
     ):
         """
@@ -38,20 +37,7 @@ class Burst:
         transactions for that node and any subtree, filtered by date.
         """
         trans = Ledger.positize(trans)
-        date_start = trans["date"].min()
-        date_end = pd.Timestamp.now()
-        prorate_factor: float = 1
-        if time_span != "total":
-            ts = CONST["time_span_lookup"][time_span]
-            ts_months = ts.get("months")  # e.g., 12
-            duration_m = pd.to_timedelta(
-                (date_end - date_start), unit="ms"
-            ) / np.timedelta64(1, "M")
-            # prorate: e.g., annual average over 18 months would be 12 / 18 = .667
-            prorate_factor = ts_months / duration_m
-
-        trans = Ledger.positize(trans)
-        tree = tree.append_sums_from_trans(trans, prorate_factor)
+        tree = tree.append_sums_from_trans(trans, factor)
         tree.roll_up_subtotals(prevent_negatives=True)
         tree = tree.trim_excess_root()
 

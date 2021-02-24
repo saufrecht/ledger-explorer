@@ -11,14 +11,15 @@ from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.burst import Burst
 from ledgex.params import CONST, Params
+from ledgex.ledger import Ledger
+from ledgex.errors import LError
 from ledgex.utils import (
     chart_fig_layout,
     pe_trans_table,
-    make_bar,
+    periodic_bar,
     period_to_date_range,
     pretty_date,
     preventupdate_if_empty,
-    LError,
 )
 from ledgex.datastore import Datastore
 
@@ -29,56 +30,37 @@ layout = html.Div(
         html.Div(
             className="time_series_box",
             children=[
-                dcc.Graph(id="pe_master_time_series"),
                 html.Div(
                     className="control_bar",
                     children=[
-                        dcc.Store(
-                            id="pe_time_series_selection_info", storage_type="memory"
+                        dcc.Store(id="pe_selection_store", storage_type="memory"),
+                        dcc.Dropdown(
+                            id="pe_time_series_span",
+                            options=CONST["time_span_options"],
                         ),
-                        html.Div(id="pe_selected_trans_display", children=None),
-                        html.Fieldset(
-                            className="flpe_forward radio",
-                            children=[
-                                html.Span(children="Group By "),
-                                dcc.RadioItems(
-                                    id="pe_time_series_resolution",
-                                    options=CONST["time_res_options"],
-                                ),
-                            ],
-                        ),
-                        html.Fieldset(
-                            className="flpe_forward radio",
-                            children=[
-                                dcc.RadioItems(
-                                    id="pe_time_series_span",
-                                    options=CONST["time_span_options"],
-                                ),
-                            ],
+                        html.Span(id="pe_unit_text", children=" per "),
+                        dcc.Dropdown(
+                            id="pe_time_series_resolution",
+                            options=CONST["time_res_options"],
                         ),
                     ],
                 ),
+                dcc.Graph(id="pe_master_time_series"),
             ],
         ),
         html.Div(
             className="account_burst_box",
             children=[
-                html.Div(
-                    [
-                        html.H3(id="pe_burst_title", children=""),
-                        html.Div(
-                            id="pe_selected_account_text",
-                            children="Click a pie slice to filter records",
-                        ),
-                    ]
-                ),
+                html.H3(id="pe_burst_title", children=""),
                 dcc.Graph(id="pe_account_burst"),
-            ],
-        ),
-        html.Div(
-            className="detail_time_series_box",
-            children=[
-                dcc.Graph(id="pe_detail_time_series"),
+                html.Div(
+                    id="pe_burst_text",
+                    children="Click a pie slice to filter records",
+                ),
+                html.Div(
+                    id="pe_burst_text2",
+                    children="text 2",
+                ),
             ],
         ),
         html.Div(
@@ -97,22 +79,24 @@ layout = html.Div(
         Output("pe_time_series_resolution", "value"),
         Output("pe_time_series_resolution", "options"),
         Output("pe_time_series_span", "value"),
+        Output("pe_unit_text", "value"),
     ],
     [Input("pe_tab_trigger", "children")],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def load_pe_params(trigger: str, data_store: str, param_store: str):
+def pe_load_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
     preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
     options = CONST["time_res_options"]
+    unit_text = f" {params.unit} per "
     if data_store:
         data: Datastore() = Datastore.from_json(data_store)
         eras = data.eras
         if len(eras) > 0:
             options = [CONST["time_res_era_option"]] + options
 
-    return [params.init_time_res, options, params.init_time_span]
+    return [params.init_time_res, options, params.init_time_span, unit_text]
 
 
 @app.callback(
@@ -123,7 +107,7 @@ def load_pe_params(trigger: str, data_store: str, param_store: str):
     ],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
-def pe_make_time_series(
+def pe_make_master_time_series(
     time_resolution: int, time_span: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
@@ -131,40 +115,25 @@ def pe_make_time_series(
     params: Params() = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
-
     if not time_span:
         time_span = params.init_time_span
-
-    try:
-        tr_label = CONST["time_res_lookup"][time_resolution]["label"]  # e.g., 'by Era'
-        ts_label = CONST["time_span_lookup"][time_span][
-            "label"
-        ]  # e.g., 'Annual' or 'Monthly'
-    except KeyError as E:
-        app.logger.warning(
-            f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
-        )
-        raise PreventUpdate
-
     data_store: Datastore() = Datastore.from_json(data_store, params.pe_roots)
     trans: pd.DataFrame = data_store.trans
     eras: pd.DataFrame = data_store.eras
-    if time_resolution == "era" and len(eras) == 0:
-        raise PreventUpdate  # TODO: better solution is, if eras isn't loaded, remove ERAS from the choices
     account_tree: ATree = data_store.account_tree
     unit = params.unit
-
     chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
-    root_account_id: str = account_tree.root  # TODO: Stub for controllable design
+    # get everything, but note that it's already been pre-filtered by pe_roots
+    root_account_id: str = account_tree.root
     selected_accounts = account_tree.get_children_ids(root_account_id)
-
+    factor = Ledger.prorate_factor(time_span, ts_resolution=time_resolution)
     for i, account in enumerate(selected_accounts):
-        bar = make_bar(
+        bar = periodic_bar(
             trans,
             account_tree,
             account,
             time_resolution,
-            time_span,
+            factor,
             eras,
             i,
             deep=True,
@@ -172,10 +141,7 @@ def pe_make_time_series(
         )
         if bar:
             chart_fig.add_trace(bar)
-
-    ts_title = f"Average {ts_label} {unit}, by {tr_label} "
     chart_fig.update_layout(
-        title={"text": ts_title},
         xaxis={"showgrid": True, "nticks": 20},
         yaxis={"showgrid": True},
         barmode="relative",
@@ -187,8 +153,8 @@ def pe_make_time_series(
     [
         Output("pe_account_burst", "figure"),
         Output("pe_burst_title", "children"),
-        Output("pe_selected_trans_display", "children"),
-        Output("pe_time_series_selection_info", "data"),
+        Output("pe_burst_text", "children"),
+        Output("pe_selection_store", "data"),
     ],
     [
         Input("pe_master_time_series", "figure"),
@@ -303,7 +269,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
     else:
         # If no trans are selected, show everything.  Note that we
         # could logically get here even if valid accounts are
-        # seleceted, in which case it would be confusing to get back
+        # selected, in which case it would be confusing to get back
         # all trans instead of none, but this should never happen haha
         # because any clickable bar must have $$, and so, trans
         description = f"Click a bar in the graph to filter from {len(trans):,d} records"
@@ -312,34 +278,36 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         max_period_end = trans["date"].max()
 
     title = f"Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}"
-    time_series_selection_info = {
+    pe_selection_store = {
         "start": min_period_start,
         "end": max_period_end,
         "count": len(selected_trans),
+        "accounts": selected_accounts,
     }
 
+    duration = round(pd.to_timedelta((max_period_end - min_period_start), unit="ms") / np.timedelta64(1, "M"))
+    factor = Ledger.prorate_factor(time_span, duration=duration)
     try:
-        sun_fig = Burst.from_trans(account_tree, selected_trans, time_span, colormap)
+        sun_fig = Burst.from_trans(account_tree, selected_trans, time_span, factor, colormap)
     except LError as E:
         app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
         raise PreventUpdate
 
-    return (sun_fig, title, description, time_series_selection_info)
+    return (sun_fig, title, description, pe_selection_store)
 
 
 @app.callback(
     [
         Output("pe_trans_table", "data"),
-        Output("pe_selected_account_text", "children"),
+        Output("pe_burst_text2", "children"),
         Output("pe_trans_table_text", "children"),
-        Output("pe_detail_time_series", "figure"),
     ],
     [
         Input("pe_account_burst", "clickData"),
         Input("pe_account_burst", "figure"),
     ],
     state=[
-        State("pe_time_series_selection_info", "data"),
+        State("pe_selection_store", "data"),
         State("data_store", "children"),
         State("param_store", "children"),
         State("pe_time_series_resolution", "value"),
@@ -349,112 +317,69 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
 def apply_burst_click(
     burst_clickData,
     burst_figure,
-    time_series_info,
+    pe_selection_store,
     data_store: str,
     param_store: str,
     time_resolution: int,
     time_span: str,
 ):
-    """
-    Clicking on a slice in the Sunburst updates the transaction list with matching transactions
-    burst_figure Input is used only to guarantee a trigger on initial page load.
+    """Clicking on a slice in the Sunburst updates the transaction list
+    with matching transactions burst_figure Input is used only to
+    guarantee a trigger on initial page load.
+
     """
     data_store: Datastore() = Datastore.from_json(data_store)
     preventupdate_if_empty(data_store)
-    preventupdate_if_empty(time_series_info)
+    preventupdate_if_empty(pe_selection_store)
     trans = data_store.trans
     preventupdate_if_empty(trans)
     account_tree = data_store.account_tree
     earliest_trans = data_store.earliest_trans
     latest_trans = data_store.latest_trans
 
+    # get the selection parameters from the master time series, via an intermediary store.
     date_start: np.datetime64 = pd.to_datetime(
-        time_series_info.get("start", earliest_trans)
+        pe_selection_store.get("start", earliest_trans)
     )
-    date_end: np.datetime64 = pd.to_datetime(time_series_info.get("end", latest_trans))
-    max_trans_count = time_series_info.get("count", 0)
+    date_end: np.datetime64 = pd.to_datetime(
+        pe_selection_store.get("end", latest_trans)
+    )
+    max_trans_count: int = pe_selection_store.get("count", 0)
+    click_accounts: list = pe_selection_store.get("accounts", [])
 
-    sub_accounts: list = []
-
-    # Figure out which account(s) were selected in the sunburst click
+    # Figure out which accounts to use to filter transactions.  If any
+    # account(s) were selected in the sunburst click, they override
+    # the selection passed through from master_time_series
     if burst_clickData:
         raw_click_account = burst_clickData["points"][0]["id"]
         # strip any SUFFFIXes from the label that were added in the sunburst hack
         if CONST["leaf_suffix"] in raw_click_account:
-            click_account = raw_click_account.replace(CONST["leaf_suffix"], "")
+            click_accounts = [raw_click_account.replace(CONST["leaf_suffix"], "")]
         elif CONST["subtotal_suffix"] in raw_click_account:
-            click_account = raw_click_account.replace(CONST["subtotal_suffix"], "")
+            click_accounts = [raw_click_account.replace(CONST["subtotal_suffix"], "")]
         else:
-            click_account = raw_click_account
-    else:
-        click_account = []
+            click_accounts = [raw_click_account]
 
-    # if an accounts was clicked, get a ledger of those transactions, and a detailed time series
-    # chart of the clicked account.  Otherwise, get all transactions, and an empty chart.
-    detail_fig: go.Figure = go.Figure(layout=chart_fig_layout)
-    if click_account:
-        # Add any sub-accounts
-        sub_accounts = account_tree.get_descendents(click_account)
-        filter_accounts = [click_account] + sub_accounts
-        sel_trans = trans[trans["account"].isin(filter_accounts)]
+    if len(click_accounts) > 0:
+        sub_accounts: list = []
+        for account in click_accounts:
+            sub_accounts = account_tree.get_descendents(account)
+        sel_accounts = click_accounts + sub_accounts
+        sel_trans = trans[
+            trans["account"].isin(sel_accounts)
+            & (trans["date"] >= date_start)
+            & (trans["date"] <= date_end)
+        ]
+        num_trans = len(sel_trans)
+        account_text = f"{num_trans} selected for {', '.join(click_accounts)}"
         if (len_sub := len(sub_accounts)) > 0:
-            account_text = f"{click_account} and {len_sub} sub-accounts selected"
-        else:
-            account_text = f"{click_account} selected"
-
-        # also, build the detail chart for the primarily selected account
-        params: Params() = Params.from_json(param_store)
-        if not time_resolution:
-            time_resolution = params.init_time_res
-        if not time_span:
-            time_span = params.init_time_span
-        unit = params.unit
-        eras: pd.DataFrame = data_store.eras
-        try:
-            tr_label = CONST["time_res_lookup"][time_resolution][
-                "label"
-            ]  # e.g., 'by Era'
-            ts_label = CONST["time_span_lookup"][time_span][
-                "label"
-            ]  # e.g., 'Annual' or 'Monthly'
-        except KeyError as E:
-            app.logger.warning(
-                f"Bad data from selectors: time_resolution {time_resolution}, time_span {time_span}. {E}"
-            )
-            raise PreventUpdate
-        bar = make_bar(
-            trans,
-            account_tree,
-            click_account,
-            time_resolution,
-            time_span,
-            eras,
-            0,
-            deep=True,
-            unit=unit,
-        )
-        if bar:
-            detail_fig.add_trace(bar)
-            ts_title = f"Average {ts_label} {click_account} {unit}, by {tr_label} "
-            detail_fig.update_layout(
-                title={"text": ts_title},
-                xaxis={"showgrid": True, "nticks": 20},
-                yaxis={"showgrid": True},
-                barmode="relative",
-            )
+            account_text = account_text + f" and {len_sub} sub-accounts"
     else:
         sel_trans = trans
-        account_text = f"Click a pie slice to filter from {max_trans_count} records"
+        num_trans = len(sel_trans)
+        account_text = f"All accounts selected. Click a pie slice to filter from {max_trans_count} records"
 
-    try:
-        sel_trans = sel_trans[
-            (sel_trans["date"] >= date_start) & (sel_trans["date"] <= date_end)
-        ]
-    except (KeyError, TypeError):
-        pass
     sel_trans["date"] = pd.DatetimeIndex(sel_trans["date"]).strftime("%Y-%m-%d")
     sel_trans = sel_trans.sort_values(["date"])
 
-    pe_trans_table_text: str = f"{len(sel_trans)} records"
-
-    return [sel_trans.to_dict("records"), account_text, pe_trans_table_text, detail_fig]
+    return [sel_trans.to_dict("records"), account_text, account_text]
