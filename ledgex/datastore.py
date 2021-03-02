@@ -43,11 +43,6 @@ class Datastore:
         if (not json_data) or (len(json_data) == 0):
             return None
         data = json.loads(json_data)
-        data_error = data.get("error", None)
-        if data_error:
-            # TODO handle these errors better- probably kick them from origin instead of making this
-            # pseudo-catching approach?
-            return None
         if not data or len(data) == 0:
             return None
         trans = pd.read_json(
@@ -64,7 +59,7 @@ class Datastore:
         filter_accounts: list = []
         for account in filter:
             filter_accounts = (
-                filter_accounts + [account] + orig_account_tree.get_descendents(account)
+                filter_accounts + [account] + orig_account_tree.get_descendent_ids(account)
             )
         if len(filter_accounts) > 0:
             trans = trans[trans[CONST["account_col"]].isin(filter_accounts)]

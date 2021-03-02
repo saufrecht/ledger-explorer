@@ -95,7 +95,6 @@ def pe_load_params(trigger: str, data_store: str, param_store: str):
         eras = data.eras
         if len(eras) > 0:
             options = [CONST["time_res_era_option"]] + options
-
     return [params.init_time_res, options, params.init_time_span, unit_text]
 
 
@@ -242,7 +241,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
                     max_period_end = period_end
                 else:
                     max_period_end = max(max_period_end, period_end)
-                desc_accounts = account_tree.get_descendents(account)
+                desc_accounts = account_tree.get_descendent_ids(account)
                 desc_account_count = desc_account_count + len(desc_accounts)
                 subtree_accounts = [account] + desc_accounts
                 new_trans = (
@@ -363,7 +362,7 @@ def apply_burst_click(
     if len(click_accounts) > 0:
         sub_accounts: list = []
         for account in click_accounts:
-            sub_accounts = account_tree.get_descendents(account)
+            sub_accounts = account_tree.get_descendent_ids(account)
         sel_accounts = click_accounts + sub_accounts
         sel_trans = trans[
             trans["account"].isin(sel_accounts)

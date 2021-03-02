@@ -231,7 +231,7 @@ def convert_raw_data(
     for account in [ra for ra in CONST["root_accounts"] if ra["flip_negative"] is True]:
         if atree.get_node(account["id"]):
             trans["amount"] = np.where(
-                trans[CONST["account_col"]].isin(atree.get_descendents(account["id"])),
+                trans[CONST["account_col"]].isin(atree.get_descendent_ids(account["id"])),
                 trans["amount"] * -1,
                 trans["amount"],
             )

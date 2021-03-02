@@ -6,7 +6,8 @@ from params import CONST
 
 class Ledger(pd.DataFrame):
     """
-    TODO: Work in progress to start using this instead of "trans" everywhere.
+    TODO: Move this into Datastore?  Or have Ledger be a subclass of DataFrame?
+    
     """
 
     @staticmethod

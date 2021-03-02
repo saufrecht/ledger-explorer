@@ -212,10 +212,12 @@ a:visited {
 .col_heading {
   text-align: center;
 }
+
 /*———————————————————————————————————————————————————————————*/
 /* Individual page layouts                                   */
 /*———————————————————————————————————————————————————————————*/
 /* Cash_flow */
+
 
 .time_series_box {
   grid-column: 1 / 3;
@@ -246,6 +248,16 @@ a:visited {
   grid-column: 1 / 3;
 }
 
+/* Explorer */
+#ex_wrapper {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2 ;
+}
+
+#ex_drill_figures {
+  grid-column: 1 / 3;
+  grid-row: 2 / 3 ;
+}
 /* Cash_flow */
 
 

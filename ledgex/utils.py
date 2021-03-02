@@ -22,9 +22,9 @@ pd.options.mode.chained_assignment = (
 disc_colors = px.colors.qualitative.D3
 
 fonts = dict(
-    big=dict(family="IBM Plex Sans Medium", size=24),
-    medium=dict(family="IBM Plex Sans Light", size=20),
-    small=dict(family="IBM Plex Light", size=12),
+    big=dict(family="IBM Plex Sans Medium", size=32),
+    medium=dict(family="IBM Plex Sans Light", size=26),
+    small=dict(family="IBM Plex Light", size=18),
 )
 chart_fig_layout = dict(
     clickmode="event+select",
@@ -33,11 +33,39 @@ chart_fig_layout = dict(
     height=350,
     showlegend=False,
     title=dict(font=fonts["big"], x=0.1, y=0.9),
-    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)", font=fonts["medium"]),
+    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
     legend={"x": 0, "y": 1},
-    font=fonts["small"],
-    titlefont=fonts["medium"],
+    font=fonts["big"],
+    titlefont=fonts["small"],
     paper_bgcolor="rgba(0, 0, 0, 0)",
+)
+
+dot_fig_layout = dict(
+    clickmode="event+select",
+    dragmode="select",
+    margin=dict(l=10, r=10, t=10, b=10),  # NOQA
+    height=350,
+    showlegend=False,
+    title=dict(font=fonts["big"], x=0.1, y=0.9),
+    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
+    font=fonts["small"],
+    paper_bgcolor="rgba(0, 0, 0, 0)",
+)
+
+drill_layout = dict(
+    clickmode="event+select",
+    dragmode="select",
+    margin=dict(l=10, r=10, t=10, b=10),
+    height=350,
+    showlegend=False,
+    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
+    font=fonts["big"],
+    title=dict(font=fonts["big"]),
+    xaxis_tickfont=fonts["small"],
+    xaxis={'categoryorder': 'total descending'},
+    yaxis_visible=False,
+    paper_bgcolor="rgba(0, 0, 0, 0)",
+    plot_bgcolor="rgba(100, 100, 100, 0.1)",
 )
 
 trans_table = dash_table.DataTable(
@@ -338,7 +366,7 @@ def periodic_bar(
     if deep:
         tba = trans[
             trans[CONST["account_col"]].isin(
-                [account_id] + account_tree.get_descendents(account_id)
+                [account_id] + account_tree.get_descendent_ids(account_id)
             )
         ]
     else:
@@ -370,7 +398,6 @@ def periodic_bar(
             marker_color=marker_color,
         )
     elif time_resolution == "era" and len(eras) > 0:
-        breakpoint()
         latest_tba = tba.index.max()
         # convert the era dates to a series that can be used for grouping
         bins = eras.date_start.sort_values()

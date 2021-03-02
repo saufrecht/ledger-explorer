@@ -125,28 +125,52 @@ class ATree(Tree):
         """
         Return a list of tags of all direct child accounts of the input account.
         """
-        return [x.tag for x in self.children(account_id)]
+        try:
+            child_tags = [x.tag for x in self.children(account_id)]
+            return child_tags
+        except tle.NodeIDAbsentError as E:
+            app.logger.warning(f"A specified root is missing from the account tree: {E}")
+            return []
 
     def get_children_ids(self, account_id: int):
         """
         Return a list of tags of all direct child accounts of the input account.
         """
-        return [x.identifier for x in self.children(account_id)]
+        try:
+            child_ids = [x.identifier for x in self.children(account_id)]
+            return child_ids
+        except tle.NodeIDAbsentError as E:
+            app.logger.warning(f"A specified root is missing from the account tree: {E}")
+            return []
 
-    def get_descendents(self, account_id: str) -> list:
+    def get_descendent_ids(self, account_id: str) -> list:
         """
-        Return a list of tags of all descendent accounts of the input account.
+        Return a list of ids of all descendent accounts of the input account.
         """
         if (not account_id) or (len(account_id) == 0):
             return []
         try:
             # TODO: make this comparison case-insensitive
             subtree_nodes = self.subtree(account_id).all_nodes()
-            descendent_list = [x.tag for x in subtree_nodes if x.tag != account_id]
+            descendent_list = [x.identifier for x in subtree_nodes if x.identifier != account_id]
         except tle.NodeIDAbsentError:
             descendent_list = []
-
         return descendent_list
+
+    def get_lineage_ids(self, account_id: str) -> list:
+        """
+        Return a list of ids of all parent accounts of the input account up to root
+        """
+        if account_id == self.root:
+            lineage = []
+        else:
+            parent = self.parent(account_id).identifier
+            if parent == self.root:
+                lineage = [self.root]
+            else:
+                lineage = self.get_lineage_ids(parent) + [parent]
+
+        return lineage
 
     @classmethod
     def from_parents(cls, parent_list: pd.DataFrame) -> Tree:
