@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from ledgex.app import app
-from ledgex.apps import compare, cumulative, data_source, explore, periodic, hometab, sankey
+from ledgex.tabs import compare, cumulative, data_source, explore, periodic, hometab, sankey
 from ledgex.errors import LoadError
 from ledgex.loading import convert_raw_data, load_input_file
 from ledgex.params import CONST, Params
