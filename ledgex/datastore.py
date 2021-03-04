@@ -72,7 +72,6 @@ class Datastore:
                 dtype={
                     "index": "str",
                     "date_start": "datetime64",
-                    "date_end": "datetime64",
                 },
             )
             # No idea why era dates suddenly became int64 instead of datetime.  Kludge it back.
@@ -81,8 +80,7 @@ class Datastore:
             eras = pd.DataFrame()
         if len(eras) > 0:
             eras["date_start"] = eras["date_start"].astype("datetime64[ms]")
-            eras["date_end"] = eras["date_end"].astype("datetime64[ms]")
-
+            eras = eras.set_index("name")
         trans_filename = data.get("trans_filename")
         eras_filename = "placeholder"
         account_filename = "placeholder"

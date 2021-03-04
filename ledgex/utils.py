@@ -281,11 +281,10 @@ trans_table_format = dict(
 
 
 def period_to_date_range(
-    tr_label: str, ts_label: str, period: str, eras: pd.DataFrame
+    time_resolution: str, period: str, eras: pd.DataFrame = None
 ) -> Tuple[np.datetime64, np.datetime64]:
 
-    # Convert period label to tuple of start and end dates, based on tr_label
-
+    # Convert period label to tuple of start and end dates, based on time_resolution
     def _month_end(date: np.datetime64) -> np.datetime64:
         # return the date of the last day of the month of the input date
         year = date.year
@@ -293,18 +292,18 @@ def period_to_date_range(
         last_day = calendar.monthrange(year, month)[1]
         end_date = np.datetime64(datetime(year=year, month=month, day=last_day))
         return end_date
-
-    if tr_label == "Era":
-        era = eras.loc[(eras["date_start"] < period) & (eras["date_end"] > period)]
-        period_start = era["date_start"][0]
-        period_end = era["date_end"][0]
-    if tr_label == "Decade":
+    if time_resolution == "era":
+        if len(eras) == 0:
+            raise LError("Trying to group by era, but no eras provided.")
+        period_start = eras[eras["date_start"] < period].iloc[-1]['date_start']
+        period_end = eras[eras["date_start"] > period].iloc[0]['date_start']
+    elif time_resolution == "decade":
         period_start = datetime(int(period.year / 10) * 10, 1, 1)
         period_end = datetime(int(((period.year / 10) + 1) * 10) - 1, 12, 31)
-    elif tr_label == "Year":
+    elif time_resolution == "year":
         period_start = datetime(int(period), 1, 1)
         period_end = datetime(int(period), 12, 31)
-    elif tr_label == "Quarter":
+    elif time_resolution == "quarter":
         try:
             year: int = int(period[0:4])
         except ValueError:
@@ -316,18 +315,18 @@ def period_to_date_range(
         start_month: int = (Q * 3) - 2
         period_start = datetime(year, start_month, 1)
         period_end = _month_end(period_start + timedelta(days=63))
-    elif tr_label == "Month":
-        period_start = datetime.strptime(period + "-01", "%Y-%b-%d")
+    elif time_resolution == "month":
+        period_start = datetime.strptime(period, "%Y-%m")
         period_end = _month_end(period_start)
-    elif tr_label == "Week":
-        period_start = datetime.strptime(period + "-0.23", "%Y-%b-%d")
+    elif time_resolution == "week":
+        period_start = datetime.strptime(period, "%Y-W%V")
         period_end = period_start + timedelta(days=7)
-    elif tr_label == "Day":
-        period_start = datetime.strptime(period + "-0.033", "%Y-%b-%d")
+    elif time_resolution == "day":
+        period_start = datetime.strptime(period, "%Y-%m-%d")
         period_end = period_start
     else:
         raise LError(
-            "Internal error: {tr_label} is invalid"
+            "Internal error: {time_resolution} is invalid"
         )
     return (np.datetime64(period_start), np.datetime64(period_end))
 
@@ -397,19 +396,14 @@ def periodic_bar(
             hovertemplate="%{x}<br>%{y:$,.0f}<br>",  # TODO: pass in unit for $
             marker_color=marker_color,
         )
-    elif time_resolution == "era" and len(eras) > 0:
-        latest_tba = tba.index.max()
+    elif time_resolution == "era":
+        if len(eras) == 0:
+            raise LError("era was selected but no eras are available.")
         # convert the era dates to a series that can be used for grouping
         bins = eras.date_start.sort_values()
         bin_boundary_dates = bins.tolist()
         bin_labels = bins.index.tolist()
-        # there must be one more bin boundary than label, so:
-        if bin_boundary_dates[-1] <= latest_tba:
-            # if there's going to be any data in the last bin, add a final boundary
-            bin_boundary_dates = bin_boundary_dates + [latest_tba]
-        else:
-            # otherwise, lose its label, leaving its start as the final boundary of the previous
-            bin_labels = bin_labels[0:-1]
+        bin_labels = bin_labels[0:-1]
         try:
             tba["bin"] = pd.cut(
                 x=tba.index,
@@ -420,7 +414,7 @@ def periodic_bar(
         except ValueError as E:
             app.logger.warning(
                 "An error making the bins for eras.  Probably because of design errors"
-                + f" in how eras are parsed and loaded: {E}"
+                + f" in how eras are parsed and loaded: {E}.  Bins are {bins}"
             )
             return None
         bin_amounts = pd.DataFrame(
@@ -431,7 +425,6 @@ def periodic_bar(
         )
         bin_amounts["date_start"] = bin_boundary_dates[0:-1]
         bin_amounts["date_end"] = bin_boundary_dates[1:]
-        # Plotly bars want the midpoint and width:  # TODO this may be fixed in new dash
         bin_amounts["delta"] = bin_amounts["date_end"] - bin_amounts["date_start"]
         bin_amounts["width"] = bin_amounts["delta"] / np.timedelta64(1, "ms")
         bin_amounts["midpoint"] = bin_amounts["date_start"] + bin_amounts["delta"] / 2
@@ -462,7 +455,7 @@ def periodic_bar(
             marker_color=marker_color,
         )
     else:
-        raise LError(f"Invalid keyword for tr_label: {time_resolution}, or eras is specified but empty.")
+        raise LError(f"Invalid keyword for time_resolution: {time_resolution}, or eras is specified but empty.")
     return trace
 
 

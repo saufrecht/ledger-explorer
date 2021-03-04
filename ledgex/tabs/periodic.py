@@ -37,11 +37,13 @@ layout = html.Div(
                         dcc.Dropdown(
                             id="pe_time_series_span",
                             options=CONST["time_span_options"],
+                            searchable=False,
                         ),
                         html.Span(id="pe_unit_text", children=" per "),
                         dcc.Dropdown(
                             id="pe_time_series_resolution",
                             options=CONST["time_res_options"],
+                            searchable=False,
                         ),
                     ],
                 ),
@@ -209,7 +211,6 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
     account_tree = data_store.account_tree
     unit = params.unit
 
-    tr_label = CONST["time_res_lookup"].get(time_resolution)["label"]
     ts_label = CONST["time_span_lookup"].get(time_span)["label"]
     min_period_start: np.datetime64 = None
     max_period_end: np.datetime64 = None
@@ -230,8 +231,9 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
             selected_accounts.append(account)
             for point in points:
                 point_x = trace["x"][point]
+                app.logger.debug(f'point_x is {point_x}')
                 period_start, period_end = period_to_date_range(
-                    tr_label, ts_label, point_x, eras
+                    time_resolution, point_x, eras
                 )
                 if min_period_start is None:
                     min_period_start = period_start

@@ -15,28 +15,35 @@ from ledgex.errors import LoadError
 
 def load_eras(data, earliest_date, latest_date):
     """
-    If era data file is available, use it to construct
-    arbitrary bins
+    If era data file is available, use it to construct bins.
+    if necessary, expand to cover all transactions
     """
+    if len(data) == 0:
+        return
     try:
         data = data.replace(r"^\s*$", np.nan, regex=True)
         data["date_start"] = data["date_start"].astype({"date_start": "datetime64"})
-        data["date_end"] = data["date_end"].astype({"date_end": "datetime64"})
-        # TODO: filter out out-of-order rows
     except Exception as E:
         app.logger.warning(f"Error parsing eras file: {E}")
         return pd.DataFrame()
 
+    # If there is data before the earliest bin, add an extra bin to cover it.
+    data = data.dropna(subset=["name", "date_start"])
     data = data.sort_values(by=["date_start"], ascending=True)
-    data = data.reset_index(drop=True).set_index("name")
 
-    # if the first start or last end is missing, substitute earliest/lastest possible date
-    # TODO: this is broken because sorting is not reliable, because data containing NaN is not sorted
-    # to the right place for this logic to work
-    if pd.isnull(data.iloc[0].date_start):
-        data.iloc[-1].date_start = earliest_date
-    if pd.isnull(data.iloc[-1].date_end):
-        data.iloc[0].date_end = latest_date
+    if data.iloc[0].date_start > earliest_date:
+        data = data.append(
+            dict(name="Before", date_start=earliest_date), ignore_index=True
+        )
+        data = data.sort_values(by=["date_start"], ascending=True)
+
+    # If there is data after the last bin's start, add another row to provide a final date.
+    if data.iloc[-1].date_start < latest_date:
+        data = data.append(
+            dict(name="After", date_start=latest_date), ignore_index=True
+        )
+        data = data.sort_values(by=["date_start"], ascending=True)
+    data.set_index(["name"])
     return data
 
 
@@ -86,8 +93,8 @@ def rename_columns(data: pd.DataFrame, parameters: Params) -> pd.DataFrame:
 def load_input_file(input_file=None, url=None, filename=None) -> Iterable:
     """ Load a tabular data file (CSV, maybe XLS) from URL or file upload."""
     data: pd.DataFrame() = pd.DataFrame()
-    result_meta: str = ''
-    new_filename: str = ''
+    result_meta: str = ""
+    new_filename: str = ""
     # TODO: trim whitespace from column titles
     if input_file:
         try:
@@ -231,7 +238,9 @@ def convert_raw_data(
     for account in [ra for ra in CONST["root_accounts"] if ra["flip_negative"] is True]:
         if atree.get_node(account["id"]):
             trans["amount"] = np.where(
-                trans[CONST["account_col"]].isin(atree.get_descendent_ids(account["id"])),
+                trans[CONST["account_col"]].isin(
+                    atree.get_descendent_ids(account["id"])
+                ),
                 trans["amount"] * -1,
                 trans["amount"],
             )
