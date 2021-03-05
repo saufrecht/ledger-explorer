@@ -11,13 +11,12 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.utils import (
-    dot_fig_layout,
-    drill_layout,
+    layouts,
+    traces,
     preventupdate_if_empty,
 )
 
 from ledgex.datastore import Datastore
-
 
 layout: html = html.Div(
     className="layout_box",
@@ -30,9 +29,11 @@ layout: html = html.Div(
 
 @app.callback(
     [Output("ex_wrapper", "children")],
-    [Input("ex_dummy", "children"),
-     Input({"type": "ex_chart", "index": ALL}, "selectedData"),
-     Input({"type": "ex_chart", "index": ALL}, "figure")],
+    [
+        Input("ex_dummy", "children"),
+        Input({"type": "ex_chart", "index": ALL}, "selectedData"),
+        Input({"type": "ex_chart", "index": ALL}, "figure"),
+    ],
     state=[
         State("data_store", "children"),
         State("param_store", "children"),
@@ -52,11 +53,15 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     else:
         for i, indexed_fig in enumerate(figure):
             try:
-                account = figure[i]['data'][0]['customdata'][selectedData[i]['points'][0]['pointNumber']]
+                account = figure[i]["data"][0]["customdata"][
+                    selectedData[i]["points"][0]["pointNumber"]
+                ]
                 if account and len(account) > 0:
                     break
-            except Exception as E:
-                app.logger.debug(f'Error parsing pattern-matching callback: {E}')
+            except TypeError:
+                # happens when clicking on the second or later chart, because
+                # the corresponding selectedData will be empty
+                pass
     if not account:
         raise PreventUpdate
     lineage = tree.get_lineage_ids(account) + [account]
@@ -66,26 +71,31 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     tree = tree.append_sums_from_trans(trans)
     tree.roll_up_subtotals()
     palette = cb.Set3
-    bg_color = 'rgba(100, 100, 100, 0.1)'
     selection_color = None
+    color_data = pd.DataFrame(columns=["account", "color"])
     for i, node in enumerate(lineage):
         palette_mod = 12 - i  # compensate for shrinking palette
-        drill_data = pd.DataFrame(columns=["account", "child_id", "child_tag", "color", "amount"])
+        drill_data = pd.DataFrame(
+            columns=["account", "child_id", "child_tag", "color", "amount"]
+        )
         children = tree.children(node)
         level_selection = []
         if len(children) > 0:
             try:
-                level_selection = [x.identifier for x in children if x.identifier == lineage[i + 1]]
+                level_selection = [
+                    x.identifier for x in children if x.identifier == lineage[i + 1]
+                ]
             except IndexError:
                 pass
             for j, point in enumerate(children):
                 point_id = point.identifier
                 color = palette[j % palette_mod]
+                color_data = color_data.append(dict(account=point_id, color=color), ignore_index=True)
                 if len(level_selection) > 0:  # If there is a selection …
                     if point_id == level_selection[0]:
                         selection_color = color
                     else:
-                        color = 'rgba(100, 100, 100, .5)'
+                        color = "rgba(100, 100, 100, .5)"
                 drill_data = drill_data.append(
                     dict(
                         account=node,
@@ -106,32 +116,45 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
                 textposition="inside",
                 text=drill_data["child_tag"],
                 texttemplate="%{text}<br>" + unit + "%{value:,.0f}",
-                hovertemplate="%{text}<br>amount:" + unit + "%{value:.0f}<extra></extra>",
+                hovertemplate="%{text}<br>" + unit + "%{value:,.0f}<extra></extra>",
                 customdata=drill_data["child_id"],
                 orientation="h",
             )
             fig: go.Figure = go.Figure(data=node_bar)
-            fig.update_layout(drill_layout)
-            fig.update_layout(plot_bgcolor=bg_color)
+            fig.update_layout(layouts["drill"])
+            fig.update_traces(traces["drill"])
             if selection_color and len(selection_color) > 0:
                 # Once a color is used for a background, remove it from the palette
                 palette = list(set(cb.Set3) - set([selection_color]))
                 # and set it as the background for the next graph
-                bg_color = selection_color
                 if i > 0:
                     fig.update_layout(title_text=node, title_x=0, title_y=0.98)
-            charts = charts + [dcc.Graph(figure=fig, id={"type": "ex_chart", "index": i})]
+            charts = charts + [
+                dcc.Graph(figure=fig, id={"type": "ex_chart", "index": i})
+            ]
         except Exception as E:
             charts = charts + [html.Div(f"Error making {node}: {E}")]
 
     if len(lineage) > 1:
         selected_accounts = tree.get_descendent_ids(lineage[-1]) + [lineage[i]]
         selected_trans = trans[trans["account"].isin(selected_accounts)]
+        color_data = color_data.set_index("account")
+        selected_trans["color"] = selected_trans.account.map(color_data.color)
+        selected_trans["color"] = selected_trans["color"].fillna("darkslategray")
     else:
         selected_trans = trans
-    dot_fig = px.scatter(selected_trans, x="date", y="amount", labels="account")
-    dot_fig.update_layout(dot_fig_layout)
-    if selection_color:
-        dot_fig.update_traces(marker_color=selection_color)
+        selected_trans["color"] = "darkslategray"
+    hover_d = dict(date=True, amount=":,.3f", description=True)
+    dot_fig = px.scatter(
+        selected_trans,
+        x="date",
+        y="amount",
+        hover_name="account",
+        hover_data=hover_d,
+        color="color",
+        color_discrete_map="identity",
+    )
+    dot_fig.update_layout(layouts["dot_fig"])
+    dot_fig.update_traces(traces["dot_fig"])
     charts = charts + [dcc.Graph(figure=dot_fig, id="ex_dot_chart")]
     return [charts]

@@ -14,7 +14,7 @@ from ledgex.params import CONST, Params
 from ledgex.ledger import Ledger
 from ledgex.errors import LError
 from ledgex.utils import (
-    chart_fig_layout,
+    layouts,
     pe_trans_table,
     periodic_bar,
     period_to_date_range,
@@ -39,7 +39,7 @@ layout = html.Div(
                             options=CONST["time_span_options"],
                             searchable=False,
                         ),
-                        html.Span(id="pe_unit_text", children=" per "),
+                        html.Span(id="pe_intra_text", children=" by "),
                         dcc.Dropdown(
                             id="pe_time_series_resolution",
                             options=CONST["time_res_options"],
@@ -54,15 +54,11 @@ layout = html.Div(
             className="account_burst_box",
             children=[
                 html.H3(id="pe_burst_title", children=""),
-                dcc.Graph(id="pe_account_burst"),
                 html.Div(
                     id="pe_burst_text",
                     children="Click a pie slice to filter records",
                 ),
-                html.Div(
-                    id="pe_burst_text2",
-                    children="text 2",
-                ),
+                dcc.Graph(id="pe_account_burst"),
             ],
         ),
         html.Div(
@@ -81,7 +77,6 @@ layout = html.Div(
         Output("pe_time_series_resolution", "value"),
         Output("pe_time_series_resolution", "options"),
         Output("pe_time_series_span", "value"),
-        Output("pe_unit_text", "value"),
     ],
     [Input("pe_tab_trigger", "children")],
     state=[State("data_store", "children"), State("param_store", "children")],
@@ -91,13 +86,12 @@ def pe_load_params(trigger: str, data_store: str, param_store: str):
     preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
     options = CONST["time_res_options"]
-    unit_text = f" {params.unit} per "
     if data_store:
         data: Datastore() = Datastore.from_json(data_store)
         eras = data.eras
         if len(eras) > 0:
             options = [CONST["time_res_era_option"]] + options
-    return [params.init_time_res, options, params.init_time_span, unit_text]
+    return [params.init_time_res, options, params.init_time_span]
 
 
 @app.callback(
@@ -123,7 +117,7 @@ def pe_make_master_time_series(
     eras: pd.DataFrame = data_store.eras
     account_tree: ATree = data_store.account_tree
     unit = params.unit
-    chart_fig: go.Figure = go.Figure(layout=chart_fig_layout)
+    chart_fig: go.Figure = go.Figure(layout=layouts["periodic"])
     # get everything, but note that it's already been pre-filtered by pe_roots
     root_account_id: str = account_tree.root
     selected_accounts = account_tree.get_children_ids(root_account_id)
@@ -134,6 +128,7 @@ def pe_make_master_time_series(
             account_tree,
             account,
             time_resolution,
+            time_span,
             factor,
             eras,
             i,
@@ -142,11 +137,6 @@ def pe_make_master_time_series(
         )
         if bar:
             chart_fig.add_trace(bar)
-    chart_fig.update_layout(
-        xaxis={"showgrid": True, "nticks": 20},
-        yaxis={"showgrid": True},
-        barmode="relative",
-    )
     return [chart_fig]
 
 
@@ -231,7 +221,6 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
             selected_accounts.append(account)
             for point in points:
                 point_x = trace["x"][point]
-                app.logger.debug(f'point_x is {point_x}')
                 period_start, period_end = period_to_date_range(
                     time_resolution, point_x, eras
                 )
@@ -263,8 +252,6 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         description = Burst.pretty_account_label(
             selected_accounts,
             desc_account_count,
-            min_period_start,
-            max_period_end,
             selected_count,
         )
     else:
@@ -278,7 +265,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         min_period_start = trans["date"].min()
         max_period_end = trans["date"].max()
 
-    title = f"Average {ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}"
+    title = f"{ts_label} {unit} from {pretty_date(min_period_start)} to {pretty_date(max_period_end)}"
     pe_selection_store = {
         "start": min_period_start,
         "end": max_period_end,
@@ -286,10 +273,15 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
         "accounts": selected_accounts,
     }
 
-    duration = round(pd.to_timedelta((max_period_end - min_period_start), unit="ms") / np.timedelta64(1, "M"))
+    duration = round(
+        pd.to_timedelta((max_period_end - min_period_start), unit="ms")
+        / np.timedelta64(1, "M")
+    )
     factor = Ledger.prorate_factor(time_span, duration=duration)
     try:
-        sun_fig = Burst.from_trans(account_tree, selected_trans, time_span, factor, colormap)
+        sun_fig = Burst.from_trans(
+            account_tree, selected_trans, time_span, unit, factor, colormap, title
+        )
     except LError as E:
         app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
         raise PreventUpdate
@@ -300,7 +292,6 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
 @app.callback(
     [
         Output("pe_trans_table", "data"),
-        Output("pe_burst_text2", "children"),
         Output("pe_trans_table_text", "children"),
     ],
     [
@@ -383,4 +374,4 @@ def apply_burst_click(
     sel_trans["date"] = pd.DatetimeIndex(sel_trans["date"]).strftime("%Y-%m-%d")
     sel_trans = sel_trans.sort_values(["date"])
 
-    return [sel_trans.to_dict("records"), account_text, account_text]
+    return [sel_trans.to_dict("records"), account_text]

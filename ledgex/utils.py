@@ -24,48 +24,70 @@ disc_colors = px.colors.qualitative.D3
 fonts = dict(
     big=dict(family="IBM Plex Sans Medium", size=32),
     medium=dict(family="IBM Plex Sans Light", size=26),
-    small=dict(family="IBM Plex Light", size=18),
-)
-chart_fig_layout = dict(
-    clickmode="event+select",
-    dragmode="select",
-    margin=dict(l=10, r=10, t=10, b=10),  # NOQA
-    height=350,
-    showlegend=False,
-    title=dict(font=fonts["big"], x=0.1, y=0.9),
-    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
-    legend={"x": 0, "y": 1},
-    font=fonts["big"],
-    titlefont=fonts["small"],
-    paper_bgcolor="rgba(0, 0, 0, 0)",
+    small=dict(family="IBM Plex Sans Light", size=18),
 )
 
-dot_fig_layout = dict(
+shared_layout = dict(
     clickmode="event+select",
     dragmode="select",
     margin=dict(l=10, r=10, t=10, b=10),  # NOQA
     height=350,
-    showlegend=False,
     title=dict(font=fonts["big"], x=0.1, y=0.9),
-    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
+    hoverlabel=dict(bgcolor="lightgray", font_color="black"),
     font=fonts["small"],
     paper_bgcolor="rgba(0, 0, 0, 0)",
+    plot_bgcolor="rgba(0, 0, 0, 0)",
+    showlegend=False,
+    xaxis=dict(showgrid=False, zeroline=False, visible=False),
+    yaxis=dict(showgrid=False, zeroline=False, visible=False),
 )
 
-drill_layout = dict(
-    clickmode="event+select",
-    dragmode="select",
-    margin=dict(l=10, r=10, t=10, b=10),
-    height=350,
-    showlegend=False,
-    hoverlabel=dict(bgcolor="var(--bg)", font_color="var(--fg)"),
-    font=fonts["big"],
-    title=dict(font=fonts["big"]),
+shared_traces = dict()
+
+periodic_extras = dict(
+    xaxis=dict(showgrid=False, nticks=20, zeroline=True, visible=True),
+    barmode="relative",
+    hoverlabel_font=fonts["big"],
+)
+
+periodic_trace_extras = dict()
+
+dot_fig_extras = dict(
+    title=dict(font=fonts["big"], x=0.1, y=0.9),
+    yaxis=dict(showgrid=True, zeroline=True, visible=True),
+    xaxis=dict(showgrid=True, zeroline=True, visible=True),
+)
+
+dot_fig_trace_extras = dict(
+    text=None,
+    hoverlabel=dict(font=fonts["medium"]),
+    marker_size=12,
+    line=dict(width=1, color="gray"),
+)
+
+drill_extras = dict(
     xaxis_tickfont=fonts["small"],
-    xaxis={'categoryorder': 'total descending'},
+    xaxis_categoryorder="total descending",
     yaxis_visible=False,
-    paper_bgcolor="rgba(0, 0, 0, 0)",
-    plot_bgcolor="rgba(100, 100, 100, 0.1)",
+)
+
+drill_trace_extras = dict(
+    textfont=fonts["medium"],
+    hoverlabel_font=fonts["big"],
+)
+
+layouts = dict(
+    base=shared_layout,
+    periodic={**shared_layout, **periodic_extras},
+    dot_fig={**shared_layout, **dot_fig_extras},
+    drill={**shared_layout, **drill_extras},
+)
+
+traces = dict(
+    base=shared_traces,
+    periodic={**shared_traces, **periodic_trace_extras},
+    dot_fig={**shared_traces, **dot_fig_trace_extras},
+    drill={**shared_traces, **drill_trace_extras},
 )
 
 trans_table = dash_table.DataTable(
@@ -280,6 +302,14 @@ trans_table_format = dict(
 )
 
 
+def to_decade(year_string: str) -> int:
+    """Convert a four-digit string representing a year
+    to an int representing the first year
+    of the containing decade, where decade = MCDY and Y
+    goes from 0 to 9"""
+    return int(year_string[0:3]) * 10
+
+
 def period_to_date_range(
     time_resolution: str, period: str, eras: pd.DataFrame = None
 ) -> Tuple[np.datetime64, np.datetime64]:
@@ -292,14 +322,19 @@ def period_to_date_range(
         last_day = calendar.monthrange(year, month)[1]
         end_date = np.datetime64(datetime(year=year, month=month, day=last_day))
         return end_date
+
     if time_resolution == "era":
         if len(eras) == 0:
             raise LError("Trying to group by era, but no eras provided.")
-        period_start = eras[eras["date_start"] < period].iloc[-1]['date_start']
-        period_end = eras[eras["date_start"] > period].iloc[0]['date_start']
+        period_start = eras[eras["date_start"] < period].iloc[-1]["date_start"]
+        period_end = eras[eras["date_start"] > period].iloc[0]["date_start"]
     elif time_resolution == "decade":
-        period_start = datetime(int(period.year / 10) * 10, 1, 1)
-        period_end = datetime(int(((period.year / 10) + 1) * 10) - 1, 12, 31)
+        try:
+            decade_start_year = to_decade(period)
+            period_start = datetime(decade_start_year, 1, 1)
+            period_end = datetime(decade_start_year + 10, 1, 1)
+        except Exception as E:
+            raise LError(f"problem calculating decade: {E}")
     elif time_resolution == "year":
         period_start = datetime(int(period), 1, 1)
         period_end = datetime(int(period), 12, 31)
@@ -325,9 +360,7 @@ def period_to_date_range(
         period_start = datetime.strptime(period, "%Y-%m-%d")
         period_end = period_start
     else:
-        raise LError(
-            "Internal error: {time_resolution} is invalid"
-        )
+        raise LError("Internal error: {time_resolution} is invalid")
     return (np.datetime64(period_start), np.datetime64(period_end))
 
 
@@ -354,6 +387,7 @@ def periodic_bar(
     account_tree: ATree,
     account_id: str,
     time_resolution: str,
+    time_span: str,
     factor: float,
     eras: pd.DataFrame,
     color_num: int = 0,
@@ -373,6 +407,7 @@ def periodic_bar(
     tba = tba.set_index("date")
     tr: dict = CONST["time_res_lookup"][time_resolution]
     tr_format: str = tr.get("format", None)  # e.g., %Y-%m
+    abbrev = CONST["time_span_lookup"][time_span]["abbrev"]
     try:
         marker_color = disc_colors[color_num]
     except IndexError:
@@ -380,20 +415,35 @@ def periodic_bar(
         marker_color = "var(--Cyan)"
 
     if time_resolution in ["decade", "year", "quarter", "month", "week", "day"]:
-        bin_amounts = (
-            tba.resample(tr["resample_keyword"]).sum()["amount"].to_frame(name="value")
-        )
-        bin_amounts["x"] = bin_amounts.index.to_period().strftime(tr_format)
+        if time_resolution == "decade":
+            tba["year"] = tba.index.year
+            tba["dec"] = tba["year"].floordiv(10).mul(10).astype("str")
+            bin_amounts = tba.groupby("dec").sum()["amount"].to_frame(name="value")
+            bin_amounts["x"] = bin_amounts.index
+        else:
+            bin_amounts = (
+                tba.resample(tr["resample_keyword"])
+                .sum()["amount"]
+                .to_frame(name="value")
+            )
+            bin_amounts["x"] = bin_amounts.index.to_period().strftime(tr_format)
+
         bin_amounts["y"] = bin_amounts["value"] * factor
-        bin_amounts["text"] = tr["abbrev"]
+        bin_amounts["unit"] = unit
+        bin_amounts["abbrev"] = abbrev
+        bin_amounts[
+            "label_pre"
+        ] = f"{account_id}<br>{unit}"  # this works because these are variables, not column names
         trace = go.Bar(
             name=account_id,
             x=bin_amounts.x,
             y=bin_amounts.y,
-            text=account_id,
+            text=bin_amounts.label_pre,
             textposition="auto",
             opacity=0.9,
-            hovertemplate="%{x}<br>%{y:$,.0f}<br>",  # TODO: pass in unit for $
+            customdata=bin_amounts.abbrev,
+            texttemplate="%{text}%{y:,.0f}%{customdata}",
+            hovertemplate="%{x}<br>%{text}%{y:,.0f}%{customdata}<extra></extra>",
             marker_color=marker_color,
         )
     elif time_resolution == "era":
@@ -429,18 +479,25 @@ def periodic_bar(
         bin_amounts["width"] = bin_amounts["delta"] / np.timedelta64(1, "ms")
         bin_amounts["midpoint"] = bin_amounts["date_start"] + bin_amounts["delta"] / 2
         bin_amounts["months"] = bin_amounts["delta"] / np.timedelta64(1, "M")
+        bin_amounts["title"] = bin_amounts.index.astype(str)
         bin_amounts["value"] = bin_amounts["value"] * factor / bin_amounts["months"]
-        bin_amounts["text"] = account_id
+        bin_amounts["pretty_value"] = bin_amounts["value"].apply("{:,.0f}".format)
+        bin_amounts["suffix"] = str(unit) + str(abbrev)
+        bin_amounts["account_id"] = account_id
         bin_amounts["customdata"] = (
-            bin_amounts["text"]
+            "From " + bin_amounts["date_start"].astype(str) + " to " + bin_amounts["date_end"].astype(str)
+        )
+
+        bin_amounts["text"] = (
+            bin_amounts["account_id"]
+            + "<br>"
+            + bin_amounts["pretty_value"]
+            + " "
+            + bin_amounts["suffix"]
             + "<br>"
             + bin_amounts.index.astype(str)
-            + "<br>("
-            + bin_amounts["date_start"].astype(str)
-            + " to "
-            + bin_amounts["date_end"].astype(str)
-            + ")"
         )
+
         trace = go.Bar(
             name=account_id,
             x=bin_amounts.midpoint,
@@ -450,12 +507,14 @@ def periodic_bar(
             text=bin_amounts.text,
             textposition="auto",
             opacity=0.9,
-            texttemplate="%{text}<br>%{value:$,.0f}",  # TODO: pass in unit for $
-            hovertemplate="%{customdata}<br>%{value:$,.0f}",  # TODO: pass in unit for $
+            texttemplate="%{text}",
+            hovertemplate="%{customdata}<extra></extra>",
             marker_color=marker_color,
         )
     else:
-        raise LError(f"Invalid keyword for time_resolution: {time_resolution}, or eras is specified but empty.")
+        raise LError(
+            f"Invalid keyword for time_resolution: {time_resolution}, or eras is specified but empty."
+        )
     return trace
 
 

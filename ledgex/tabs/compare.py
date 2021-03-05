@@ -9,7 +9,7 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import chart_fig_layout, make_cum_area, preventupdate_if_empty
+from ledgex.utils import make_cum_area, preventupdate_if_empty
 from ledgex.datastore import Datastore
 
 layout: html = html.Div(

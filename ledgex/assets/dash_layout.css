@@ -474,10 +474,15 @@ button {
 }
 
 #pe_time_series_span {
-  width: 15rem;
+  width: 11rem;
 }
 
-#pe_unit_text {
+#pe_intra_text {
   padding-left: 1rem;
   padding-right: 1rem;
+ 
+}
+
+#pe_time_series_resolution {
+  width: 7rem;
 }

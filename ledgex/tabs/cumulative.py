@@ -7,7 +7,7 @@ from dash.exceptions import PreventUpdate
 from ledgex.app import app
 from ledgex.atree import ATree
 from ledgex.params import CONST, Params
-from ledgex.utils import chart_fig_layout, make_cum_area, preventupdate_if_empty
+from ledgex.utils import layouts, make_cum_area, preventupdate_if_empty
 from ledgex.datastore import Datastore
 
 layout: html = html.Div(
@@ -71,7 +71,7 @@ def cu_make_time_serieses(time_resolution, data_store, param_store):
         app.logger.warning(f"Account list should be a list but isn't: {account_list}")
         raise PreventUpdate
     for account in account_list:
-        fig: go.Figure = go.Figure(layout=chart_fig_layout)
+        fig: go.Figure = go.Figure(layout=layouts['base'])
         fig.update_layout(
             title={"text": f"{data_title} {account}: Cumulative {unit}"},
             xaxis={"showgrid": True, "nticks": 20},
