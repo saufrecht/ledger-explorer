@@ -1,7 +1,7 @@
 import pandas as pd
 
-from errors import LError
-from params import CONST
+from ledgex.errors import LError
+from ledgex.params import CONST
 
 
 class Ledger(pd.DataFrame):
