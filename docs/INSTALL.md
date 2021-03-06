@@ -153,7 +153,7 @@ Group=www-data
 
 WorkingDirectory=/home/ledge/ledger-explorer
 Environment="PATH=/home/ledge/.venv_le/bin/"
-ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock ledgex.index:server
+ExecStart=/home/ledge/.venv_le/bin/gunicorn --workers 3 --bind unix:ledge.sock index:server  --pythonpath ledgex
 
 [Install]
 WantedBy=multi-user.target

@@ -43,11 +43,12 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     """Take the selected account from the main explorer chart
     and show it in a series of drill-down charts
     """
+    preventupdate_if_empty(data_store)
     data_store: Datastore() = Datastore.from_json(data_store)
     tree: ATree = data_store.account_tree
     params: Params() = Params.from_json(param_store)
     unit: str = params.unit
-    preventupdate_if_empty(data_store)
+
     if not selectedData or len(selectedData) == 0:
         account = tree.root
     else:
