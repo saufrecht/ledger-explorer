@@ -61,13 +61,13 @@ dot_fig_extras = dict(
 dot_fig_trace_extras = dict(
     text=None,
     hoverlabel=dict(font=fonts["medium"]),
-    marker_size=12,
+    marker_size=14,
     line=dict(width=1, color="gray"),
 )
 
 drill_extras = dict(
     xaxis_tickfont=fonts["small"],
-    xaxis_categoryorder="total descending",
+    yaxis_categoryorder="total descending",
     yaxis_visible=False,
 )
 

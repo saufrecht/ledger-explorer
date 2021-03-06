@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import textwrap
 
 from plotly.colors import colorbrewer as cb
 import plotly.graph_objects as go
@@ -74,6 +75,8 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     palette = cb.Set3
     selection_color = None
     color_data = pd.DataFrame(columns=["account", "color"])
+
+    # iterate through the lineage and make a new stacked bar chart for each level.
     for i, node in enumerate(lineage):
         palette_mod = 12 - i  # compensate for shrinking palette
         drill_data = pd.DataFrame(
@@ -91,7 +94,9 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
             for j, point in enumerate(children):
                 point_id = point.identifier
                 color = palette[j % palette_mod]
-                color_data = color_data.append(dict(account=point_id, color=color), ignore_index=True)
+                color_data = color_data.append(
+                    dict(account=point_id, color=color), ignore_index=True
+                )
                 if len(level_selection) > 0:  # If there is a selection …
                     if point_id == level_selection[0]:
                         selection_color = color
@@ -110,6 +115,7 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
         else:
             continue
         try:
+            drill_data = drill_data.sort_values("amount")
             node_bar: go.Bar = go.Bar(
                 y=drill_data["account"],
                 x=drill_data["amount"],
@@ -125,9 +131,8 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
             fig.update_layout(layouts["drill"])
             fig.update_traces(traces["drill"])
             if selection_color and len(selection_color) > 0:
-                # Once a color is used for a background, remove it from the palette
+                # Don't reuse selected colors in later bars.
                 palette = list(set(cb.Set3) - set([selection_color]))
-                # and set it as the background for the next graph
                 if i > 0:
                     fig.update_layout(title_text=node, title_x=0, title_y=0.98)
             charts = charts + [
@@ -138,24 +143,41 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
 
     if len(lineage) > 1:
         selected_accounts = tree.get_descendent_ids(lineage[-1]) + [lineage[i]]
-        selected_trans = trans[trans["account"].isin(selected_accounts)]
+        sel_trans = trans[trans["account"].isin(selected_accounts)]
         color_data = color_data.set_index("account")
-        selected_trans["color"] = selected_trans.account.map(color_data.color)
-        selected_trans["color"] = selected_trans["color"].fillna("darkslategray")
+        sel_trans["color"] = sel_trans.account.map(color_data.color)
+        sel_trans["color"] = sel_trans["color"].fillna("darkslategray")
     else:
-        selected_trans = trans
-        selected_trans["color"] = "darkslategray"
-    hover_d = dict(date=True, amount=":,.3f", description=True)
+        sel_trans = trans
+        sel_trans["color"] = "darkslategray"
+    wrapper = textwrap.TextWrapper(width=40)
+
+    def brfill(text, TW):
+        return "<br>".join(TW.wrap(text))
+
+    sel_trans["wrap"] = sel_trans["description"].apply(brfill, TW=wrapper)
+    sel_trans["pretty_value"] = sel_trans["amount"].apply("{:,.0f}".format)
+
+    sel_trans["customdata"] = (
+        sel_trans["account"]
+        + "<br>"
+        + sel_trans["date"].astype(str)
+        + "<br>"
+        + sel_trans["pretty_value"]
+        + "<br>"
+        + sel_trans["wrap"]
+    )
     dot_fig = px.scatter(
-        selected_trans,
+        sel_trans,
         x="date",
         y="amount",
-        hover_name="account",
-        hover_data=hover_d,
         color="color",
         color_discrete_map="identity",
     )
     dot_fig.update_layout(layouts["dot_fig"])
     dot_fig.update_traces(traces["dot_fig"])
+    dot_fig.update_traces(
+        customdata=sel_trans["customdata"], hovertemplate="%{customdata}<extra></extra>"
+    )
     charts = charts + [dcc.Graph(figure=dot_fig, id="ex_dot_chart")]
     return [charts]
