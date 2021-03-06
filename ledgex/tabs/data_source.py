@@ -6,11 +6,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from ledgex.app import app
-from ledgex.loading import load_input_file
-from ledgex.params import CONST, Params
-from ledgex.datastore import Datastore
-from ledgex.utils import preventupdate_if_empty, pretty_date
+from app import app
+from loading import load_input_file
+from params import CONST, Params
+from datastore import Datastore
+from utils import preventupdate_if_empty, pretty_date
 
 
 layout = (

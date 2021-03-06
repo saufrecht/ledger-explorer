@@ -1,10 +1,10 @@
 import pandas as pd
 import plotly.express as px
 
-from ledgex.atree import ATree
-from ledgex.utils import fonts
-from ledgex.ledger import Ledger
-from ledgex.params import CONST
+from atree import ATree
+from utils import fonts
+from ledger import Ledger
+from params import CONST
 
 from typing import Dict
 

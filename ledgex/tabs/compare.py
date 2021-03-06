@@ -6,11 +6,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from ledgex.app import app
-from ledgex.atree import ATree
-from ledgex.params import CONST, Params
-from ledgex.utils import make_cum_area, preventupdate_if_empty
-from ledgex.datastore import Datastore
+from app import app
+from atree import ATree
+from params import CONST, Params
+from utils import make_cum_area, preventupdate_if_empty
+from datastore import Datastore
 
 layout: html = html.Div(
     className="layout_box",

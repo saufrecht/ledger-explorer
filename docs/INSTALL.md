@@ -52,8 +52,8 @@ You will need to activate the virtual environment every time you open a new shel
 1. `python ledgex/index.py`
 1. Browse to http://localhost:8050.
 1. In the *Load File* » *Transaction File* » "Drag and Drop or Select Files" box, either
-  1. Drop transactions.csv into the box from another window,
-  1. Or, click 'Select Files' and select transactions.csv
+    1. Drop transactions.csv into the box from another window,
+    1. Or, click 'Select Files' and select transactions.csv
 1. If everything works, you should see something similar to the screenshot.
 
 ### Warnings
@@ -75,12 +75,12 @@ A production-ready setup, using Nginx and GUnicorn.
 ## Prepare a production server
 
 1. Create a new, non-root user for ledger explorer, let's call it **ledge**.
-   1. `sudo adduser ledge`
+    1. `sudo adduser ledge`
 2. Install nginx
-   1. `sudo apt install nginx`
+    1. `sudo apt install nginx`
 3. Set up HTTPS 
-   1. `sudo apt install certbot python3-certbot-nginx`
-   1. `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
+    1. `sudo apt install certbot python3-certbot-nginx`
+    1. `sudo certbot --nginx -d *your-domain.name* -d *www.your.domain.name*`
 
 ## get the code
 1. *Same as for development server (above).*
@@ -98,9 +98,9 @@ A production-ready setup, using Nginx and GUnicorn.
 
 ## Set Up Ledger Explorer to be run from Gunicorn
 1. Test by running `gunicorn -b 127.0.0.1:8081 index:server`
-   1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
+    1. Should be able to access the site locally-only.  (use a public IP address if necessary to verify this step works)
 2. Create a new systemd service file to control ledge:
-   1. `sudo emacs /etc/systemd/system/ledge.service`
+    1. `sudo emacs /etc/systemd/system/ledge.service`
 3. `sudo systemctl enable ledge.service`
 4. `sudo systemctl start ledge.service`
 5. Verify that the service is running correctly with `systemctl status ledge`

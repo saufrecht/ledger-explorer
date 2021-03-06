@@ -4,9 +4,9 @@ import pandas as pd
 from treelib import Tree
 from treelib import exceptions as tle
 
-from ledgex.app import app
-from ledgex.params import CONST
-from ledgex.ledger import Ledger
+from app import app
+from params import CONST
+from ledger import Ledger
 
 
 class ATree(Tree):

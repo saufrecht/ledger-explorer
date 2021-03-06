@@ -7,13 +7,13 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from ledgex.app import app
-from ledgex.atree import ATree
-from ledgex.burst import Burst
-from ledgex.params import CONST, Params
-from ledgex.ledger import Ledger
-from ledgex.errors import LError
-from ledgex.utils import (
+from app import app
+from atree import ATree
+from burst import Burst
+from params import CONST, Params
+from ledger import Ledger
+from errors import LError
+from utils import (
     layouts,
     pe_trans_table,
     periodic_bar,
@@ -21,7 +21,7 @@ from ledgex.utils import (
     pretty_date,
     preventupdate_if_empty,
 )
-from ledgex.datastore import Datastore
+from datastore import Datastore
 
 
 layout = html.Div(

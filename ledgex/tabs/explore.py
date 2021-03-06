@@ -6,17 +6,17 @@ from plotly.colors import colorbrewer as cb
 import plotly.graph_objects as go
 import plotly.express as px
 from dash.dependencies import Input, Output, State, ALL
-from ledgex.params import Params
+from params import Params
 from dash.exceptions import PreventUpdate
-from ledgex.app import app
-from ledgex.atree import ATree
-from ledgex.utils import (
+from app import app
+from atree import ATree
+from utils import (
     layouts,
     traces,
     preventupdate_if_empty,
 )
 
-from ledgex.datastore import Datastore
+from datastore import Datastore
 
 layout: html = html.Div(
     className="layout_box",
