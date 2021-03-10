@@ -179,5 +179,6 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     dot_fig.update_traces(
         customdata=sel_trans["customdata"], hovertemplate="%{customdata}<extra></extra>"
     )
+
     charts = charts + [dcc.Graph(figure=dot_fig, id="ex_dot_chart")]
     return [charts]

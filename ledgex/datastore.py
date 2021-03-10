@@ -12,7 +12,7 @@ from atree import ATree
 class Datastore:
     """ Class to hold all data to be presented """
 
-    trans: pd.DataFrame = pd.DataFrame
+    trans: pd.DataFrame = pd.DataFrame  # TODO: would it make any difference to make this an HDFStore?
     eras: pd.DataFrame = pd.DataFrame
     account_tree: ATree = ATree()
     trans_filename: str = ""

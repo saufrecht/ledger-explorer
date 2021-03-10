@@ -519,7 +519,9 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     upload it and provide visual feedback.
     Can't use time comparison to see which one is more recent (because dcc.Upload
     doesn't have an upload timestamp), so punt that for now; need to reload the page
-    to control whether url or file takes precedence."""
+    to control whether url or file takes precedence.
+    # TODO: what's happening here that isn't happening in the similar function in index.py?
+"""
 
     if (not filename or len(filename) == 0) and (not url or len(url) == 0):
         raise PreventUpdate

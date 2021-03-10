@@ -1,7 +1,7 @@
 import json
 import logging
 from urllib.parse import parse_qs, urlencode
-
+from timeit import default_timer as timer
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -205,7 +205,12 @@ def parse_url_search(search: str):
     api_input_j = json.dumps(inputs)
     trans_input = inputs.get("transu", None)
     if trans_input:
+
+        start = timer()
         filename, t_data, text = load_input_file(url=trans_input[0])
+        end = timer()
+        app.logger.debug(f"load_input_file  duration: {end - start}")
+
         if len(t_data) > 0:
             trans_j = t_data.to_json()
 
@@ -335,9 +340,13 @@ def load_and_transform(
                 e_source = api_eras_node
             if e_source:
                 eras_data = pd.read_json(e_source)
+            start = timer()
             trans, atree, eras = convert_raw_data(
                 trans_data, atree_data, eras_data, params
             )
+            end = timer()
+            app.logger.debug(f"convert_raw_data duration: {end - start}")
+
             data = json.dumps(
                 {
                     "trans": trans.to_json(),
