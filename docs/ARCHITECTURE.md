@@ -5,7 +5,7 @@ Everything starts with ```index.py``` (all paths start from ```ledger-explorer/l
 
 ### Start the webserver and Dash application
 
-```server = app.server`` points to app.py, which creates the Dash application that everything runs in.  If index.py is run as a python module (```python ledegx/index.py```), this will invoke a Flask app which will run as a webserver.  If run from gunicorn (or other python app server), it will … probably still run as Flask, I guess?, but then that will be wrapped by the application server.
+```server = app.server``` points to app.py, which creates the Dash application that everything runs in.  If index.py is run as a python module (```python ledegx/index.py```), this will invoke a Flask app which will run as a webserver.  If run from gunicorn (or other python app server), it will … probably still run as Flask, I guess?, but then that will be wrapped by the application server.
 
 ### Define the page and shared data
 
