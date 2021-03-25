@@ -36,9 +36,12 @@ class Datastore:
     def from_json(cls, json_data, filter: list = []):
         """Parse data stored in Dash JSON component, in order to move data
         between different callbacks in Dash.  Returns the transaction
-        list, account tree, and eras.  If provided with a filter,
-        pre-filters everything.  Also includes earliest and latest
-        trans (post-filter, if any) for convenience.
+        list, account tree, and eras.  A distinct account tree, if
+        present in the data, pre-filters the transaction list.  An
+        explicit filter, if provided, filters all descendent accounts.
+        Also includes earliest and latest trans (post-filter, if any)
+        for convenience.
+
         """
         if (not json_data) or (len(json_data) == 0):
             return None
@@ -55,17 +58,18 @@ class Datastore:
                 CONST["fan_col"]: "object",
             },
         )
-        orig_account_tree = ATree.from_names(trans[CONST["fan_col"]])
+        atree = ATree.from_json(data['atree'])
+        atree_accounts = [atree.root] + atree.get_descendent_ids()
+        trans = trans[trans[CONST["account_col"]].isin(atree_accounts)]
         filter_accounts: list = []
         for account in filter:
             filter_accounts = (
-                filter_accounts + [account] + orig_account_tree.get_descendent_ids(account)
+                filter_accounts + [account] + atree.get_descendent_ids(account)
             )
         if len(filter_accounts) > 0:
             trans = trans[trans[CONST["account_col"]].isin(filter_accounts)]
         # rebuild account tree from filtered trans
-        account_tree = ATree.from_names(trans[CONST["fan_col"]])
-        # TODO: should be much tougher parser
+        # TODO: eras should be much tougher parser
         try:
             eras = pd.read_json(
                 data["eras"],
@@ -90,7 +94,7 @@ class Datastore:
         return Datastore(
             trans=trans,
             eras=eras,
-            account_tree=account_tree,
+            account_tree=atree,
             trans_filename=trans_filename,
             eras_filename=eras_filename,
             account_filename=account_filename,

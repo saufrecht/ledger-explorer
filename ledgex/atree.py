@@ -10,12 +10,12 @@ from ledger import Ledger
 
 
 class ATree(Tree):
-    """ Subclass of treelib Tree for holding extra functions """
+    """ Subclass of treelib Tree for holding ledger-related functions """
 
     ROOT_TAG = "[Total]"
     ROOT_ID = "root"
 
-    def pp(self, node="root"):  # DEBUG
+    def pp(self, node="root"):  # DEBUG helper function
         w_node = self[node]
         try:
             leaf_total = w_node.data.get("leaf_total")
@@ -52,13 +52,36 @@ class ATree(Tree):
         return self._reader
 
     def to_json(self, with_data=False, sort=True, reverse=False):
-        """Override Tree.to_json with a version that doesn't error if tree is empty """
+        """Override Tree.to_json with a version that doesn't error if tree is empty.
+        This is used only for caching the imported atree, so don't worry about any
+        tree attributes other than id, tag, and edges."""
         if len(self) > 0:
             return json.dumps(
                 self.to_dict(with_data=with_data, sort=sort, reverse=reverse)
             )
         else:
             return ""
+
+    @classmethod
+    def from_json(cls, atree_j: str):
+        """Parent class doesn't have this.  As with to_json, this is used only
+        for caching the imported atree, so don't worry about any tree
+        attributes other than id, tag, and edges.
+        """
+        def dict_to_branch(atreedict, atree: ATree = cls(), parent: str = None):
+            new_tag = next(iter(atreedict.keys()))
+            if parent is None:
+                new_id = cls.ROOT_ID
+            else:
+                new_id = new_tag
+            atree.create_node(tag=new_tag, identifier=new_id, parent=parent)
+            for child in atreedict[new_tag]["children"]:
+                if isinstance(child, dict):
+                    atree = dict_to_branch(child, parent=new_id)
+                else:
+                    atree.create_node(tag=child, identifier=child, parent=new_id)
+            return atree
+        return dict_to_branch(json.loads(atree_j))
 
     def dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
@@ -100,7 +123,7 @@ class ATree(Tree):
         """
         clean_list = full_names.unique()
         tree = ATree()
-        tree.create_node(tag=tree.ROOT_TAG, identifier=tree.ROOT_ID)
+        tree.create_node(tag=tree.ROOT_TAG, identifier=cls.ROOT_ID)
         for account in clean_list:
             try:
                 if account and len(account) > 0:
@@ -108,7 +131,7 @@ class ATree(Tree):
                     for i, branch in enumerate(branches):
                         name = branch
                         if i == 0:
-                            parent = tree.ROOT_ID
+                            parent = cls.ROOT_ID
                         else:
                             parent = branches[i - 1]
                         if not tree.get_node(name):
@@ -143,7 +166,7 @@ class ATree(Tree):
             app.logger.warning(f"A specified root is missing from the account tree: {E}")
             return []
 
-    def get_descendent_ids(self, account_id: str) -> list:
+    def get_descendent_ids(self, account_id: str = ROOT_ID) -> list:
         """
         Return a list of ids of all descendent accounts of the input account.
         """
