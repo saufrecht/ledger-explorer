@@ -2,7 +2,6 @@ import base64
 import io
 import urllib
 from typing import Iterable
-from timeit import default_timer as timer
 
 import numpy as np
 import pandas as pd
@@ -130,8 +129,6 @@ def load_transactions(data: pd.DataFrame):
 
     # try to parse date.  TODO: Maybe move this to a function so it can be re-used in era parsing
 
-    start = timer()
-
     try:
         data["date"] = data["date"].astype({"date": "datetime64"})
     except ValueError:
@@ -139,10 +136,7 @@ def load_transactions(data: pd.DataFrame):
         data["date"] = pd.to_datetime(data["date"], format="%Y").astype(
             {"date": "datetime64[ms]"}
         )
-    end = timer()
-    app.logger.debug(f"  data parsing   duration: {end - start}")
 
-    start = timer()
     data["amount"] = data["amount"].replace(to_replace=",", value="")
     data["amount"] = data["amount"].fillna(value=0)
     data["amount"] = (
@@ -152,9 +146,6 @@ def load_transactions(data: pd.DataFrame):
         .astype(int, errors="ignore")
     )
 
-    end = timer()
-    app.logger.debug(f"  generic fills  duration: {end - start}")
-    start1 = timer()
     #######################################################################
     # Gnucash-specific filter:
     # Gnucash doesn't include the date, description, or notes for transaction splits.  Fill them in.
@@ -170,30 +161,18 @@ def load_transactions(data: pd.DataFrame):
             data["memo"].fillna(method="ffill", limit=1).fillna("").astype(str)
         )
 
-        start = timer()
-
         data["description"] = data.description.map(str) + " " + data.notes + " " + data.memo
 
-        end = timer()
-        app.logger.debug(f"    agg          duration: {end - start}")
     except Exception as E:  # NOQA
         # TODO: handle this better, so it runs only when gnucash is indicated
         pass
 
-    end1 = timer()
-    app.logger.debug(f"  gnucash fill   duration: {end1 - start1}")
-
     #######################################################################
 
-    start = timer()
     data.fillna(
         "", inplace=True
     )  # Any remaining fields with invalid numerical data should be text fields
     data.where(data.notnull(), None)
-
-    end = timer()
-    app.logger.debug(f"  final fillna   duration: {end - start}")
-
     trans = data[
         ["date", "description", "amount", CONST["account_col"], CONST["fan_col"]]
     ]
