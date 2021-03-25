@@ -1,4 +1,28 @@
-# Page and code layout
+# Fundamental decisions
+
+Several needs drive Ledger Explorer's design choices:
+** As a data analyst, I graph data published on the internet, so that I can get new information with little time investment.**
+  * detail: tabular data, CSV format, where each tuple includes a date, account, and amount.
+
+** As an analyst of dynamic data, my charting tool refresh third-party data automatically, so that I always have current information automatically.**
+
+** Analyzing data with thousands of records, I navigate between summations and individual records instantly, so that I can analyze at several levels of abstraction simultaneously. **
+
+Therefore:
+1. Ledger Explorer downloads data from URLs.
+1. Ledger Explorer can perform rudimentary ETL, to match column names to required fields.
+1. Ledger Explorer uses Plotly to generate and display dynamic charts and graphs in the browser
+1. Ledger Explorer stores the complete transaction dataset in the browser
+1. Ledger Explorer stores configuration as URL parameters, so that a report can be saved by bookmarking and shared by sending a URL.
+1. A Ledger Explorer webserver performs data loading, modifies data as needed upstream from specific Plotly functions, and publishes the GUI as a Single-Page Application.
+
+# Code structure
+
+The root of the github filetree, by default ```ledger-explorer```, holds several configuration files.  It should **not** be served publically.
+
+The ```/ledgex/``` directory holds all program code; this is the directory to publish on an application server.
+The ```/tests/``` directory holds code and data required to automatically test the program code.
+The ```/docs/``` directory holds documentation—written in Github Markdown—and related images.
 
 ## index.py
 Everything starts with ```index.py``` (all paths start from ```ledger-explorer/ledgex``` in the git structure unless otherwise noted), which does three things:
@@ -34,16 +58,17 @@ Each tab in the GUI is one-to-one with a file in ```/tabs```.  These hold the ta
 ## Trans, ATree, and Eras
 The three main custom data structures for the application.  Each of them can be specified as an external file.
 1. **Trans** subclasses ```pandas.DataFrame```, and is a frame (table) of all individual transactions.  This is required; it's the source of all data to be shown.  The master copy in the datastore should stay intact unless the input parameters change.  For each use of the data, try to shrink it (by filtering or grouping) as early as the GUI path allows, to improve performance.  
-1. **ATree**, short for "Account Tree", subclasses ```treelib.Tree```.  This is the hierarchical structure of accounts used for grouping and rollup.  It can be derived from appropriate transaction data.  When provided as a second input file, it allows custom recategorizing, re-structuring, and account-level filtering of the source data without requiring changes to the source transaction file.
+1. **ATree**, short for "Account Tree", subclasses ```treelib.Tree```.  This is the hierarchical structure of accounts used for grouping and rollup.  By default it is derived from parent relationships in the transaction data file: Gnucash provides a complete account path in each record.  If there is no parent information in transactions, every account will be a first-level node in the account tree.  An Atree source file, if provided, takes precedence over a derived tree.  This allows custom recategorizing, re-structuring, and account-level filtering of the source data without requiring changes to the source transaction file.
 1. **Eras** is optional data defining custom reporting periods.
 
+
+## Import
+Ledger Explorer imports trans, atree, and eras csv files.  These can be uploaded, or provided as URLs.
 
 ## Going from parsed data to graphs
 Each tab has a primary graph that always reloads on tab activation, pulls data from the data store for display.  Guarantee this by adding a ```??_dummy``` input to the callback that outputs the primary graph, where ```??``` is the tab prefix.  All other graphs on the tab could have an Input that is an Output of the primary graph—in this arrangement, any change to the primary graph updates everything else on the page.  Or, an Output from the primary graph could go to an Input of a secondary graph, which in turn would Output to an input of a tertiary graph, and so forth.
 
 
-## Import
-Ledger Explorer imports trans, atree, and eras files as csv data.  This can be in the form of uploaded files.  More interestingly, Dash can pull from URLs, so a custom configuration that pulls from a third-party data source and manipulates and displays the data can itself be saved as a URL.  So party A (you) can make a link to your Ledger Explorer server that any random party B can click on, which will pull fresh data from party C and automatically parse and display it.
 
 
 ## Export
