@@ -4,9 +4,10 @@ import pandas as pd
 from treelib import Tree
 from treelib import exceptions as tle
 
+
+from ledger import Ledger
 from app import app
 from params import CONST
-from ledger import Ledger
 
 
 class ATree(Tree):
@@ -308,11 +309,11 @@ class ATree(Tree):
         """Modifies the tree in place, setting a subtotal for all branch
         nodes.
 
-        TODO: If there are any negative children, pass back a flag to
-        add warning text to the hovertext/ledgend.  e.g. "One or more
-        nodes show contains a mix of negative and positive sub-nodes,
-        which cannot be displayed in a sunburst.  Narrow your
-        selection to get more depth."
+        TODO: If there are any negative children, maybe pass back a
+        flag to add warning text to the hovertext/legend?.  e.g. "One
+        or more nodes show contains a mix of negative and positive
+        sub-nodes, which cannot be displayed in a sunburst.  Narrow
+        your selection to get more depth."
 
         Sunburst is very very finicky and wants the subtotals to be
         exactly correct and never missing, so this builds them
@@ -323,30 +324,32 @@ class ATree(Tree):
         In order for the tree to be rendered as a hierarchical figure
         with area—like a sunburst or treemap—it may not contain any
         negative values, because that would require taking up a
-        negative amount of area on in the figure, which is impossible.
-        So, wehave the option to roll up any negative nodes until a
-        positive parent node is achieved.  Example: A contains A¹=50
-        and A²=−30.  This function will return A=20 with no children.
+        negative amount of area in 2D space, which is impossible.  So,
+        prevent_negatives=True cause any negative nodes to get rolled
+        up until a positive parent node is achieved.  Example: A
+        contains A¹=50 and A²=−30.  This function will return A=20
+        with no children.
 
-        If a node has a total, and has a child with a total, then there
-        is no way to see what the node's total is in isolation.  So,
-        any node that has value, and has children
+        If a node has a total, and has a child with a total, then
+        there is no way to see what the node's total is in isolation.
+        So, any node that has value, and has children, has to get
+        split into an empty container node and a leaf node with the
+        value.  Then, there has to be a way to differentiate between
+        clicking on the sub-total and clicking on the leaf.  Do this
+        by appending a magic string to the id of the leaf.  Then, use
+        the tag as the key to transaction.account.  This will cause
+        the parent tag, 'XX Subtotal', to fail matches, and the child,
+        which is labeled 'XX Leaf' but tagged 'XX' to match.
 
-
-        If a leaf_total is moved out of a subtotal, there has to be a
-        way to differentiate between clicking on the sub-total and
-        clicking on the leaf.  Do this by appending a magic string to
-        the id of the leaf.  Then, use the tag as the key to
-        transaction.account.  This will cause the parent tag, 'XX
-        Subtotal', to fail matches, and the child, which is labeled
-        'XX Leaf' but tagged 'XX' to match.
-        BEFORE                          | AFTER
-        id   parent   tag  leaf_total   | id       parent   tag          leaf_total    total
-        A             A            50   | A                 A Subtotal                    72
-        B    A        B            22   | A Leaf   A        A                    50       50
-                                        | B        A        B                    22       22
-
+                       BEFORE               ||                         AFTER
+        -----------------------------------------------------------------------------------------
+        id  | parent  | tag  | leaf_total   || id     | parent  | tag         | leaf_total | total
+        A   |         | A    |         50   || A      |         | A Subtotal  |            |    72
+        B   | A       | B    |         22   || A Leaf | A       | A           |         50 |    50
+                                            || B      | A       | B           |         22 |    22
         """
+
+        app.logger.debug(f"Before: {self.pp()}")
 
         def set_node_total(tree, node):
             """
@@ -368,6 +371,7 @@ class ATree(Tree):
             running_subtotal: int = leaf_total
             children: ATree = tree.children(node_id)
             negative_child: bool = False
+            app.logger.debug(f"Processing {node_id}, with leaf_total {leaf_total}")
             if children:
                 # make it a subtotal
                 if node_id != tree.ROOT_ID:
@@ -389,7 +393,6 @@ class ATree(Tree):
                             tree.remove_node(child.identifier)
                         except tle.NodeIDAbsentError:
                             pass
-                    # TODO: here's where to add a flag to get passed back
                     negative_child = False
                 elif leaf_total > 0:
                     # if it's not childless, and has its own value,
@@ -417,3 +420,4 @@ class ATree(Tree):
 
         root = self.get_node(self.root)
         set_node_total(self, root)
+        app.logger.debug(f"After: {self.pp()}")

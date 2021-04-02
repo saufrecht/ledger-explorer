@@ -7,7 +7,6 @@ from params import CONST
 class Ledger(pd.DataFrame):
     """
     TODO: Move this into Datastore?  Or have Ledger be a subclass of DataFrame?
-    
     """
 
     @staticmethod

@@ -76,11 +76,11 @@ def rename_columns(data: pd.DataFrame, parameters: Params) -> pd.DataFrame:
 
     # take all of the input column names and rename them to the standard internal names
     cols = [
-        (parameters.account_label, "account"),
-        (parameters.amount_label, "amount"),
-        (parameters.desc_label, "description"),
-        (parameters.fan_label, "full account name"),
-        (parameters.date_label, "date"),
+        (parameters.account_label, CONST["account_col"]),
+        (parameters.amount_label, CONST["amount_col"]),
+        (parameters.desc_label, CONST["desc_col"]),
+        (parameters.fan_label, CONST["fan_col"]),
+        (parameters.date_label, CONST["date_col"]),
     ]  # NOQA
 
     for col_a, col_b in cols:

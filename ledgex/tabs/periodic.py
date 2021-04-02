@@ -283,8 +283,9 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
             account_tree, selected_trans, time_span, unit, factor, colormap, title
         )
     except LError as E:
-        app.logger.warning(f"Failed to generate sunburst.  Error: {E}")
-        raise PreventUpdate
+        text = f"Failed to generate sunburst.  Error: {E}"
+        app.logger.warning(text)
+        description = text
 
     return (sun_fig, title, description, pe_selection_store)
 

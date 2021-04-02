@@ -1,12 +1,12 @@
 import pandas as pd
 import plotly.express as px
 
+from typing import Dict
+
 from atree import ATree
 from utils import fonts
 from ledger import Ledger
 from params import CONST
-
-from typing import Dict
 
 
 class Burst:

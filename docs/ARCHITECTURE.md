@@ -1,12 +1,14 @@
 # Fundamental decisions
 
 Several needs drive Ledger Explorer's design choices:
-** As a data analyst, I graph data published on the internet, so that I can get new information with little time investment.**
+
+**As a data analyst, I graph data published on the internet, so that I can get new information with little time investment.**
+
   * detail: tabular data, CSV format, where each tuple includes a date, account, and amount.
 
-** As an analyst of dynamic data, my charting tool refresh third-party data automatically, so that I always have current information automatically.**
+**As an analyst of dynamic data, my charting tool refresh third-party data automatically, so that I always have current information automatically.**
 
-** Analyzing data with thousands of records, I navigate between summations and individual records instantly, so that I can analyze at several levels of abstraction simultaneously. **
+**Analyzing data with thousands of records, I navigate between summations and individual records instantly, so that I can analyze at several levels of abstraction simultaneously.**
 
 Therefore:
 1. Ledger Explorer downloads data from URLs.
@@ -25,7 +27,7 @@ The ```/tests/``` directory holds code and data required to automatically test t
 The ```/docs/``` directory holds documentation—written in Github Markdown—and related images.
 
 ## index.py
-Everything starts with ```index.py``` (all paths start from ```ledger-explorer/ledgex``` in the git structure unless otherwise noted), which does three things:
+The entry point to code execution is ```index.py``` (all paths start from ```ledger-explorer/ledgex``` in the git structure unless otherwise noted).  It does three things:
 
 ### Start the webserver and Dash application
 
@@ -35,7 +37,7 @@ Everything starts with ```index.py``` (all paths start from ```ledger-explorer/l
 
 ```app.layout``` is the parent for everything visible on the screen, as well as for any non-displayed information that needs to be available on all tabs, which is everything with ```className="hidden"```.
 
-### Handle the GUI fundament
+### Handle GUI interactions, i.e., Dash callbacks, that exist on all tabs.
 
 The callbacks cover:
 1. parsing and applying any URL parameters.
@@ -43,7 +45,7 @@ The callbacks cover:
 1. (Re)generating the reporting data whenever any of the data inputs change.  Putting this in the file that contains the entire tab structure allows incoming URLs to go directly to a specific tab view, with the data and parameters specified in the URL.  It also causes lots of extra processing, so TODO it would benefit from being tuned to be much more conservative about running.
 
 
-## custom classes and other code
+## Custom classes and other code
 
 All shared code in the application lives in the other files in the base code directory.  Worth noting:
 
@@ -63,13 +65,10 @@ The three main custom data structures for the application.  Each of them can be 
 
 
 ## Import
-Ledger Explorer imports trans, atree, and eras csv files.  These can be uploaded, or provided as URLs.
+Ledger Explorer imports trans, atree, and eras csv files.  These can be uploaded, or provided as URLs.  This data is stored in the ```datastore``` object in ```index.py```, so that it is accessible to all callbacks on all tabs.
 
 ## Going from parsed data to graphs
-Each tab has a primary graph that always reloads on tab activation, pulls data from the data store for display.  Guarantee this by adding a ```??_dummy``` input to the callback that outputs the primary graph, where ```??``` is the tab prefix.  All other graphs on the tab could have an Input that is an Output of the primary graph—in this arrangement, any change to the primary graph updates everything else on the page.  Or, an Output from the primary graph could go to an Input of a secondary graph, which in turn would Output to an input of a tertiary graph, and so forth.
-
-
-
+Each tab has a primary graph that always reloads on tab activation, pulls data from the data store for display.  Guarantee this by adding a ```??_dummy``` input to the callback that outputs the primary graph, where ```??``` is the tab prefix.  The rest of the GUI elements could go in either a star or cascade design.  In a star, all other graphs on the tab have an Input that is an Output of the primary graph.  In this arrangement, any change to the primary graph updates everything else on the page.  In a cascade arrangement, every graph has an Input that connects to an Output of a graph closer to the primary, in an unbroken chain.  Either way, note that one Output can trigger Inputs in any number of callbacks.  These designs can be mixed, at peril of mass confusion.
 
 ## Export
 The only form of export in Ledger Explorer is creating a permalink, which saves all current parameters into a new URL.

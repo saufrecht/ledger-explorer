@@ -313,8 +313,8 @@ def to_decade(year_string: str) -> int:
 def period_to_date_range(
     time_resolution: str, period: str, eras: pd.DataFrame = None
 ) -> Tuple[np.datetime64, np.datetime64]:
+    """ Convert period label to tuple of start and end dates, based on time_resolution """
 
-    # Convert period label to tuple of start and end dates, based on time_resolution
     def _month_end(date: np.datetime64) -> np.datetime64:
         # return the date of the last day of the month of the input date
         year = date.year
@@ -332,7 +332,7 @@ def period_to_date_range(
         try:
             decade_start_year = to_decade(period)
             period_start = datetime(decade_start_year, 1, 1)
-            period_end = datetime(decade_start_year + 10, 1, 1)
+            period_end = datetime(decade_start_year + 9, 12, 31)
         except Exception as E:
             raise LError(f"problem calculating decade: {E}")
     elif time_resolution == "year":
