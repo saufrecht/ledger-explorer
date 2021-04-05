@@ -11,19 +11,32 @@ from params import CONST
 
 
 class ATree(Tree):
-    """ Subclass of treelib Tree for holding ledger-related functions """
+    """Subclass of treelib Tree for holding ledger-related functions.
+
+    ROOT_TAG and ROOT_ID are the preferred default tag and ID of root
+    nodes, but current design doesn't guarantee they'll always be
+    there.  If it were, then either stem pruning would not be
+    possible, or other root nodes might have to be overwritten.  E.g.,
+    should the tree "Root → B → C → branches…" be truncated to "Root →
+    branches…", or to "c → branches…"?  The latter is currently implemented.
+
+    """
 
     ROOT_TAG = "[Total]"
     ROOT_ID = "root"
 
-    def pp(self, node="root"):  # DEBUG helper function
+    def pp(self, node: str = None):  # DEBUG helper function
+        if not node:
+            node = self.root
         w_node = self[node]
         try:
-            leaf_total = w_node.data.get("leaf_total")
+            leaf_total = w_node.data.get("leaf_total", 0)
+            total = w_node.data.get("total", 0)
         except AttributeError:
             leaf_total = 0
+            total = 0
         print(
-            f"{self.depth(w_node) * '   '} {w_node.identifier} ({w_node.tag}) {leaf_total}"
+            f"{self.depth(w_node) * '   '} {w_node.identifier} ({w_node.tag}) {leaf_total} {total}"
         )
         for child in self.children(node):
             self.pp(child.identifier)
@@ -52,37 +65,39 @@ class ATree(Tree):
 
         return self._reader
 
-    def to_json(self, with_data=False, sort=True, reverse=False):
-        """Override Tree.to_json with a version that doesn't error if tree is empty.
-        This is used only for caching the imported atree, so don't worry about any
-        tree attributes other than id, tag, and edges."""
+    def to_json(self, sort=True, reverse=False):
+        """Override Tree.to_json with a version that doesn't error if tree is
+        empty.  Due to to_dict implementation in parent class, this
+        stores only tag and child relationships, not ids or data.
+        """
         if len(self) > 0:
             return json.dumps(
-                self.to_dict(with_data=with_data, sort=sort, reverse=reverse)
+                self.to_dict(with_data=False, sort=sort, reverse=reverse)
             )
         else:
             return ""
 
     @classmethod
     def from_json(cls, atree_j: str):
-        """Parent class doesn't have this.  As with to_json, this is used only
-        for caching the imported atree, so don't worry about any tree
-        attributes other than id, tag, and edges.
+        """Parent class doesn't have this.  As with to_json, this stores only
+        tags and child relationships, so it doesn't support id or
+        data, so it's only useable for limited purposes.
         """
-        def dict_to_branch(atreedict, atree: ATree = cls(), parent: str = None):
-            new_tag = next(iter(atreedict.keys()))
-            if parent is None:
-                new_id = cls.ROOT_ID
+        def _dict_to_branch(atreedict, parent: str = None):
+            if isinstance(atreedict, dict):
+                tuple_list = []
+                for node in atreedict.keys():
+                    tuple_list = tuple_list + [(node, parent)]
+                    try:
+                        for child in atreedict[node]["children"]:
+                            tuple_list = tuple_list + _dict_to_branch(child, parent=node)
+                    except KeyError:
+                        pass
             else:
-                new_id = new_tag
-            atree.create_node(tag=new_tag, identifier=new_id, parent=parent)
-            for child in atreedict[new_tag]["children"]:
-                if isinstance(child, dict):
-                    atree = dict_to_branch(child, parent=new_id)
-                else:
-                    atree.create_node(tag=child, identifier=child, parent=new_id)
-            return atree
-        return dict_to_branch(json.loads(atree_j))
+                tuple_list = [(atreedict, parent)]
+            return tuple_list
+        tuple_list = _dict_to_branch(json.loads(atree_j))
+        return cls.from_list_of_tuples(tuple_list)
 
     def dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
@@ -94,56 +109,6 @@ class ATree(Tree):
         for leaf in self.all_nodes():
             res.append([nid for nid in self.rsearch(leaf.identifier)][::-1])
         return {x[-1]: ":".join(x) for x in res}
-
-    def trim_excess_root(self):
-        """If root node has only one child, return a tree with that child as the new root."""
-        root_id = self.root
-        branches = self.children(root_id)
-        if len(branches) == 1:
-            self.update_node(branches[0].identifier, parent=None, bpointer=None)
-            new_tree = self.subtree(branches[0].identifier)
-            new_atree = ATree.cast(new_tree)
-            return new_atree.trim_excess_root()
-        else:
-            return self
-
-    @classmethod
-    def from_names(cls, full_names: pd.Series, delim: str = CONST["delim"]) -> Tree:
-        """extract all accounts from a list of Gnucash-like account paths
-
-        Assumes each account name is a full path, delimiter is :.
-        Creating each node the first time it's seen should handle these cases:
-        - Parent accounts with no transactions and therefore no distinct rows
-        - Nodes are presented out of order
-        data, so reconstruct the complete tree implied by the
-        transaction data.
-
-        If there are multiple heads in the data, they will all belong
-        to root, so the tree will still be a DAG
-
-        """
-        clean_list = full_names.unique()
-        tree = ATree()
-        tree.create_node(tag=tree.ROOT_TAG, identifier=cls.ROOT_ID)
-        for account in clean_list:
-            try:
-                if account and len(account) > 0:
-                    branches = account.split(delim)  # example: Foo:Bar:Baz
-                    for i, branch in enumerate(branches):
-                        name = branch
-                        if i == 0:
-                            parent = cls.ROOT_ID
-                        else:
-                            parent = branches[i - 1]
-                        if not tree.get_node(name):
-                            tree.create_node(tag=name, identifier=name, parent=parent)
-            except tle.NodeIDAbsentError as E:
-                app.logger.warning(f"Problem building account tree: {E}")
-                # TODO: write some bad sample data to see what errors we should catch here.
-                #  presumably: account not a list; branch in account not a string
-                continue
-        # tree = tree.trim_excess_root()  TODO waiting for trim_excess_root to get fixed
-        return tree
 
     def get_children_tags(self, account_id: int):
         """
@@ -167,12 +132,12 @@ class ATree(Tree):
             app.logger.warning(f"A specified root is missing from the account tree: {E}")
             return []
 
-    def get_descendent_ids(self, account_id: str = ROOT_ID) -> list:
+    def get_descendent_ids(self, account_id: str = None) -> list:
         """
         Return a list of ids of all descendent accounts of the input account.
         """
         if (not account_id) or (len(account_id) == 0):
-            return []
+            account_id = self.root
         try:
             # TODO: make this comparison case-insensitive
             subtree_nodes = self.subtree(account_id).all_nodes()
@@ -196,6 +161,84 @@ class ATree(Tree):
 
         return lineage
 
+    def trim_excess_root(self):
+        """ Returns a version of the tree with no single-child root
+        nodes (recursively). Does not modify the object."""
+        root_id = self.root
+        branches = self.children(root_id)
+        if len(branches) == 1:
+            new_tree = self.subtree(branches[0].identifier)
+            new_atree = ATree.cast(new_tree)
+            new_tree[new_tree.root].bpointer = None
+            return new_atree.trim_excess_root()
+        else:
+            return self
+
+    @classmethod
+    def from_list_of_tuples(cls, node_list: list):
+        """Convert a list of (node tag, node parent tag) tuples to an ATree
+        with one root, trimmed of any long stem.  This function is the
+        shared foundation of all other from_* ATree creation
+        functions.  It creates a new root with default values, to
+        guarantee a single-rooted tree. This would create an extra root
+        node with each trip, but trimming prevents that.
+
+        First pass creates all nodes.  Second pass builds all
+        relationships.  This way, out-of-order data won't cause problems.
+        """
+        atree = cls()
+        atree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
+        atree.root = cls.ROOT_ID
+        parent_list = [(cls.ROOT_ID, None)]
+        for row in node_list:
+            try:
+                name = row[0]
+                atree.create_node(tag=name, identifier=name, parent=atree.root)
+                parent_list = parent_list + [row]
+            except IndexError:
+                app.logger.info(f"Bad data while creating account tree: {row}.  Skipping.")
+                continue
+            except tle.DuplicatedNodeIdError:
+                app.logger.info(f"Duplicate node rejected while creating account tree: {row}.  Skipping.")
+                pass
+        for row in parent_list:
+            name = row[0]
+            try:
+                parent = row[1]
+                if parent is None:
+                    parent = atree.root
+            except IndexError:
+                parent = atree.root
+            if name != parent:
+                try:
+                    atree.move_node(name, parent)
+                except tle.NodeIDAbsentError:
+                    pass
+            else:
+                pass
+        return atree.trim_excess_root()
+
+    @classmethod
+    def from_names(cls, full_names: pd.Series, delim: str = CONST["delim"]) -> Tree:
+        """Extract all accounts from a list of Gnucash-like account paths.
+        Assumes each account name is a full path, delimiter is :.
+        """
+        tuple_list = []
+        for account in full_names.unique():
+            try:
+                if account and len(account) > 0:
+                    nodes = account.split(delim)  # example: Foo:Bar:Baz
+                    for i, node_tag in enumerate(nodes):
+                        if i == 0:
+                            parent = None
+                        else:
+                            parent = nodes[i - 1]
+                        tuple_list = tuple_list + [(node_tag, parent)]
+            except KeyError:
+                breakpoint()
+                # narrow this down.
+        return cls.from_list_of_tuples(tuple_list)
+
     @classmethod
     def from_parents(cls, parent_list: pd.DataFrame) -> Tree:
         """Extract all accounts from dataframe of parent-child relationships.
@@ -205,38 +248,10 @@ class ATree(Tree):
 
         """
         clean_list = parent_list[[CONST["account_col"], CONST["parent_col"]]]
-        tree = cls()
-        tree.create_node(tag=cls.ROOT_TAG, identifier=cls.ROOT_ID)
+        tuple_list = []
         for row in clean_list.itertuples(index=False):
-            try:
-                name = row[0]  # index assumes clean_list fixed column order
-                parent = row[1]
-                if not tree.get_node(parent):
-                    tree.create_node(tag=parent, identifier=parent, parent=cls.ROOT_ID)
-                if not tree.get_node(name):
-                    tree.create_node(tag=name, identifier=name, parent=parent)
-            except tle.NodeIDAbsentError as E:
-                app.logger.warning(f"Error creating parent list: {E}")
-                # TODO: write some bad sample data to see what errors we should catch here.
-                #  presumably: account not a list; branch in account not a string
-                continue
-        # second pass, to get orphaned nodes in the right place
-        for row in clean_list.itertuples(index=False):
-            try:
-                name = row[0]
-                parent = row[1]
-                if name == parent:
-                    app.logger.info(
-                        f"Cannot move {name} to be child of {parent}.  Skipping."
-                    )
-                else:
-                    tree.move_node(name, parent)
-            except tle.NodeIDAbsentError as E:
-                app.logger.warning(f"Error moving node: {E}")
-                # TODO: write some bad sample data to see what errors we should catch here.
-                #  presumably: account not a list; branch in account not a string
-                continue
-        return tree
+            tuple_list = tuple_list + [(row[0], row[1])]
+        return cls.from_list_of_tuples(tuple_list)
 
     @staticmethod
     def stuff_tree_into_trans(trans: Ledger, tree: Tree) -> pd.DataFrame:
@@ -251,6 +266,10 @@ class ATree(Tree):
         """Calculate the subtotal for each node (direct subtotal only, no
         children) in the tree, based on exactly provided transaction
         frame, and return it within a new account tree
+
+        TODO: this modifies the tree in place, but for consistency and
+        flexibility, it should return a new tree
+
         """
         trans = trans.reset_index(drop=True).set_index(CONST["account_col"])
         subtotals = trans.groupby(CONST["account_col"]).sum()["amount"]
@@ -271,6 +290,8 @@ class ATree(Tree):
     def summarize_to_other(self, node):
         """
         TODO: fix, and put back into use, with new UI to control it
+        TODO: this modifies the tree in place, but for consistency and
+        flexibility, it should return a new tree
 
         If there are more than (MAX_SLICES - 2) children in this node,
         group the excess children into a new 'other' node.
@@ -305,15 +326,15 @@ class ATree(Tree):
         for child in children:
             self.summarize_to_other(child)
 
-    def roll_up_subtotals(self, prevent_negatives: bool = False):
-        """Modifies the tree in place, setting a subtotal for all branch
-        nodes.
-
-        TODO: If there are any negative children, maybe pass back a
-        flag to add warning text to the hovertext/legend?.  e.g. "One
-        or more nodes show contains a mix of negative and positive
-        sub-nodes, which cannot be displayed in a sunburst.  Narrow
-        your selection to get more depth."
+    def roll_up_subtotals(self, prevent_negatives: bool = True):
+        """Return a version of the atree that has subtotals for each
+        node.  To accommodate this, change the returned tree in several
+        other ways:
+          1. Append Subtotal to the name of any node with children
+          2. For any node with children and its own value, move its value
+             to a new child node (see below)
+          3. Remove any negative children and their siblings, preserving
+             their net value in the rollup.
 
         Sunburst is very very finicky and wants the subtotals to be
         exactly correct and never missing, so this builds them
@@ -324,11 +345,12 @@ class ATree(Tree):
         In order for the tree to be rendered as a hierarchical figure
         with area—like a sunburst or treemap—it may not contain any
         negative values, because that would require taking up a
-        negative amount of area in 2D space, which is impossible.  So,
-        prevent_negatives=True cause any negative nodes to get rolled
-        up until a positive parent node is achieved.  Example: A
-        contains A¹=50 and A²=−30.  This function will return A=20
-        with no children.
+        negative amount of area in 2D space, which is impossible.  By
+        default, any negative-value node is pruned.  Sunburst also
+        requires node totals to exactly match the value of
+        descendents, so any children of a negative node must also be
+        pruned.  Example: A contains A¹=50 and A²=−30.  This function
+        will return A=20 with no children.
 
         If a node has a total, and has a child with a total, then
         there is no way to see what the node's total is in isolation.
@@ -347,77 +369,71 @@ class ATree(Tree):
         A   |         | A    |         50   || A      |         | A Subtotal  |            |    72
         B   | A       | B    |         22   || A Leaf | A       | A           |         50 |    50
                                             || B      | A       | B           |         22 |    22
+
         """
 
-        app.logger.debug(f"Before: {self.pp()}")
-
-        def set_node_total(tree, node):
-            """
-
-            Recursively set the value of a node as the sum of its descendents' totals.
-            Alters the tree as it goes, making subtotals and leafs where needed for clarity,
-            and fixing unmappable nodes if so flagged.
-            Uses 'leaf_total' for all transactions that belong to this node's account,
-            and 'total' for the final value for the node, including descendents.
+        def set_node_total(atree, node):
+            """Recursive function to operate on the atree.  Uses 'leaf_total' for
+            all transactions that belong to this node's account, and
+            'total' for the final value for the node, including
+            descendents.
             """
             node_id: str = node.identifier
             tag: str = node.tag
-            leaf_total: int = 0
             try:
-                leaf_total = node.data.get("leaf_total", 0)
+                leaf_total: int = node.data.get("leaf_total", 0)
             except AttributeError:
                 # in case it doesn't even have a data node
-                pass
-            running_subtotal: int = leaf_total
-            children: ATree = tree.children(node_id)
-            negative_child: bool = False
-            app.logger.debug(f"Processing {node_id}, with leaf_total {leaf_total}")
+                leaf_total = 0
+            if len(atree.children(node_id)) > 0 and leaf_total != 0:
+                # if it's not childless, and has its own value, move
+                # that value to a leaf.  do this
+                new_leaf_id = node_id + CONST["leaf_suffix"]
+                node.data["leaf_total"] = 0
+                atree.create_node(
+                    identifier=new_leaf_id,
+                    tag=tag,
+                    parent=node_id,
+                    data=dict(total=leaf_total, leaf_total=leaf_total),
+                )
+                running_subtotal: int = 0
+            else:
+                running_subtotal: int = leaf_total
+            children: ATree = atree.children(node_id)
             if children:
-                # make it a subtotal
-                if node_id != tree.ROOT_ID:
+                negative_child: bool = False
+                # re-label the node as subtotal
+                if node_id != self.root:
                     subtotal_tag = tag + CONST["subtotal_suffix"]
-                    tree.update_node(node_id, tag=subtotal_tag)
+                    atree.update_node(node_id, tag=subtotal_tag)
                 for child in children:
                     # recurse to get subtotals.
-                    child_total = set_node_total(tree, child)
-                    running_subtotal += child_total
+                    child_total = set_node_total(atree, child)
                     if child_total < 0:
                         negative_child = True
-                node.data = {"total": running_subtotal}
+                    running_subtotal += child_total
                 if prevent_negatives and negative_child:
-                    # If any of the children are negative, the
-                    # parent's subtotal won't match the sum of its
-                    # children, so prune all the children
+                    # prune all children
                     for child in children:
                         try:
-                            tree.remove_node(child.identifier)
+                            atree.remove_node(child.identifier)
                         except tle.NodeIDAbsentError:
                             pass
-                    negative_child = False
-                elif leaf_total > 0:
-                    # if it's not childless, and has its own value,
-                    # move that value to a leaf
-                    new_leaf_id = node_id + CONST["leaf_suffix"]
-                    node.data["leaf_total"] = 0
-                    tree.create_node(
-                        identifier=new_leaf_id,
-                        tag=tag,
-                        parent=node_id,
-                        data=dict(total=leaf_total),
-                    )
-            if node.data:
-                node.data["total"] = running_subtotal
+            if running_subtotal != 0:
+                if node.data:
+                    node.data["total"] = running_subtotal
+                else:
+                    node.data = {"total": running_subtotal}
             else:
-                node.data = {"total": running_subtotal}
-            # If this node and descendents total to zero or less, purge
-            if running_subtotal == 0:
                 try:
-                    tree.remove_node(node_id)
+                    atree.remove_node(node_id)
                 except tle.NodeIDAbsentError:
                     pass
 
             return running_subtotal
 
-        root = self.get_node(self.root)
-        set_node_total(self, root)
-        app.logger.debug(f"After: {self.pp()}")
+        root_id = self.root
+        new_tree = Tree(self.subtree(root_id), deep=True)
+        new_atree = ATree.cast(new_tree)
+        set_node_total(new_atree, new_atree[root_id])
+        return new_tree

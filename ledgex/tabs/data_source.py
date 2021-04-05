@@ -615,7 +615,6 @@ def update_status_on_ds_tab_content(data_store: str, param_store: str):
     tab controls. So, show feedback.  If the loaded files change
     through the URL mechanism, and the data source tab isn't open,
     then this callback is ignored."""
-
     preventupdate_if_empty(data_store)
     data_store: Datastore() = Datastore.from_json(data_store)
     params = Params.from_json(param_store)

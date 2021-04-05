@@ -71,7 +71,7 @@ def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     trans: pd.DataFrame = data_store.trans
     tree: ATree = data_store.account_tree
     tree = tree.append_sums_from_trans(trans)
-    tree.roll_up_subtotals()
+    tree = tree.roll_up_subtotals()
     palette = cb.Set3
     selection_color = None
     color_data = pd.DataFrame(columns=["account", "color"])

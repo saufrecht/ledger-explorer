@@ -199,7 +199,6 @@ def convert_raw_data(
     except Exception as E:
         raise LoadError(f"Could not import the transactions because: {type(E)}, {E}")
     atree: Tree = ATree()
-
     # look for account tree in separate tree file.
     if len(raw_tree) > 0:
         # apply column renaming parameters before loading
@@ -223,11 +222,8 @@ def convert_raw_data(
             atree = ATree.from_parents(
                 trans[[CONST["account_col"], CONST["parent_col"]]]
             )
+    atree = atree.trim_excess_root()
 
-    # Because treelib can't be restored from JSON, store it denormalized in
-    # trans[CONST['fan_col']] (for simplicity, overwrite if it's already there)
-    if len(atree) > 0:
-        trans = ATree.stuff_tree_into_trans(trans, atree)
 
     # Special case for Gnucash and other ledger data.
     # TODO: generalize mangle amounts signs for known account types, to make graphs
