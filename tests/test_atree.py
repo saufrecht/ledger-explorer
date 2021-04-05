@@ -4,84 +4,104 @@ import pytest
 from ledgex.atree import ATree, tle
 from ledgex.params import CONST
 
-skinny_tree: ATree = ATree()
-skinny_tree.create_node("Lower Trunk", "lt")
-skinny_tree.create_node("Middle Trunk", "mt", parent="lt")
-skinny_tree.create_node("Top Trunk", "tt", parent="mt")
-skinny_tree.create_node("Branch Alpha", "ba", parent="tt")
-skinny_tree.create_node("Branch Beta", "bb", parent="tt")
-skinny_tree.create_node("Branch Gamma", "bg", parent="tt")
 
-skinny_tree_j = '{"Lower Trunk": {"children": [{"Middle Trunk": {"children": [{"Top Trunk": {"children": ["Branch Alpha", "Branch Beta", "Branch Gamma"]}}]}}]}}'  # NOQA
+@pytest.fixture
+def skinny_tree():
+    skinny_tree: ATree = ATree()
+    skinny_tree.create_node("Lower Trunk", "lt")
+    skinny_tree.create_node("Middle Trunk", "mt", parent="lt")
+    skinny_tree.create_node("Top Trunk", "tt", parent="mt")
+    skinny_tree.create_node("Branch Alpha", "ba", parent="tt")
+    skinny_tree.create_node("Branch Beta", "bb", parent="tt")
+    skinny_tree.create_node("Branch Gamma", "bg", parent="tt")
+    return skinny_tree
 
-fan = pd.Series(
-    [
-        "Continents:All Africa:Senegal",
-        "Continents:All Africa:Seychelles",
-        "Continents:All Africa:Sierra Leone",
-        "Continents:All South America:Colombia",
-        "Continents:All South America:Argentina",
-        "Entities:MERCOSUR",
-        "Entities:EU",
-    ]
-)  # NOQA
 
-parents = pd.DataFrame(
-    {
-        CONST["account_col"]: [
-            "Continents",
-            "All Africa",
-            "Senegal",
-            "Seychelles",
-            "Sierra Leone",
-            "All South America",
-            "Colombia",
-            "Argentina",
-            "Entities",
-            "MERCOSUR",
-            "EU",
-        ],
-        CONST["parent_col"]: [
-            "root",
-            "Continents",
-            "All Africa",
-            "All Africa",
-            "All Africa",
-            "Continents",
-            "All South America",
-            "All South America",
-            "root",
-            "Entities",
-            "Entities",
-        ],
-    }
-)  # NOQA
+@pytest.fixture
+def skinny_tree_j():
+    return '{"Lower Trunk": {"children": [{"Middle Trunk": {"children": [{"Top Trunk": {"children": ["Branch Alpha", "Branch Beta", "Branch Gamma"]}}]}}]}}'  # NOQA
 
-delim_pipe = pd.Series(
-    [
-        "Continents|All Africa|Senegal",
-        "Continents|All Africa|Seychelles",
-        "Continents|All Africa|Sierra Leone",
-        "Continents|All South America|Colombia",
-        "Continents|All South America|Argentina",
-        "Entities|MERCOSUR",
-        "Entities|EU",
-    ]
-)  # NOQA
 
-fan_tree = ATree()
-fan_tree.create_node(tag=ATree.ROOT_TAG, identifier=ATree.ROOT_ID)
-fan_tree.create_node("Continents", "Continents", parent=ATree.ROOT_ID)
-fan_tree.create_node("Entities", "Entities", parent=ATree.ROOT_ID)
-fan_tree.create_node("All Africa", "All Africa", parent="Continents")
-fan_tree.create_node("All South America", "All South America", parent="Continents")
-fan_tree.create_node("MERCOSUR", "MERCOSUR", parent="Entities")
-fan_tree.create_node("EU", "EU", parent="Entities")
-fan_tree.create_node("Senegal", "Senegal", parent="All Africa")
-fan_tree.create_node("Seychelles", "Seychelles", parent="All Africa")
-fan_tree.create_node("Sierra Leone", "Sierra Leone", parent="All Africa")
-fan_tree.create_node("Argentina", "Argentina", parent="All South America")
-fan_tree.create_node("Colombia", "Colombia", parent="All South America")
+@pytest.fixture
+def fan():
+    return pd.Series(
+        [
+            "Continents:All Africa:Senegal",
+            "Continents:All Africa:Seychelles",
+            "Continents:All Africa:Sierra Leone",
+            "Continents:All South America:Colombia",
+            "Continents:All South America:Argentina",
+            "Entities:MERCOSUR",
+            "Entities:EU",
+        ]
+    )
+
+
+@pytest.fixture
+def parents():
+    return pd.DataFrame(
+        {
+            CONST["account_col"]: [
+                "Continents",
+                "All Africa",
+                "Senegal",
+                "Seychelles",
+                "Sierra Leone",
+                "All South America",
+                "Colombia",
+                "Argentina",
+                "Entities",
+                "MERCOSUR",
+                "EU",
+            ],
+            CONST["parent_col"]: [
+                "root",
+                "Continents",
+                "All Africa",
+                "All Africa",
+                "All Africa",
+                "Continents",
+                "All South America",
+                "All South America",
+                "root",
+                "Entities",
+                "Entities",
+            ],
+        }
+    )
+
+
+@pytest.fixture
+def delim_pipe():
+    return pd.Series(
+        [
+            "Continents|All Africa|Senegal",
+            "Continents|All Africa|Seychelles",
+            "Continents|All Africa|Sierra Leone",
+            "Continents|All South America|Colombia",
+            "Continents|All South America|Argentina",
+            "Entities|MERCOSUR",
+            "Entities|EU",
+        ]
+    )
+
+
+@pytest.fixture
+def fan_tree():
+    fan_tree = ATree()
+    fan_tree.create_node(tag=ATree.ROOT_TAG, identifier=ATree.ROOT_ID)
+    fan_tree.create_node("Continents", "Continents", parent=ATree.ROOT_ID)
+    fan_tree.create_node("Entities", "Entities", parent=ATree.ROOT_ID)
+    fan_tree.create_node("All Africa", "All Africa", parent="Continents")
+    fan_tree.create_node("All South America", "All South America", parent="Continents")
+    fan_tree.create_node("MERCOSUR", "MERCOSUR", parent="Entities")
+    fan_tree.create_node("EU", "EU", parent="Entities")
+    fan_tree.create_node("Senegal", "Senegal", parent="All Africa")
+    fan_tree.create_node("Seychelles", "Seychelles", parent="All Africa")
+    fan_tree.create_node("Sierra Leone", "Sierra Leone", parent="All Africa")
+    fan_tree.create_node("Argentina", "Argentina", parent="All South America")
+    fan_tree.create_node("Colombia", "Colombia", parent="All South America")
+    return fan_tree
 
 
 @pytest.fixture
@@ -107,43 +127,40 @@ def naughty_tree():
 class TestSkinnyTrim:
     """ Should remove lower and middle trunk """
 
-    def test_lt(self):
+    def test_lt(self, skinny_tree):
         assert skinny_tree.get_node("lt").tag == "Lower Trunk"
 
-    def test_mt(self):
+    def test_mt(self, skinny_tree):
         assert skinny_tree.get_node("mt").tag == "Middle Trunk"
 
-    short_tree: ATree = skinny_tree.trim_excess_root()
+    def test_lt_gone(self, skinny_tree):
+        assert skinny_tree.trim_excess_root().get_node("lt") is None
 
-    def test_lt_gone(self):
-        assert self.short_tree.get_node("lt") is None
+    def test_mt_gone(self, skinny_tree):
+        assert skinny_tree.trim_excess_root().get_node("mt") is None
 
-    def test_mt_gone(self):
-        assert self.short_tree.get_node("mt") is None
-
-    def test_tt(self):
-        title = self.short_tree.get_node("tt").tag
+    def test_tt(self, skinny_tree):
+        title = skinny_tree.trim_excess_root().get_node("tt").tag
         assert title == "Top Trunk"
 
-    def test_root(self):
-        id = self.short_tree.root
+    def test_root(self, skinny_tree):
+        id = skinny_tree.trim_excess_root().root
         assert id == "tt"
 
 
 class TestSkinnyString:
     """ render a string """
 
-    def test_show(self):
+    def test_show(self, skinny_tree):
         assert (
             skinny_tree.show_to_string()
-            == "Lower Trunk\n└── Middle Trunk\n    └── Top Trunk\n        ├── Branch Alpha\n        ├── Branch Beta\n        └── Branch Gamma\n"
-        )  # NOQA
+            == "Lower Trunk\n└── Middle Trunk\n    └── Top Trunk\n        ├── Branch Alpha\n        ├── Branch Beta\n        └── Branch Gamma\n")  # NOQA
 
 
 class TestJson:
     """ Test converting the skinny string to and from JSON """
 
-    def test_skinny_to_json(self):
+    def test_skinny_to_json(self, skinny_tree, skinny_tree_j):
         assert skinny_tree.to_json() == skinny_tree_j
 
     def test_naughty_to_json(self, naughty_tree):
@@ -157,28 +174,29 @@ class TestJson:
         for item in n_list:
             assert n_tree[item].tag == item
 
-    @pytest.mark.xfail(
-        reason="Haven't decided yet how to handle adding the [Total] root, so this comparison fails"
-    )
-    def test_tree_to_json_to_tree(self):
+    def test_tree_to_json_to_tree(self, skinny_tree):
         test_j = skinny_tree.to_json()
         new_tree = ATree.from_json(test_j)
-        # only tests that tags and relationships are identical
-        assert skinny_tree.to_dict() == new_tree.to_dict()
+        # ATree's implementation of to_json and from_json is not
+        # a clean round trip, so don't test it with this:
+        #
+        #   assert skinny_tree.to_dict() == new_tree.to_dict()
+        #
+        # Instead, test the implementation as-is, which returns
+        # trimmed treed.
+        assert new_tree.to_dict() == skinny_tree.trim_excess_root().to_dict()
 
 
 class TestFroms:
     """ Test all of the from_ methods, which are the main ways to create ATree """
 
-    def test_from_names(self):
-        names_tree = ATree.from_names(fan)
-        assert names_tree.to_dict() == fan_tree.to_dict()
+    def test_from_names(self, fan, fan_tree):
+        assert ATree.from_names(fan).to_dict() == fan_tree.to_dict()
 
-    def test_from_parents(self):
-        parents_tree = ATree.from_parents(parents)
-        assert parents_tree.to_dict() == fan_tree.to_dict()
+    def test_from_parents(self, parents, fan_tree):
+        assert ATree.from_parents(parents).to_dict() == fan_tree.to_dict()
 
-    def test_from_names_delim(self):
+    def test_from_names_delim(self, delim_pipe, fan_tree):
         delim_tree = ATree.from_names(delim_pipe, delim="|")
         assert delim_tree.to_dict() == fan_tree.to_dict()
 
@@ -186,7 +204,7 @@ class TestFroms:
 class TestGets:
     """ Test the get_* functions which return lists of parents, children, lineage, etc """
 
-    def test_get_ch_tags(self):
+    def test_get_ch_tags(self, skinny_tree):
         assert skinny_tree.get_children_tags("lt") == ["Middle Trunk"]
         assert skinny_tree.get_children_tags("tt") == [
             "Branch Alpha",
@@ -195,17 +213,17 @@ class TestGets:
         ]
         assert skinny_tree.get_children_tags("bb") == []
 
-    def test_get_ch_ids(self):
+    def test_get_ch_ids(self, skinny_tree):
         assert skinny_tree.get_children_ids("lt") == ["mt"]
         assert skinny_tree.get_children_ids("tt") == ["ba", "bb", "bg"]
         assert skinny_tree.get_children_ids("bb") == []
 
-    def test_get_desc_ids(self):
+    def test_get_desc_ids(self, skinny_tree):
         assert skinny_tree.get_descendent_ids("lt") == ["mt", "tt", "ba", "bb", "bg"]
         assert skinny_tree.get_descendent_ids("tt") == ["ba", "bb", "bg"]
         assert skinny_tree.get_descendent_ids("bb") == []
 
-    def test_get_lin_ids(self):
+    def test_get_lin_ids(self, skinny_tree):
         assert skinny_tree.get_lineage_ids("lt") == []
         assert skinny_tree.get_lineage_ids("tt") == ["lt", "mt"]
         assert skinny_tree.get_lineage_ids("bb") == ["lt", "mt", "tt"]
