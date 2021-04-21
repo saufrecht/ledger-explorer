@@ -199,7 +199,6 @@ class ATree(Tree):
                 app.logger.info(f"Bad data while creating account tree: {row}.  Skipping.")
                 continue
             except tle.DuplicatedNodeIdError:
-                app.logger.info(f"Duplicate node rejected while creating account tree: {row}.  Skipping.")
                 pass
         for row in parent_list:
             name = row[0]
@@ -234,9 +233,8 @@ class ATree(Tree):
                         else:
                             parent = nodes[i - 1]
                         tuple_list = tuple_list + [(node_tag, parent)]
-            except KeyError:
-                breakpoint()
-                # narrow this down.
+            except KeyError as E:
+                app.logger.debug(f'Key error {E} converting account tree from names')
         return cls.from_list_of_tuples(tuple_list)
 
     @classmethod

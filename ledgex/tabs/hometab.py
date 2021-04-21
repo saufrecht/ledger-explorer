@@ -18,7 +18,7 @@ Quickly navigate through flow and balance charts as line charts, drill down into
 
 ## Try an example
 
-* **Example #1:** [Personal accounting sample data (Gnucash format)](/ex/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&erasu=https://ledge.uprightconsulting.com/s/sample_transaction_eras.csv&init_time_res=quarter&ex_roots=Income,Expenses&bs_roots=Assets,Liabilities,Equity)
+* **Example #1:** [Personal accounting sample data (Gnucash format)](/pe/?transu=https://ledge.uprightconsulting.com/s/sample_transaction_data.csv&atreeu=https://ledge.uprightconsulting.com/s/sample_transaction_account_tree.csv&erasu=https://ledge.uprightconsulting.com/s/sample_transaction_eras.csv&init_time_res=quarter&pe_roots=Income,Expenses&cu_roots=Assets,Liabilities,Equity)
    * Loads data from a [sample Gnucash export file](https://ledge.uprightconsulting.com/s/sample_transaction_data.csv)
    * ![Screenshot](/assets/screenshot_cash_flow_transdata.png)
 

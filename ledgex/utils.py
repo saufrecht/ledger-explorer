@@ -404,6 +404,8 @@ def periodic_bar(
         ]
     else:
         tba = trans[trans[CONST["account_col"]] == account_id]
+    if len(tba) == 0:
+        raise LError('no transactions sent to periodic_bar')
     tba = tba.set_index("date")
     tr: dict = CONST["time_res_lookup"][time_resolution]
     tr_format: str = tr.get("format", None)  # e.g., %Y-%m

@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 import inspect
 from typing import Iterable
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode
 
 CONST = {
     "parent_col": "parent account",  # TODO: move the column names into Trans class
@@ -78,7 +78,7 @@ CONST = {
             "abbrev": "D",
             "format": "%Y-%m-%d",
             "label": "Day",
-            "months": .033,
+            "months": 0.033,
             "resample_keyword": "D",
         },
     },
@@ -169,9 +169,17 @@ class Params:
             return Params.from_dict(dict)
 
     def fill_defaults(self):
-        """If there is any user input, we should use it.  If user input is None,
-        treat that as 'use the default' and use the default.  For transaction import table,
-        use gnucash account labels as defaults.  For root account lists, parse to tuples."""
+        """Since some uses of this class want to know the difference between
+        'no input' and default value, and setting defaults in class
+        variable definitions would erase that difference, this
+        function fills in defaults electively rather than
+        automatically.  If called, don't overwrite any user input.  If
+        user input is None, treat that as 'use the default' and use
+        the default.  For transaction import table, use gnucash
+        account labels as defaults.  For root account lists, parse to
+        tuples.
+
+        """
         if not self.account_label:
             self.account_label = "Account Name"
         if not self.amount_label:
@@ -211,3 +219,30 @@ class Params:
         self.ex_roots = self.cleanse_account_list_input(self.ex_roots)
         self.pe_roots = self.cleanse_account_list_input(self.pe_roots)
         self.sa_roots = self.cleanse_account_list_input(self.sa_roots)
+
+    @classmethod
+    def le_parse_qs(cls, search: str):
+        """Do some extra cleanup on url string over and above what the
+        built-in parser does, on fields that expect to be lists.  Specifically:
+        1. Parser returns x=1,2 as {'x': '1, 2'}, but we want {'x': ['1', '2']}"""
+        parsed_params = {}
+        raw_qs = parse_qs(
+            search, max_num_fields=50
+        )  # 50 is arbitrary, for DoS prevention
+        for key, value_list in raw_qs.items():
+            if key[-6:] == '_roots':  # These fields all expect lists.
+                key_list = []
+                for value in value_list:
+                    if (not isinstance(value, str)) or (not len(value) > 0):
+                        pass
+                    if "," in value:
+                        for sub_val in value.split(","):
+                            if isinstance(sub_val, str) and len(sub_val) > 0:
+                                key_list.append(sub_val)
+                    else:
+                        key_list.append(value)
+                parsed_params[key] = key_list
+            else:  # all other fields should have one value, in a list from parse_qs
+                parsed_params[key] = value_list[0]
+
+        return parsed_params

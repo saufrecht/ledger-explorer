@@ -1,6 +1,5 @@
 import json
 import logging
-from urllib.parse import parse_qs, urlencode
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,6 +13,7 @@ from errors import LoadError
 from loading import convert_raw_data, load_input_file
 from params import CONST, Params
 from utils import preventupdate_if_empty
+from urllib.parse import urlencode
 
 server = app.server
 
@@ -170,58 +170,32 @@ def parse_url_search(search: str):
     the user browsed to the Data Source tab."""
 
     preventupdate_if_empty(search)
-
-    def le_parse_qs(search: str):
-        """Do some extra cleanup on url string over and above what the
-        built-in parser does.  Specifically:
-        1. Parser returns x=1,2 as {'x': '1, 2'}, but we want {'x': ['1', '2']}"""
-        parsed_params = {}
-        raw_qs = parse_qs(
-            search, max_num_fields=50
-        )  # 50 is arbitrary, for DoS prevention
-        for key, value_list in raw_qs.items():
-            key_list = []
-
-            for value in value_list:
-                if (not isinstance(value, str)) or (not len(value) > 0):
-                    pass
-                if "," in value:
-                    for sub_val in value.split(","):
-                        if isinstance(sub_val, str) and len(sub_val) > 0:
-                            key_list.append(sub_val)
-                else:
-                    key_list.append(value)
-            parsed_params[key] = key_list
-        return parsed_params
-
     search = search.lstrip("?")
     if not search or not isinstance(search, str) or not len(search) > 0:
         raise PreventUpdate
-    inputs = le_parse_qs(search)
+    inputs = Params.le_parse_qs(search)
     trans_j = None
     atree_j = None
     eras_j = None
-    api_input_j = json.dumps(inputs)
     trans_input = inputs.get("transu", None)
     if trans_input:
-
-        filename, t_data, text = load_input_file(url=trans_input[0])
-
+        filename, t_data, text = load_input_file(url=trans_input)
         if len(t_data) > 0:
             trans_j = t_data.to_json()
 
     atree_input = inputs.get("atreeu", None)
     if atree_input:
-        filename, a_data, text = load_input_file(url=atree_input[0])
+        filename, a_data, text = load_input_file(url=atree_input)
         if len(a_data) > 0:
             atree_j = a_data.to_json()
 
     eras_input = inputs.get("erasu", None)
     if eras_input:
-        filename, e_data, text = load_input_file(url=eras_input[0])
+        filename, e_data, text = load_input_file(url=eras_input)
         if len(e_data) > 0:
             eras_j = e_data.to_json()
 
+    api_input_j = json.dumps(inputs)  # whatever parts of the original url was valid, save them
     return [trans_j, atree_j, eras_j, api_input_j, api_input_j]
 
 

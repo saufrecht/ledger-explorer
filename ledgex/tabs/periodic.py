@@ -123,20 +123,23 @@ def pe_make_master_time_series(
     selected_accounts = account_tree.get_children_ids(root_account_id)
     factor = Ledger.prorate_factor(time_span, ts_resolution=time_resolution)
     for i, account in enumerate(selected_accounts):
-        bar = periodic_bar(
-            trans,
-            account_tree,
-            account,
-            time_resolution,
-            time_span,
-            factor,
-            eras,
-            i,
-            deep=True,
-            unit=unit,
-        )
-        if bar:
-            chart_fig.add_trace(bar)
+        try:
+            bar = periodic_bar(
+                trans,
+                account_tree,
+                account,
+                time_resolution,
+                time_span,
+                factor,
+                eras,
+                i,
+                deep=True,
+                unit=unit,
+            )
+            if bar:
+                chart_fig.add_trace(bar)
+        except LError:
+            pass
     return [chart_fig]
 
 
