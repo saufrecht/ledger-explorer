@@ -124,6 +124,27 @@ def naughty_tree():
     return (tree, blns_list)
 
 
+@pytest.fixture
+def rollup_happy():
+    rollup_happy: ATree = ATree()
+    rollup_happy.create_node("root", identifier="root", data={"leaf_total": 0})
+    rollup_happy.root = "root"
+    rollup_happy.create_node(
+        "Ten", identifier="Ten", parent="root", data={"leaf_total": 10}
+    )
+    rollup_happy.create_node(
+        "Twenty", identifier="Twenty", parent="root", data={"leaf_total": 20}
+    )
+    rollup_happy.create_node("Branch", identifier="Branch", parent="root")
+    rollup_happy.create_node(
+        "Thirty", identifier="Thirty", parent="Branch", data={"leaf_total": 30}
+    )
+    rollup_happy.create_node(
+        "Forty", identifier="Forty", parent="Branch", data={"leaf_total": 40}
+    )
+    return rollup_happy
+
+
 class TestSkinnyTrim:
     """ Should remove lower and middle trunk """
 
@@ -154,11 +175,16 @@ class TestSkinnyString:
     def test_show(self, skinny_tree):
         assert (
             skinny_tree.show_to_string()
-            == "Lower Trunk\n└── Middle Trunk\n    └── Top Trunk\n        ├── Branch Alpha\n        ├── Branch Beta\n        └── Branch Gamma\n")  # NOQA
+            == "Lower Trunk\n└── Middle Trunk\n    └── Top Trunk\n        ├── Branch Alpha\n        ├── Branch Beta\n        └── Branch Gamma\n"  # NOQA
+        )
 
 
 class TestJson:
     """ Test converting the skinny string to and from JSON """
+
+    def test_null_to_json(self):
+        empty_tree = ATree()
+        assert empty_tree.to_json() == ""
 
     def test_skinny_to_json(self, skinny_tree, skinny_tree_j):
         assert skinny_tree.to_json() == skinny_tree_j
@@ -205,6 +231,7 @@ class TestGets:
     """ Test the get_* functions which return lists of parents, children, lineage, etc """
 
     def test_get_ch_tags(self, skinny_tree):
+        assert skinny_tree.get_children_tags("nonexistent root") == []
         assert skinny_tree.get_children_tags("lt") == ["Middle Trunk"]
         assert skinny_tree.get_children_tags("tt") == [
             "Branch Alpha",
@@ -214,43 +241,46 @@ class TestGets:
         assert skinny_tree.get_children_tags("bb") == []
 
     def test_get_ch_ids(self, skinny_tree):
+        assert skinny_tree.get_children_ids("nonexistent root") == []
         assert skinny_tree.get_children_ids("lt") == ["mt"]
         assert skinny_tree.get_children_ids("tt") == ["ba", "bb", "bg"]
         assert skinny_tree.get_children_ids("bb") == []
 
     def test_get_desc_ids(self, skinny_tree):
+        assert skinny_tree.get_descendent_ids("") == ["mt", "tt", "ba", "bb", "bg"]
+        assert skinny_tree.get_descendent_ids("nonexistent root") == []
         assert skinny_tree.get_descendent_ids("lt") == ["mt", "tt", "ba", "bb", "bg"]
         assert skinny_tree.get_descendent_ids("tt") == ["ba", "bb", "bg"]
         assert skinny_tree.get_descendent_ids("bb") == []
 
     def test_get_lin_ids(self, skinny_tree):
+        assert skinny_tree.get_lineage_ids("nonexistent root") == []
         assert skinny_tree.get_lineage_ids("lt") == []
         assert skinny_tree.get_lineage_ids("tt") == ["lt", "mt"]
         assert skinny_tree.get_lineage_ids("bb") == ["lt", "mt", "tt"]
 
+    def test_get_dict_of_paths(self, skinny_tree):
+        assert skinny_tree.get_dict_of_paths() == {
+            "lt": "lt",
+            "mt": "lt:mt",
+            "tt": "lt:mt:tt",
+            "ba": "lt:mt:tt:ba",
+            "bb": "lt:mt:tt:bb",
+            "bg": "lt:mt:tt:bg",
+        }
+
+
+class TestAppendSums:
+    def test_happy(self):
+        pass
+
 
 class TestRollUpSubtotals:
-    def test_happy(self):
-        rollup_happy: ATree = ATree()
-        rollup_happy.create_node("root", identifier="root", data={"leaf_total": 0})
-        rollup_happy.root = "root"
-        rollup_happy.create_node(
-            "Ten", identifier="Ten", parent="root", data={"leaf_total": 10}
-        )
-        rollup_happy.create_node(
-            "Twenty", identifier="Twenty", parent="root", data={"leaf_total": 20}
-        )
-        rollup_happy.create_node("Branch", identifier="Branch", parent="root")
-        rollup_happy.create_node(
-            "Thirty", identifier="Thirty", parent="Branch", data={"leaf_total": 30}
-        )
-        rollup_happy.create_node(
-            "Forty", identifier="Forty", parent="Branch", data={"leaf_total": 40}
-        )
-        rollup_happy = rollup_happy.roll_up_subtotals()
-        assert rollup_happy["Twenty"].data["total"] == 20
-        assert rollup_happy["Branch"].data["total"] == 70
-        assert rollup_happy["root"].data["total"] == 100
+    def test_happy(self, rollup_happy):
+        happy = rollup_happy.roll_up_subtotals()
+        assert happy["Twenty"].data["total"] == 20
+        assert happy["Branch"].data["total"] == 70
+        assert happy["root"].data["total"] == 100
 
     def test_with_leafy(self):
         rollup_leafy: ATree = ATree()

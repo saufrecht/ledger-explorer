@@ -25,7 +25,7 @@ class ATree(Tree):
     ROOT_TAG = "[Total]"
     ROOT_ID = "root"
 
-    def pp(self, node: str = None):  # DEBUG helper function
+    def pp(self, node: str = None):  # pragma: no cover      DEBUG helper function
         if not node:
             node = self.root
         w_node = self[node]
@@ -47,7 +47,7 @@ class ATree(Tree):
         tree.__class__ = cls
         return tree
 
-    def show_to_string(self) -> str:
+    def show_to_string(self) -> str:  # pragma: no cover
         """ Alternative to the parent method show(), which outputs to stdout. """
 
         if len(self) == 0:
@@ -99,7 +99,7 @@ class ATree(Tree):
         tuple_list = _dict_to_branch(json.loads(atree_j))
         return cls.from_list_of_tuples(tuple_list)
 
-    def dict_of_paths(self) -> dict:
+    def get_dict_of_paths(self) -> dict:
         """Return full paths as primary internal representation of account
         tree. Note that ':' here is an internal detail, and so not
         affected by DELIM constant or user input
@@ -118,7 +118,7 @@ class ATree(Tree):
             child_tags = [x.tag for x in self.children(account_id)]
             return child_tags
         except tle.NodeIDAbsentError as E:
-            app.logger.warning(f"A specified root is missing from the account tree: {E}")
+            app.logger.warning(f"A specified node is missing from the account tree: {E}")
             return []
 
     def get_children_ids(self, account_id: int):
@@ -129,7 +129,7 @@ class ATree(Tree):
             child_ids = [x.identifier for x in self.children(account_id)]
             return child_ids
         except tle.NodeIDAbsentError as E:
-            app.logger.warning(f"A specified root is missing from the account tree: {E}")
+            app.logger.warning(f"A specified node is missing from the account tree: {E}")
             return []
 
     def get_descendent_ids(self, account_id: str = None) -> list:
@@ -153,11 +153,14 @@ class ATree(Tree):
         if account_id == self.root:
             lineage = []
         else:
-            parent = self.parent(account_id).identifier
-            if parent == self.root:
-                lineage = [self.root]
-            else:
-                lineage = self.get_lineage_ids(parent) + [parent]
+            try:
+                parent = self.parent(account_id).identifier
+                if parent == self.root:
+                    lineage = [self.root]
+                else:
+                    lineage = self.get_lineage_ids(parent) + [parent]
+            except tle.NodeIDAbsentError:
+                lineage = []
 
         return lineage
 
@@ -256,7 +259,7 @@ class ATree(Tree):
         """Convert the tree into full account name format and add/update the
         full account field in trans accordingly.
         This should probably be a static method on TransFrame, once that Class exists."""
-        paths = tree.dict_of_paths()
+        paths = tree.get_dict_of_paths()
         trans[CONST["fan_col"]] = trans[CONST["account_col"]].map(paths)
         return trans
 
@@ -285,7 +288,7 @@ class ATree(Tree):
             node.data = {"leaf_total": prorated_subtotal}
         return self
 
-    def summarize_to_other(self, node):
+    def summarize_to_other(self, node):  # pragma: no cover
         """
         TODO: fix, and put back into use, with new UI to control it
         TODO: this modifies the tree in place, but for consistency and

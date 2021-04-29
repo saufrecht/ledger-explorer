@@ -115,6 +115,8 @@ class Params:
     fan_label: str = None
     init_time_span: str = None
     init_time_res: str = None
+    start_date: str = None
+    end_date: str = None
     ds_data_title: str = None
     ds_delimiter: str = None
     unit: str = None
