@@ -266,27 +266,27 @@ class ATree(Tree):
     def append_sums_from_trans(self, trans: Ledger, prorate_fraction: int = 1):
         """Calculate the subtotal for each node (direct subtotal only, no
         children) in the tree, based on exactly provided transaction
-        frame, and return it within a new account tree
-
-        TODO: this modifies the tree in place, but for consistency and
-        flexibility, it should return a new tree
-
+        frame, and return a new account tree with subtotals
         """
         trans = trans.reset_index(drop=True).set_index(CONST["account_col"])
         subtotals = trans.groupby(CONST["account_col"]).sum()["amount"]
-        for node in self.all_nodes():
+        atree = self.subtree(self.root)
+        atree = ATree.cast(atree)
+        for node in atree.all_nodes():
             try:
                 subtotal = subtotals.loc[node.tag]
             except KeyError:
                 # These should be nodes without leaf_totals, and therefore
                 # not present in the subtotals DataFrame
                 continue
-            try:
-                prorated_subtotal = round(subtotal * prorate_fraction)
-            except OverflowError:
-                prorated_subtotal = 0
+            prorated_subtotal = 0
+            if subtotal and subtotal > 0:
+                try:
+                    prorated_subtotal = round(subtotal * prorate_fraction)
+                except OverflowError:
+                    pass
             node.data = {"leaf_total": prorated_subtotal}
-        return self
+        return atree
 
     def summarize_to_other(self, node):  # pragma: no cover
         """

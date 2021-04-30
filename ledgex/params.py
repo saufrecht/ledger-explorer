@@ -5,7 +5,7 @@ from typing import Iterable
 from urllib.parse import parse_qs, urlencode
 
 CONST = {
-    "parent_col": "parent account",  # TODO: move the column names into Trans class
+    "parent_col": "parent account",  # TODO: move the column names into Ledger class
     "account_col": "account",
     "fan_col": "full account name",
     "date_col": "date",
@@ -232,7 +232,7 @@ class Params:
             search, max_num_fields=50
         )  # 50 is arbitrary, for DoS prevention
         for key, value_list in raw_qs.items():
-            if key[-6:] == '_roots':  # These fields all expect lists.
+            if key[-6:] == "_roots":  # These fields all expect lists.
                 key_list = []
                 for value in value_list:
                     if (not isinstance(value, str)) or (not len(value) > 0):

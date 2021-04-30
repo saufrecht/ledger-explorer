@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from app import app
-from atree import ATree
 from burst import Burst
 from params import CONST, Params
 from ledger import Ledger
@@ -34,16 +33,24 @@ layout = html.Div(
                     className="control_bar",
                     children=[
                         dcc.Store(id="pe_selection_store", storage_type="memory"),
-                        dcc.Dropdown(
-                            id="pe_time_series_span",
-                            options=CONST["time_span_options"],
-                            searchable=False,
-                        ),
-                        html.Span(id="pe_intra_text", children=" by "),
-                        dcc.Dropdown(
-                            id="pe_time_series_resolution",
-                            options=CONST["time_res_options"],
-                            searchable=False,
+                        html.Div(
+                            className="control_group",
+                            children=[
+                                dcc.Dropdown(
+                                    id="pe_time_series_span",
+                                    options=CONST["time_span_options"],
+                                    searchable=False,
+                                ),
+                                html.Span(id="pe_intra_text", children=" by "),
+                                dcc.Dropdown(
+                                    id="pe_time_series_resolution",
+                                    options=CONST["time_res_options"],
+                                    searchable=False,
+                                ),
+                            ]),
+                        dcc.DatePickerRange(
+                            id="pe_date_range",
+                            display_format='YYYY-MM-DD',
                         ),
                     ],
                 ),
@@ -77,6 +84,8 @@ layout = html.Div(
         Output("pe_time_series_resolution", "value"),
         Output("pe_time_series_resolution", "options"),
         Output("pe_time_series_span", "value"),
+        Output("pe_date_range", "start_date"),
+        Output("pe_date_range", "end_date"),
     ],
     [Input("pe_tab_trigger", "children")],
     state=[State("data_store", "children"), State("param_store", "children")],
@@ -85,13 +94,10 @@ def pe_load_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
     preventupdate_if_empty(param_store)
     params = Params(**json.loads(param_store))
-    options = CONST["time_res_options"]
-    if data_store:
-        data: Datastore() = Datastore.from_json(data_store)
-        eras = data.eras
-        if len(eras) > 0:
-            options = [CONST["time_res_era_option"]] + options
-    return [params.init_time_res, options, params.init_time_span]
+    tr_options = CONST["time_res_options"]
+    if data_store and len(Datastore.from_json(data_store).eras) > 0:
+        tr_options = [CONST["time_res_era_option"]] + tr_options
+    return [params.init_time_res, tr_options, params.init_time_span, params.start_date, params.end_date]
 
 
 @app.callback(
@@ -99,11 +105,13 @@ def pe_load_params(trigger: str, data_store: str, param_store: str):
     [
         Input("pe_time_series_resolution", "value"),
         Input("pe_time_series_span", "value"),
+        Input("pe_date_range", "start_date"),
+        Input("pe_date_range", "end_date"),
     ],
     state=[State("data_store", "children"), State("param_store", "children")],
 )
 def pe_make_master_time_series(
-    time_resolution: int, time_span: str, data_store: str, param_store: str
+    time_resolution: int, time_span: str, start_date: str, end_date: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
     preventupdate_if_empty(data_store)
@@ -112,21 +120,18 @@ def pe_make_master_time_series(
         time_resolution = params.init_time_res
     if not time_span:
         time_span = params.init_time_span
-    data_store: Datastore() = Datastore.from_json(data_store, params.pe_roots)
-    trans: pd.DataFrame = data_store.trans
-    eras: pd.DataFrame = data_store.eras
-    account_tree: ATree = data_store.account_tree
+    trans, atree, eras, dstore = Datastore.get_parts(data_store, params.pe_roots)
     unit = params.unit
     chart_fig: go.Figure = go.Figure(layout=layouts["periodic"])
-    # get everything, but note that it's already been pre-filtered by pe_roots
-    root_account_id: str = account_tree.root
-    selected_accounts = account_tree.get_children_ids(root_account_id)
+    # get everything, remembering that it's already been pre-filtered by pe_roots
+    root_account_id: str = atree.root
+    selected_accounts = atree.get_children_ids(root_account_id)
     factor = Ledger.prorate_factor(time_span, ts_resolution=time_resolution)
     for i, account in enumerate(selected_accounts):
         try:
             bar = periodic_bar(
                 trans,
-                account_tree,
+                atree,
                 account,
                 time_resolution,
                 time_span,
@@ -134,7 +139,10 @@ def pe_make_master_time_series(
                 eras,
                 i,
                 deep=True,
+                positize=True,
                 unit=unit,
+                sel_start_date=start_date,
+                sel_end_date=end_date
             )
             if bar:
                 chart_fig.add_trace(bar)
@@ -173,35 +181,19 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
     doesn't seem to trigger reliably.  Adding selectedData as a second
     Input causes reliable triggering.
 
-    TODO: BUG: The starting point of an Era- or Decade-wide object is
-    not applied when clicked on
-
-    TODO: UX BUG: By default, the sunburst has little to no Expenses,
-    because Expenses is by default negative value.  The only way to
-    see negative expenses in the sunburst is to select a net-negative
-    set of data, in which case (the Ledger Explorer implementation of)
-    sunburst flips sign.  I.e., the user must first click on an
-    Expenses column in the time series, which will cause the burst to
-    be net-negative, which will flip it to positive, which will cause
-    it to display as expected.  Possible solution: limit the burst to
-    a single parent account (not root)?
-
     """
     params: Params() = Params.from_json(param_store)
-    data_store: Datastore() = Datastore.from_json(data_store, params.pe_roots)
     preventupdate_if_empty(data_store)
+    trans, atree, eras, dstore = Datastore.get_parts(data_store, params.pe_roots)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
         time_span = params.init_time_span
-    trans = data_store.trans
     if len(trans) == 0:
         app.logger.error(
             "Tried to make burst figure from transactions, but no transactions provided."
         )
         raise PreventUpdate()
-    eras = data_store.eras
-    account_tree = data_store.account_tree
     unit = params.unit
 
     ts_label = CONST["time_span_lookup"].get(time_span)["label"]
@@ -235,7 +227,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
                     max_period_end = period_end
                 else:
                     max_period_end = max(max_period_end, period_end)
-                desc_accounts = account_tree.get_descendent_ids(account)
+                desc_accounts = atree.get_descendent_ids(account)
                 desc_account_count = desc_account_count + len(desc_accounts)
                 subtree_accounts = [account] + desc_accounts
                 new_trans = (
@@ -243,6 +235,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
                     .loc[trans["date"] >= period_start]
                     .loc[trans["date"] <= period_end]
                 )
+                new_trans = Ledger.positize(new_trans)  # each top-level account should net positive
                 if len(selected_trans) > 0:
                     selected_trans = selected_trans.append(new_trans)
                 else:
@@ -283,7 +276,7 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
     factor = Ledger.prorate_factor(time_span, duration=duration)
     try:
         sun_fig = Burst.from_trans(
-            account_tree, selected_trans, time_span, unit, factor, colormap, title
+            atree, selected_trans, time_span, unit, factor, colormap, title
         )
     except LError as E:
         text = f"Failed to generate sunburst.  Error: {E}"
@@ -324,14 +317,12 @@ def apply_burst_click(
     guarantee a trigger on initial page load.
 
     """
-    data_store: Datastore() = Datastore.from_json(data_store)
     preventupdate_if_empty(data_store)
     preventupdate_if_empty(pe_selection_store)
-    trans = data_store.trans
+    trans, atree, eras, dstore = Datastore.get_parts(data_store)
     preventupdate_if_empty(trans)
-    account_tree = data_store.account_tree
-    earliest_trans = data_store.earliest_trans
-    latest_trans = data_store.latest_trans
+    earliest_trans = dstore.earliest_trans
+    latest_trans = dstore.latest_trans
 
     # get the selection parameters from the master time series, via an intermediary store.
     date_start: np.datetime64 = pd.to_datetime(
@@ -359,7 +350,7 @@ def apply_burst_click(
     if len(click_accounts) > 0:
         sub_accounts: list = []
         for account in click_accounts:
-            sub_accounts = account_tree.get_descendent_ids(account)
+            sub_accounts = atree.get_descendent_ids(account)
         sel_accounts = click_accounts + sub_accounts
         sel_trans = trans[
             trans["account"].isin(sel_accounts)

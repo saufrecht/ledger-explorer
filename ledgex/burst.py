@@ -5,7 +5,6 @@ from typing import Dict
 
 from atree import ATree
 from utils import fonts
-from ledger import Ledger
 from params import CONST
 
 
@@ -38,7 +37,6 @@ class Burst:
         in the tree, and the value of each node is the subtotal of all
         transactions for that node and any subtree, filtered by date.
         """
-        trans = Ledger.positize(trans)
         tree = tree.append_sums_from_trans(trans, factor)
         tree = tree.roll_up_subtotals(prevent_negatives=True)
         tree = tree.trim_excess_root()

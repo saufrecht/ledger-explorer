@@ -33,6 +33,13 @@ class Datastore:
         return len(self.trans)
 
     @classmethod
+    def get_parts(cls, json_data, filter: list = []):
+        """ Simplicity function
+        TODO: probably this can be merged in with from_json with some careful auditing """
+        data_store = cls.from_json(json_data, filter)
+        return data_store.trans, data_store.account_tree, data_store.eras, data_store
+
+    @classmethod
     def from_json(cls, json_data, filter: list = []):
         """Parse data stored in Dash JSON component, in order to move data
         between different callbacks in Dash.  Returns the transaction

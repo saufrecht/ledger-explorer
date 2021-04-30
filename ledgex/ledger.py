@@ -15,8 +15,9 @@ class Ledger(pd.DataFrame):
         with absolute value because that would erase the distinction
         between debits and credits within an account.  Simply
         reversing sign could result in a net-negative sum, which also
-        breaks sunbursts.  This function always returns a net-positive
-        sum DataFrame of transactions, suitable for a sunburst.
+        breaks sunbursts.  This function always returns a DataFrame of
+        transactions which sums to a positive number, thus suitable
+        for a sunburst.
         """
         if trans.sum(numeric_only=True)["amount"] < 0:
             trans["amount"] = trans["amount"] * -1

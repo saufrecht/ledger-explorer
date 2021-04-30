@@ -3,6 +3,7 @@ import pytest
 
 from ledgex.atree import ATree, tle
 from ledgex.params import CONST
+from ledgex.ledger import Ledger
 
 
 @pytest.fixture
@@ -145,6 +146,74 @@ def rollup_happy():
     return rollup_happy
 
 
+@pytest.fixture
+def rollup_empty():
+    rollup_empty: ATree = ATree()
+    rollup_empty.create_node("root", identifier="root")
+    rollup_empty.root = "root"
+    rollup_empty.create_node("Ten", identifier="Ten", parent="root")
+    rollup_empty.create_node("Twenty", identifier="Twenty", parent="root")
+    rollup_empty.create_node("Branch", identifier="Branch", parent="root")
+    rollup_empty.create_node("Thirty", identifier="Thirty", parent="Branch")
+    rollup_empty.create_node("Forty", identifier="Forty", parent="Branch")
+    return rollup_empty
+
+
+@pytest.fixture
+def trans_happy():
+    trans = Ledger(columns=[CONST["account_col"], CONST["amount_col"]])
+    trans = trans.append({"account": "root", "amount": ""}, ignore_index=True)
+    trans = trans.append({"account": "Ten", "amount": 5}, ignore_index=True)
+    trans = trans.append({"account": "Ten", "amount": 5}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 10}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 5}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 5}, ignore_index=True)
+    trans = trans.append({"account": "Thirty", "amount": 15}, ignore_index=True)
+    trans = trans.append({"account": "Thirty", "amount": 15}, ignore_index=True)
+    trans = trans.append({"account": "Forty", "amount": 20}, ignore_index=True)
+    trans = trans.append({"account": "Forty", "amount": 20}, ignore_index=True)
+    return trans
+
+
+@pytest.fixture
+def trans_sad():
+    trans = Ledger(columns=[CONST["account_col"], CONST["amount_col"]])
+    trans = trans.append({"account": "root", "amount": None}, ignore_index=True)
+    trans = trans.append({"account": "Ten", "amount": 1}, ignore_index=True)
+    trans = trans.append({"account": "Ten", "amount": 5}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 22}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 3}, ignore_index=True)
+    trans = trans.append({"account": "Twenty", "amount": 1}, ignore_index=True)
+    trans = trans.append({"account": "Thirty", "amount": 11}, ignore_index=True)
+    trans = trans.append({"account": "Thirty", "amount": 11}, ignore_index=True)
+    trans = trans.append({"account": "Forty", "amount": 1}, ignore_index=True)
+    trans = trans.append({"account": "Forty", "amount": 1}, ignore_index=True)
+    return trans
+
+
+@pytest.fixture
+def rollup_leafy():
+    rollup_leafy: ATree = ATree()
+    rollup_leafy.create_node("root", identifier="root", data={"leaf_total": 5})
+    rollup_leafy.root = "root"
+    rollup_leafy.create_node(
+        "Ten", identifier="Ten", parent="root", data={"leaf_total": 10}
+    )
+    rollup_leafy.create_node(
+        "Twenty", identifier="Twenty", parent="root", data={"leaf_total": 20}
+    )
+    rollup_leafy.create_node(
+        "Branch", identifier="Branch", parent="root", data={"leaf_total": 15}
+    )
+    rollup_leafy.create_node(
+        "Thirty", identifier="Thirty", parent="Branch", data={"leaf_total": 30}
+    )
+    rollup_leafy.create_node(
+        "Forty", identifier="Forty", parent="Branch", data={"leaf_total": 40}
+    )
+    return rollup_leafy
+
+
 class TestSkinnyTrim:
     """ Should remove lower and middle trunk """
 
@@ -271,8 +340,29 @@ class TestGets:
 
 
 class TestAppendSums:
-    def test_happy(self):
-        pass
+    def test_happy(self, rollup_empty, trans_happy, rollup_happy):
+        tree = rollup_empty.append_sums_from_trans(trans_happy)
+        for test_point in ["Twenty", "Thirty", "Forty"]:
+            assert (
+                tree[test_point].data["leaf_total"] == rollup_happy[test_point].data["leaf_total"]
+            )
+        for test_point in ["root", "Branch"]:
+            # TODO: this highlights how much better it would be to
+            # move leaf_total and any other totals into ATree so there
+            # wouldn't be hassle with getting variables out of a data
+            # node that might or might not exist
+            data = tree[test_point].data
+            if data:
+                assert data['leaf_total'] == 0
+            else:
+                pass
+
+    def test_sad(self, rollup_empty, trans_sad, rollup_happy):
+        tree = rollup_empty.append_sums_from_trans(trans_sad)
+        for test_point in ["Twenty", "Thirty", "Forty"]:
+            assert (
+                tree[test_point].data["leaf_total"] != rollup_happy[test_point].data["leaf_total"]
+            )
 
 
 class TestRollUpSubtotals:
@@ -282,25 +372,7 @@ class TestRollUpSubtotals:
         assert happy["Branch"].data["total"] == 70
         assert happy["root"].data["total"] == 100
 
-    def test_with_leafy(self):
-        rollup_leafy: ATree = ATree()
-        rollup_leafy.create_node("root", identifier="root", data={"leaf_total": 5})
-        rollup_leafy.root = "root"
-        rollup_leafy.create_node(
-            "Ten", identifier="Ten", parent="root", data={"leaf_total": 10}
-        )
-        rollup_leafy.create_node(
-            "Twenty", identifier="Twenty", parent="root", data={"leaf_total": 20}
-        )
-        rollup_leafy.create_node(
-            "Branch", identifier="Branch", parent="root", data={"leaf_total": 15}
-        )
-        rollup_leafy.create_node(
-            "Thirty", identifier="Thirty", parent="Branch", data={"leaf_total": 30}
-        )
-        rollup_leafy.create_node(
-            "Forty", identifier="Forty", parent="Branch", data={"leaf_total": 40}
-        )
+    def test_with_leafy(self, rollup_leafy):
         rollup_leafy = rollup_leafy.roll_up_subtotals()
         assert rollup_leafy["Twenty"].data["total"] == 20
         assert rollup_leafy["Branch"].data["total"] == 85

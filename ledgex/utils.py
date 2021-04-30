@@ -14,6 +14,7 @@ from app import app
 from atree import ATree
 from params import CONST
 from errors import LError
+from ledger import Ledger
 
 pd.options.mode.chained_assignment = (
     None  # default='warn'  This suppresses the invalid warning for the .map function
@@ -46,7 +47,7 @@ shared_traces = dict()
 
 periodic_extras = dict(
     xaxis=dict(showgrid=False, nticks=20, zeroline=True, visible=True),
-    barmode="relative",
+    barmode="group",
     hoverlabel_font=fonts["big"],
 )
 
@@ -392,7 +393,10 @@ def periodic_bar(
     eras: pd.DataFrame,
     color_num: int = 0,
     deep: bool = False,
+    positize: bool = False,
     unit: str = CONST["unit"],
+    sel_start_date: str = None,
+    sel_end_date: str = None,
 ) -> go.Bar:
     """returns a go.Bar object with total by time_resolution period for
     the selected account.  If deep, include total for all descendent accounts."""
@@ -406,7 +410,13 @@ def periodic_bar(
         tba = trans[trans[CONST["account_col"]] == account_id]
     if len(tba) == 0:
         raise LError('no transactions sent to periodic_bar')
+    tba = Ledger.positize(tba)
     tba = tba.set_index("date")
+    tba['selected'] = True
+    if sel_start_date:
+        tba.loc[tba.index < sel_start_date, 'selected'] = False
+    if sel_end_date:
+        tba.loc[tba.index > sel_end_date, 'selected'] = False
     tr: dict = CONST["time_res_lookup"][time_resolution]
     tr_format: str = tr.get("format", None)  # e.g., %Y-%m
     abbrev = CONST["time_span_lookup"][time_span]["abbrev"]
@@ -421,6 +431,7 @@ def periodic_bar(
             tba["year"] = tba.index.year
             tba["dec"] = tba["year"].floordiv(10).mul(10).astype("str")
             bin_amounts = tba.groupby("dec").sum()["amount"].to_frame(name="value")
+            bin_amounts['selected'] = tba.groupby("dec").all()['selected']
             bin_amounts["x"] = bin_amounts.index
         else:
             bin_amounts = (
@@ -429,6 +440,7 @@ def periodic_bar(
                 .to_frame(name="value")
             )
             bin_amounts["x"] = bin_amounts.index.to_period().strftime(tr_format)
+            bin_amounts["selected"] = tba.resample(tr["resample_keyword"]).apply(all)['selected']
 
         bin_amounts["y"] = bin_amounts["value"] * factor
         bin_amounts["unit"] = unit
@@ -436,12 +448,14 @@ def periodic_bar(
         bin_amounts[
             "label_pre"
         ] = f"{account_id}<br>{unit}"  # this works because these are variables, not column names
+        selected = bin_amounts.reset_index()[bin_amounts.reset_index()['selected']].index.to_list()
         trace = go.Bar(
             name=account_id,
             x=bin_amounts.x,
             y=bin_amounts.y,
             text=bin_amounts.label_pre,
             textposition="auto",
+            selectedpoints=selected,
             opacity=0.9,
             customdata=bin_amounts.abbrev,
             texttemplate="%{text}%{y:,.0f}%{customdata}",
