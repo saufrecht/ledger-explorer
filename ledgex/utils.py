@@ -414,9 +414,9 @@ def periodic_bar(
     tba = tba.set_index("date")
     tba['selected'] = True
     if sel_start_date:
-        tba.loc[tba.index < sel_start_date, 'selected'] = False
+        tba.loc[tba.index < np.datetime64(sel_start_date), 'selected'] = False
     if sel_end_date:
-        tba.loc[tba.index > sel_end_date, 'selected'] = False
+        tba.loc[tba.index > np.datetime64(sel_end_date), 'selected'] = False
     tr: dict = CONST["time_res_lookup"][time_resolution]
     tr_format: str = tr.get("format", None)  # e.g., %Y-%m
     abbrev = CONST["time_span_lookup"][time_span]["abbrev"]
@@ -425,7 +425,6 @@ def periodic_bar(
     except IndexError:
         # don't ever run out of colors
         marker_color = "var(--Cyan)"
-
     if time_resolution in ["decade", "year", "quarter", "month", "week", "day"]:
         if time_resolution == "decade":
             tba["year"] = tba.index.year
@@ -442,6 +441,7 @@ def periodic_bar(
             bin_amounts["x"] = bin_amounts.index.to_period().strftime(tr_format)
             bin_amounts["selected"] = tba.resample(tr["resample_keyword"]).apply(all)['selected']
 
+        bin_amounts = bin_amounts[bin_amounts['value'] > 0]
         bin_amounts["y"] = bin_amounts["value"] * factor
         bin_amounts["unit"] = unit
         bin_amounts["abbrev"] = abbrev
