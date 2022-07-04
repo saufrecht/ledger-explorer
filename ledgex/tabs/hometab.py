@@ -1,7 +1,6 @@
 from urllib.parse import quote
 
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 
 owid_co2_url = quote(
     "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/CO2%20emissions%20(Aggregate%20dataset%20(2020))/CO2%20emissions%20(Aggregate%20dataset%20(2020)).csv"

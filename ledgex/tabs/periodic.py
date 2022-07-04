@@ -1,7 +1,6 @@
 import json
 
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -87,8 +86,9 @@ layout = html.Div(
         Output("pe_date_range", "start_date"),
         Output("pe_date_range", "end_date"),
     ],
-    [Input("pe_tab_trigger", "children")],
-    state=[State("data_store", "children"), State("param_store", "children")],
+    Input("pe_tab_trigger", "children"),
+    State("data_store", "children"),
+    State("param_store", "children"),
 )
 def pe_load_params(trigger: str, data_store: str, param_store: str):
     """ When the param store changes and this tab is visible, update the top params"""
@@ -108,14 +108,15 @@ def pe_load_params(trigger: str, data_store: str, param_store: str):
         Input("pe_date_range", "start_date"),
         Input("pe_date_range", "end_date"),
     ],
-    state=[State("data_store", "children"), State("param_store", "children")],
+    State("data_store", "children"),
+    State("param_store", "children"),
 )
 def pe_make_master_time_series(
     time_resolution: int, time_span: str, start_date: str, end_date: str, data_store: str, param_store: str
 ):
     """ Generate a Dash bar chart figure from transactional data """
     preventupdate_if_empty(data_store)
-    params: Params() = Params.from_json(param_store)
+    params: Params = Params.from_json(param_store)
     if not time_resolution:
         time_resolution = params.init_time_res
     if not time_span:
@@ -152,22 +153,16 @@ def pe_make_master_time_series(
 
 
 @app.callback(
-    [
-        Output("pe_account_burst", "figure"),
-        Output("pe_burst_title", "children"),
-        Output("pe_burst_text", "children"),
-        Output("pe_selection_store", "data"),
-    ],
-    [
-        Input("pe_master_time_series", "figure"),
-        Input("pe_master_time_series", "selectedData"),
-    ],
-    state=[
-        State("pe_time_series_resolution", "value"),
-        State("pe_time_series_span", "value"),
-        State("data_store", "children"),
-        State("param_store", "children"),
-    ],
+    Output("pe_account_burst", "figure"),
+    Output("pe_burst_title", "children"),
+    Output("pe_burst_text", "children"),
+    Output("pe_selection_store", "data"),
+    Input("pe_master_time_series", "figure"),
+    Input("pe_master_time_series", "selectedData"),
+    State("pe_time_series_resolution", "value"),
+    State("pe_time_series_span", "value"),
+    State("data_store", "children"),
+    State("param_store", "children"),
 )
 def pe_time_series_selection_to_sunburst_and_transaction_table(
     figure, selectedData, time_resolution, time_span, data_store, param_store
@@ -287,21 +282,15 @@ def pe_time_series_selection_to_sunburst_and_transaction_table(
 
 
 @app.callback(
-    [
         Output("pe_trans_table", "data"),
         Output("pe_trans_table_text", "children"),
-    ],
-    [
         Input("pe_account_burst", "clickData"),
         Input("pe_account_burst", "figure"),
-    ],
-    state=[
         State("pe_selection_store", "data"),
         State("data_store", "children"),
         State("param_store", "children"),
         State("pe_time_series_resolution", "value"),
         State("pe_time_series_span", "value"),
-    ],
 )
 def apply_burst_click(
     burst_clickData,

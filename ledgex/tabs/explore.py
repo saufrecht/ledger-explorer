@@ -1,5 +1,4 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 import pandas as pd
 import textwrap
 
@@ -35,10 +34,10 @@ layout: html = html.Div(
         Input({"type": "ex_chart", "index": ALL}, "selectedData"),
         Input({"type": "ex_chart", "index": ALL}, "figure"),
     ],
-    state=[
-        State("data_store", "children"),
-        State("param_store", "children"),
-    ],
+    
+    State("data_store", "children"),
+    State("param_store", "children"),
+    
 )
 def ex_apply_selection(dummy, selectedData, figure, data_store, param_store):
     """Take the selected account from the main explorer chart

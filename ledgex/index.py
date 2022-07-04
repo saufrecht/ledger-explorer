@@ -1,8 +1,8 @@
 import json
 import logging
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -200,26 +200,22 @@ def parse_url_search(search: str):
 
 
 @app.callback(
-    [
-        Output("data_store", "children"),
-        Output("param_store", "children"),
-        Output("tab_label_store", "children"),
-        Output("files_status", "children"),
-        Output("pe_tab_trigger", "children"),
-        Output("ex_tab_trigger", "children"),
-        Output("permalink", "href"),
-    ],
-    [
-        Input("ui_trans_node", "children"),
-        Input("ui_atree_node", "children"),
-        Input("ui_eras_node", "children"),
-        Input("api_trans_node", "children"),
-        Input("api_atree_node", "children"),
-        Input("api_eras_node", "children"),
-        Input("ui_node", "children"),
-        Input("api_node", "children"),
-    ],
-    state=[State("tab_node", "children")],
+    Output("data_store", "children"),
+    Output("param_store", "children"),
+    Output("tab_label_store", "children"),
+    Output("files_status", "children"),
+    Output("pe_tab_trigger", "children"),
+    Output("ex_tab_trigger", "children"),
+    Output("permalink", "href"),
+    Input("ui_trans_node", "children"),
+    Input("ui_atree_node", "children"),
+    Input("ui_eras_node", "children"),
+    Input("api_trans_node", "children"),
+    Input("api_atree_node", "children"),
+    Input("api_eras_node", "children"),
+    Input("ui_node", "children"),
+    Input("api_node", "children"),
+    State("tab_node", "children"),
 )
 def load_and_transform(
     ui_trans_node: str,

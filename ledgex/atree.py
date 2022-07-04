@@ -8,6 +8,7 @@ from treelib import exceptions as tle
 from ledger import Ledger
 from app import app
 from params import CONST
+from typing import List
 
 
 class ATree(Tree):
@@ -85,7 +86,7 @@ class ATree(Tree):
         """
         def _dict_to_branch(atreedict, parent: str = None):
             if isinstance(atreedict, dict):
-                tuple_list = []
+                tuple_list: List[tuple] = []
                 for node in atreedict.keys():
                     tuple_list = tuple_list + [(node, parent)]
                     try:
@@ -225,7 +226,7 @@ class ATree(Tree):
         """Extract all accounts from a list of Gnucash-like account paths.
         Assumes each account name is a full path, delimiter is :.
         """
-        tuple_list = []
+        tuple_list: list = []
         for account in full_names.unique():
             try:
                 if account and len(account) > 0:
@@ -249,7 +250,7 @@ class ATree(Tree):
 
         """
         clean_list = parent_list[[CONST["account_col"], CONST["parent_col"]]]
-        tuple_list = []
+        tuple_list: list = []
         for row in clean_list.itertuples(index=False):
             tuple_list = tuple_list + [(row[0], row[1])]
         return cls.from_list_of_tuples(tuple_list)

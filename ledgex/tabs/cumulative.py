@@ -1,5 +1,4 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
@@ -46,8 +45,8 @@ def load_cu_params(param_store: str):
 
 @app.callback(
     [Output("time_serieses", "children")],
-    [Input("cu_time_series_resolution", "value")],
-    state=[State("data_store", "children"), State("param_store", "children")],
+    Input("cu_time_series_resolution", "value"),
+    State("data_store", "children"), State("param_store", "children"),
 )
 def cu_make_time_serieses(time_resolution, data_store, param_store):
     """ Generate cumulative Dash bar charts for all root accounts """

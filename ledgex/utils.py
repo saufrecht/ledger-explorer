@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Sized
 
 from datetime import datetime, timedelta
 import calendar
 
-import dash_table
+from dash import dash_table
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -43,7 +43,7 @@ shared_layout = dict(
     yaxis=dict(showgrid=False, zeroline=False, visible=False),
 )
 
-shared_traces = dict()
+shared_traces: dict = {}
 
 periodic_extras = dict(
     xaxis=dict(showgrid=False, nticks=20, zeroline=True, visible=True),
@@ -51,7 +51,7 @@ periodic_extras = dict(
     hoverlabel_font=fonts["big"],
 )
 
-periodic_trace_extras = dict()
+periodic_trace_extras: dict = {}
 
 dot_fig_extras = dict(
     title=dict(font=fonts["big"], x=0.1, y=0.9),
@@ -312,11 +312,11 @@ def to_decade(year_string: str) -> int:
 
 
 def period_to_date_range(
-    time_resolution: str, period: str, eras: pd.DataFrame = None
+    time_resolution: str, period: str, eras: Optional[pd.DataFrame] = None
 ) -> Tuple[np.datetime64, np.datetime64]:
     """ Convert period label to tuple of start and end dates, based on time_resolution """
 
-    def _month_end(date: np.datetime64) -> np.datetime64:
+    def _month_end(date: datetime) -> np.datetime64:
         # return the date of the last day of the month of the input date
         year = date.year
         month = date.month
@@ -325,10 +325,12 @@ def period_to_date_range(
         return end_date
 
     if time_resolution == "era":
-        if len(eras) == 0:
-            raise LError("Trying to group by era, but no eras provided.")
-        period_start = eras[eras["date_start"] < period].iloc[-1]["date_start"]
-        period_end = eras[eras["date_start"] > period].iloc[0]["date_start"]
+        if eras and isinstance(eras, pd.DataFrame):
+            if len(eras) == 0:
+                raise LError("Trying to group by era, but no eras provided.")
+            else:
+                period_start = eras[eras["date_start"] < period].iloc[-1]["date_start"]
+                period_end = eras[eras["date_start"] > period].iloc[0]["date_start"]
     elif time_resolution == "decade":
         try:
             decade_start_year = to_decade(period)
@@ -377,7 +379,7 @@ def preventupdate_if_empty(field: object):
             raise PreventUpdate
     elif not field:
         raise PreventUpdate
-    elif len(field) == 0:
+    elif isinstance(field, Sized) and len(field) == 0:
         raise PreventUpdate
     else:
         return

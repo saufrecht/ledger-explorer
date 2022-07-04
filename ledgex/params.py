@@ -1,10 +1,10 @@
 import json
 from dataclasses import dataclass
 import inspect
-from typing import Iterable
+from typing import Any, Iterable, Optional
 from urllib.parse import parse_qs, urlencode
 
-CONST = {
+CONST: dict = {
     "parent_col": "parent account",  # TODO: move the column names into Ledger class
     "account_col": "account",
     "fan_col": "full account name",
@@ -108,32 +108,32 @@ CONST = {
 class Params:
     """ Class to hold everything to do with settings & parameters """
 
-    account_label: str = None
-    amount_label: str = None
-    date_label: str = None
-    desc_label: str = None
-    fan_label: str = None
-    init_time_span: str = None
-    init_time_res: str = None
-    start_date: str = None
-    end_date: str = None
-    ds_data_title: str = None
-    ds_delimiter: str = None
-    unit: str = None
-    co_label: str = None
-    cu_label: str = None
-    ds_label: str = None
-    ex_label: str = None
-    pe_label: str = None
-    sa_label: str = None
-    co_roots: Iterable[str] = None
-    cu_roots: Iterable[str] = None
-    ex_roots: Iterable[str] = None
-    pe_roots: Iterable[str] = None
-    sa_roots: Iterable[str] = None
+    account_label: Optional[str] = None
+    amount_label: Optional[str] = None
+    date_label: Optional[str] = None
+    desc_label: Optional[str] = None
+    fan_label: Optional[str] = None
+    init_time_span: Optional[str] = None
+    init_time_res: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    ds_data_title: Optional[str] = None
+    ds_delimiter: Optional[str] = None
+    unit: Optional[str] = None
+    co_label: Optional[str] = None
+    cu_label: Optional[str] = None
+    ds_label: Optional[str] = None
+    ex_label: Optional[str] = None
+    pe_label: Optional[str] = None
+    sa_label: Optional[str] = None
+    co_roots: Optional[Iterable[str]] = None
+    cu_roots: Optional[Iterable[str]] = None
+    ex_roots: Optional[Iterable[str]] = None
+    pe_roots: Optional[Iterable[str]] = None
+    sa_roots: Optional[Iterable[str]] = None
 
     @classmethod
-    def cleanse_account_list_input(cls, input: str):
+    def cleanse_account_list_input(cls, input: Any):
         """Handle input that may come directly from parsed URL and
         ensure that it comes back a tuple of strings, with no leading or
         trailing whitespace"""
@@ -227,7 +227,7 @@ class Params:
         """Do some extra cleanup on url string over and above what the
         built-in parser does, on fields that expect to be lists.  Specifically:
         1. Parser returns x=1,2 as {'x': '1, 2'}, but we want {'x': ['1', '2']}"""
-        parsed_params = {}
+        parsed_params: dict = {}
         raw_qs = parse_qs(
             search, max_num_fields=50
         )  # 50 is arbitrary, for DoS prevention

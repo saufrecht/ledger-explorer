@@ -2,8 +2,7 @@ import json
 from typing import Iterable
 from numpy import datetime64
 import pandas as pd
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from app import app
@@ -512,7 +511,7 @@ def save_ui_input_to_node(
         Input("trans_file", "contents"),
         Input("trans_url", "n_submit"),
     ],
-    state=[State("trans_url", "value")],
+    State("trans_url", "value"),
 )
 def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
     """Whenever a new transaction source is provided (uploaded file, or new URL),
@@ -547,7 +546,7 @@ def upload_trans(filename: str, content, submit: int, url: str) -> Iterable:
         Input("atree_file", "contents"),
         Input("atree_url", "n_submit"),
     ],
-    state=[State("atree_url", "value")],
+    State("atree_url", "value"),
 )
 def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
     """Whenever a new atree source is provided (uploaded file, or new URL),
@@ -575,7 +574,7 @@ def upload_atree(filename: str, content, submit: int, url: str) -> Iterable:
         Input("eras_file", "contents"),
         Input("eras_url", "n_submit"),
     ],
-    state=[State("eras_url", "value")],
+    State("eras_url", "value"),
 )
 def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
     """Whenever a new transaction source is provided (uploaded file, or new URL),
@@ -606,8 +605,8 @@ def upload_eras(filename: str, content, submit: int, url: str) -> Iterable:
         Output("atree_display", "children"),
         Output("eras_status", "children"),
     ],
-    [Input("data_store", "children")],
-    state=[State("param_store", "children")],
+    Input("data_store", "children"),
+    State("param_store", "children"),
 )
 def update_status_on_ds_tab_content(data_store: str, param_store: str):
     """When the loaded files change, and the data source tab is open,
