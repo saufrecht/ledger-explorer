@@ -19,7 +19,7 @@ itsdangerous==1.1.0
 more_itertools==8.7.0
 mypy-extensions==0.4.3
 mypy==0.800
-numpy==1.20.1
+numpy==1.22.0
 packaging==20.9
 pandas==1.2.2
 pip-review==1.1.0
